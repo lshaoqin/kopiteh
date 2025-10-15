@@ -4,10 +4,8 @@ services:
   db:
     image: postgres:17
     container_name: postgres_db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: myapp
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -20,11 +18,8 @@ services:
     container_name: express_backend
     ports:
       - "4000:4000"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: myapp
-      POSTGRES_HOST: db
+    env_file:
+      - .env
     depends_on:
       - db
     networks:

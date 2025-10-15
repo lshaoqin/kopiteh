@@ -5,8 +5,8 @@ import { Pool } from 'pg';
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'postgres',
   host: process.env.POSTGRES_HOST || 'localhost',
-  database: process.env.POSTGRES_DB || 'myapp',
-  password: process.env.POSTGRES_PASSWORD || 'password123',
+  database: process.env.POSTGRES_DB || 'volunteer-switchboard-db',
+  password: process.env.POSTGRES_PASSWORD || 'dgvs123',
   port: 5432,
 });
 
