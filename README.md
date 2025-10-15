@@ -13,6 +13,7 @@ To seed the database with mock values,
 in another terminal:
 ```bash
 cd backend
+npm i
 npm run seed
 ```
 The result should be visible at localhost:4000/stalls
