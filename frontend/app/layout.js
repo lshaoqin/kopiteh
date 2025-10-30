@@ -1,15 +1,11 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter", // keep if you still want the CSS var for Tailwind
 });
 
 export const metadata = {
@@ -19,10 +15,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={inter.className}> {/* ← this sets font-family: Inter */}
+      <body className="antialiased">            {/* no need for font-sans here */}
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
