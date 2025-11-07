@@ -36,6 +36,27 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card); /* fine to keep for utility use */ --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px);
+
+  /* Brand */
+  --color-primary1: #048442;
+  --color-primary2: #318F6B;
+  --color-secondary: #DDDDDD;
+
+  /* States */
+  --color-info:    #71A7F6;
+  --color-success: #63C3B0;
+  --color-warning: #E9C35A;
+  --color-error:   #E38884;
+
+  /* Greys / Blacks */
+  --color-black1: #000000;
+  --color-black2: #1D1D1D;
+  --color-black3: #282828;
+  --color-grey1:  #4F4F4F;
+  --color-grey2:  #828282;
+  --color-grey3:  #BDBDBD;
+  --color-grey4:  #E0E0E0;
+  --color-white:  #FFFFFF;
 }
 
 @layer base {
