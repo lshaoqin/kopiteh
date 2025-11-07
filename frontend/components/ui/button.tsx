@@ -39,7 +39,7 @@ const buttonVariants = cva(
 // ✅ Create a prop type that merges VariantProps from CVA + native props
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 
