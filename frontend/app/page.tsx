@@ -19,7 +19,7 @@ export default function Home() {
          <div>
            <h1 className="font-semibold text-2xl">Choose a Module</h1>
          </div>
-         <div className="flex flex-col w-[250px] space-y-5 my-5">
+         <div className="flex flex-col xl:w-[250px] sm:w-[150px] md:w-[250px] space-y-5 my-5">
            <Button className="bg-primary1 h-11 rounded-md">
             <Link href="/admin">Admin</Link>
            </Button>
