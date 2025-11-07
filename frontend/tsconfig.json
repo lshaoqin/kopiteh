@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "allowJs": false, // set true if you want to migrate gradually
+    "noEmit": true,
+    "strict": false, // start relaxed; tighten later
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ], // keeps your "@/..." imports working
+      "@types/*": [
+        "../types/*"
+      ] // shared types folder at repo root
+    },
+    "incremental": true,
+    "esModuleInterop": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.d.ts",
+    "../types/**/*.ts",
+    "context/AuthContext.tsx"  
+],
+  "exclude": [
+    "node_modules"
+  ]
+}

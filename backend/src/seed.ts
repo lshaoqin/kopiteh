@@ -1,6 +1,7 @@
 //This file seeds the database with mock data. Seed 1 is for testing mock data
 
 import { Pool } from 'pg';
+import type { Stall } from "../../types/stall";
 
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'postgres',
