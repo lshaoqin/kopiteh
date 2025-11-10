@@ -1,4 +1,3 @@
-import type { Response } from 'express';
 import { ErrorCodes, errorTemplates } from './errors';
 import { SuccessCodes, successTemplates} from './success';
 
@@ -37,7 +36,7 @@ export function successResponse<T>(code: SuccessCodes, data?: T): SuccessRespons
     payload: { 
       status: template.status, 
       message: template.message,
-      data: data || null,
+      data: data ?? null,
     } 
   };
 }

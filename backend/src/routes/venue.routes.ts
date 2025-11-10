@@ -1,12 +1,23 @@
 import { Router } from 'express';
 import { VenueController } from '../controllers/venue.controller';
+import {
+  createVenueValidation,
+  runValidation,
+  updateVenueValidation,
+  venueIdParamValidation,
+} from '../middleware/validation';
 
 const router = Router();
 
 router.get('/', VenueController.getAll);
-router.get('/:id', VenueController.getById);
-router.post('/', VenueController.create);
-router.put('/:id', VenueController.update);
-router.delete('/:id', VenueController.remove);
+router.get('/:id', venueIdParamValidation, runValidation, VenueController.getById);
+router.post('/', createVenueValidation, runValidation, VenueController.create);
+router.put(
+  '/:id',
+  [...venueIdParamValidation, ...updateVenueValidation],
+  runValidation,
+  VenueController.update,
+);
+router.delete('/:id', venueIdParamValidation, runValidation, VenueController.remove);
 
 export default router;

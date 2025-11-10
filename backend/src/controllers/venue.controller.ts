@@ -9,16 +9,14 @@ import { SuccessCodes } from '../types/success';
 export const VenueController = {
   async getAll(req: Request, res: Response) {
     const result = await VenueService.findAll();
-    if (!result.success) return res.status(500).json(result);
-    return res.json(result);
+    return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
     const result = await VenueService.findById(id);
-    if (!result.success) return res.status(404).json(result);
-    return res.json(result);
+    return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
@@ -26,8 +24,7 @@ export const VenueController = {
       const payload = req.body as VenuePayload;
       validateRequired(payload, ['name']);
       const result = await VenueService.create(payload);
-      if (!result.success) return res.status(500).json(result);
-      return res.status(201).json(result);
+      return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
         return res.status(err.status).json({ success: false, error: { message: err.message, details: err.details } });
@@ -42,8 +39,7 @@ export const VenueController = {
       if (Number.isNaN(id)) return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
       const payload = req.body as UpdateVenuePayload;
       const result = await VenueService.update(id, payload);
-      if (!result.success) return res.status(404).json(result);
-      return res.json(result);
+      return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
         return res.status(err.status).json({ success: false, error: { message: err.message, details: err.details } });
@@ -56,7 +52,9 @@ export const VenueController = {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
     const result = await VenueService.delete(id);
-    if (!result.success) return res.status(404).json(result);
-    return res.status(204).send();
+    if (!result.success) {
+      return res.status(result.payload.status).json(result);
+    }
+    return res.status(result.payload.status).json(result);
   }
 };
