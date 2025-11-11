@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
-import { VenueService } from '../services/venue.service';
-import { validateRequired, BadRequestError } from './errors';
 import type { VenuePayload, UpdateVenuePayload } from '../types/payloads';
+import { VenueService } from '../services/venue.service';
+import { BadRequestError } from './errors';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
+import { validateCreateVenue, validateUpdateVenue } from '../validations/venue.validation';
 
 export const VenueController = {
   async getAll(req: Request, res: Response) {
@@ -22,14 +23,14 @@ export const VenueController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as VenuePayload;
-      validateRequired(payload, ['name']);
+      validateCreateVenue(payload);
       const result = await VenueService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        return res.status(err.status).json({ success: false, error: { message: err.message, details: err.details } });
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
       }
-      return res.status(500).json({ success: false, error: { message: 'Server error' } });
+      return errorResponse(ErrorCodes.INTERNAL_ERROR);
     }
   },
 
@@ -38,13 +39,14 @@ export const VenueController = {
       const id = Number(req.params.id);
       if (Number.isNaN(id)) return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
       const payload = req.body as UpdateVenuePayload;
+      validateUpdateVenue(payload);
       const result = await VenueService.update(id, payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        return res.status(err.status).json({ success: false, error: { message: err.message, details: err.details } });
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
       }
-      return res.status(500).json({ success: false, error: { message: 'Server error' } });
+      return errorResponse(ErrorCodes.INTERNAL_ERROR);
     }
   },
 
