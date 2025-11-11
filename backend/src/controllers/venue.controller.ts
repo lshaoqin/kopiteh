@@ -28,9 +28,11 @@ export const VenueController = {
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        return errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
       }
-      return errorResponse(ErrorCodes.INTERNAL_ERROR);
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
     }
   },
 
@@ -44,9 +46,11 @@ export const VenueController = {
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        return errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
       }
-      return errorResponse(ErrorCodes.INTERNAL_ERROR);
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
     }
   },
 
