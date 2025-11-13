@@ -12,7 +12,7 @@ const ITEM_COLUMNS = new Set([
   'remarks',
 ]);
 
-export const MenuItemService = {
+export const OrderService = {
   async findAllByOrder(user_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
