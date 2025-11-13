@@ -2,24 +2,23 @@ import type { Request, Response } from 'express';
 import type { StallPayload, UpdateStallPayload } from '../types/payloads';
 import { StallService } from '../services/stall.service';
 import { BadRequestError } from './errors';
-import { errorResponse } from '../types/responses';
+import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
+import { SuccessCodes } from 'src/types/success';
 import { validateCreateStall, validateUpdateStall } from '../validations/stall.validation';
 
 export const StallController = {
   async getAll(req: Request, res: Response) {
     const venueId = Number(req.params.venue_id);
-    if (Number.isNaN(venueId))
-      return res.status(400).json({ success: false, error: { message: 'Invalid venue_id' } });
-    const result = await StallService.findAllByVenue(venueId);
+    const data = await StallService.findAllByVenue(venueId);
+    const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    if (Number.isNaN(id))
-      return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
-    const result = await StallService.findById(id);
+    const data = await StallService.findById(id);
+    const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
@@ -27,7 +26,8 @@ export const StallController = {
     try {
       const payload = req.body as StallPayload;
       validateCreateStall(payload);
-      const result = await StallService.create(payload);
+      const data = await StallService.create(payload);
+      const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -42,11 +42,10 @@ export const StallController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      if (Number.isNaN(id))
-        return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
       const payload = req.body as UpdateStallPayload;
       validateUpdateStall(payload);
-      const result = await StallService.update(id, payload);
+      const data = await StallService.update(id, payload);
+      const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -60,9 +59,8 @@ export const StallController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    if (Number.isNaN(id))
-      return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
-    const result = await StallService.delete(id);
+    const data = await StallService.delete(id);
+    const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 };

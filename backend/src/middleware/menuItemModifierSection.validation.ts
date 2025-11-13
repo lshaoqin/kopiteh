@@ -38,6 +38,7 @@ export const createSectionValidation = [
 
 export const updateSectionValidation = [
   enforceKnownSectionFields,
+  sectionIdParamValidation,
   requireAtLeastOneSectionField,
   body('name').optional().isString(),
   optionalNonNegativeInt('min_selections'),

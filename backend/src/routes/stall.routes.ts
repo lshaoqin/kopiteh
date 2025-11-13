@@ -11,7 +11,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/venues/:venue_id/stalls', StallController.getAll);
+router.get('/venues/:venue_id/stalls', stallIdParamValidation, StallController.getAll);
 router.get('/stalls/:id', stallIdParamValidation, runValidation, StallController.getById);
 
 // Protected writes

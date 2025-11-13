@@ -16,7 +16,7 @@ router.post('/', authenticateToken, createVenueValidation, runValidation, VenueC
 router.put(
   '/:id',
   authenticateToken,
-  [...venueIdParamValidation, ...updateVenueValidation],
+  [...updateVenueValidation],
   runValidation,
   VenueController.update,
 );

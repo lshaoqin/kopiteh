@@ -42,6 +42,7 @@ export const createMenuItemValidation = [
 
 export const updateMenuItemValidation = [
   enforceKnownItemFields,
+  menuItemIdParamValidation,
   requireAtLeastOneItemField,
   optionalTextField('name'),
   optionalTextField('description', 1000),

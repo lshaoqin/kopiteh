@@ -11,7 +11,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/items/:item_id/modifiers', MenuItemModifierController.getAll);
+router.get('/items/:item_id/modifiers', modifierIdParamValidation, MenuItemModifierController.getAll);
 router.get('/modifiers/:id', modifierIdParamValidation, runValidation, MenuItemModifierController.getById);
 
 // Protected writes

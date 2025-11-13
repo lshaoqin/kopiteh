@@ -30,6 +30,7 @@ export const createModifierValidation = [
 
 export const updateModifierValidation = [
   enforceKnownModifierFields,
+  modifierIdParamValidation,
   requireAtLeastOneModifierField,
   body('name').optional().isString(),
   body('price_modifier').optional().isFloat({ min: 0 }),

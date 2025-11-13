@@ -45,6 +45,7 @@ export const createStallValidation = [
 
 export const updateStallValidation = [
   enforceKnownStallFields,
+  stallIdParamValidation,
   requireAtLeastOneStallField,
   optionalTextField('name'),
   optionalTextField('description', 1000),
