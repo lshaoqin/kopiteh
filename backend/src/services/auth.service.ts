@@ -5,6 +5,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
+import type { User } from '../../../types/auth';
 
 export interface CreateAccountPayload {
   name: string;
@@ -32,7 +33,7 @@ export const AuthService = {
    * POST /auth/create-account 
    * Creates a new user, hashes password, inserts into DB
    */
-  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<any>> {
+  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<User>> {
     try {
       // Check if email already exists
       const existing = await BaseService.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);
