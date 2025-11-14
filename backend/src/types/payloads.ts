@@ -60,6 +60,8 @@ export interface OrderPayload {
   remarks?: string;
 }
 
+export interface UpdateOrderPayload extends Partial<OrderPayload> {}
+
 export interface OrderItemPayload {
   order_id: number;
   item_id: number;
@@ -68,6 +70,8 @@ export interface OrderItemPayload {
   unit_price: number;
   line_subtotal: number;
 }
+
+export interface UpdateOrderItemPayload extends Partial<OrderItemPayload> {}
 
 export interface OrderItemModifierPayload {
   order_item_id: number;

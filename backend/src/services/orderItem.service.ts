@@ -1,4 +1,4 @@
-import type { OrderItemPayload } from '../types/payloads';
+import type { OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
@@ -14,12 +14,24 @@ const ITEM_COLUMNS = new Set([
   'line_subtotal',
 ]);
 
-export const OrderService = {
-  async findAllByStall(order_id: number): Promise<ServiceResult<any[]>> {
+export const OrderItemService = {
+  async findAllByOrder(order_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order_Item WHERE stall_id = $1 ORDER BY order_item_id',
+        'SELECT * FROM Order_Item WHERE order_id = $1 ORDER BY order_item_id',
         [order_id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async findAllByItem(item_id: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        'SELECT * FROM Order_Item WHERE item_id = $1 ORDER BY order_item_id',
+        [item_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
@@ -56,7 +68,7 @@ export const OrderService = {
     }
   },
 
-  async update(id: number, payload: OrderItemPayload): Promise<ServiceResult<any>> {
+  async update(id: number, payload: UpdateOrderItemPayload): Promise<ServiceResult<any>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');

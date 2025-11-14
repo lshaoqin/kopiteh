@@ -25,11 +25,11 @@ const requireAtLeastOneItemField = body().custom((_, { req }) => {
   return true;
 });
 
-export const menuItemIdParamValidation = [
+export const orderIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
 ];
 
-export const createMenuItemValidation = [
+export const createOrderValidation = [
   enforceKnownItemFields,
   body('table_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
@@ -39,9 +39,9 @@ export const createMenuItemValidation = [
   optionalTextField('remarks', 1000),
 ];
 
-export const updateMenuItemValidation = [
+export const updateOrderValidation = [
   enforceKnownItemFields,
-  menuItemIdParamValidation,
+  orderIdParamValidation,
   requireAtLeastOneItemField,
   optionalTextField('status'),
   optionalNonNegativeNum('total_price'),

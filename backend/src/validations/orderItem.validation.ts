@@ -1,14 +1,14 @@
 import { validateRequired, optionalTextField, runValidation } from './base.validation';
-import type { OrderItemPayload } from '../types/payloads';
+import type { OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
 
-export function validateCreateMenuItem(payload: OrderItemPayload) {
+export function validateCreateOrderItem(payload: OrderItemPayload) {
   runValidation([
     () => validateRequired(payload, ['order_id', 'item_id', 'quantity', 'unit_price', 'line_subtotal']),
     () => optionalTextField(payload, []),
   ]);
 }
 
-export function validateUpdateMenuItem(payload: OrderItemPayload) {
+export function validateUpdateOrderItem(payload: UpdateOrderItemPayload) {
   runValidation([
     () => optionalTextField(payload, ['order_id', 'item_id', 'quantity', 'unit_price', 'line_subtotal']),
   ]);

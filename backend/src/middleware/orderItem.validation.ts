@@ -4,12 +4,6 @@ import type { Request, Response, NextFunction } from 'express';
 
 const ITEM_FIELDS = ['order_id', 'item_id', 'quantity', 'unit_price', 'line_subtotal'] as const;
 
-const optionalTextField = (f: string, max = 255) =>
-  body(f).optional({ nullable: true }).isString().trim().isLength({ max }).withMessage(`${f} must be at most ${max} chars`);
-
-const optionalBoolean = (f: string) =>
-  body(f).optional().isBoolean().withMessage(`${f} must be a boolean`);
-
 const optionalNonNegativeNum = (f: string) =>
   body(f).optional().isFloat({ min: 0 }).withMessage(`${f} must be non-negative`);
 
@@ -25,11 +19,11 @@ const requireAtLeastOneItemField = body().custom((_, { req }) => {
   return true;
 });
 
-export const menuItemIdParamValidation = [
+export const orderItemIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
 ];
 
-export const createMenuItemValidation = [
+export const createOrderItemValidation = [
   enforceKnownItemFields,
   body('order_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('item_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
@@ -38,9 +32,9 @@ export const createMenuItemValidation = [
   body('line_subtotal').exists({ checkFalsy: true }).isInt({ gt: 0 }),
 ];
 
-export const updateMenuItemValidation = [
+export const updateOrderItemValidation = [
   enforceKnownItemFields,
-  menuItemIdParamValidation,
+  orderItemIdParamValidation,
   requireAtLeastOneItemField,
   optionalNonNegativeNum('quantity'),
 ];

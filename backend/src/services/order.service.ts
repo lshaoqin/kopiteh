@@ -1,4 +1,4 @@
-import type { OrderPayload } from '../types/payloads';
+import type { OrderPayload, UpdateOrderPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
@@ -68,7 +68,7 @@ export const OrderService = {
     }
   },
 
-  async update(id: number, payload: OrderPayload): Promise<ServiceResult<any>> {
+  async update(id: number, payload: UpdateOrderPayload): Promise<ServiceResult<any>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
