@@ -56,7 +56,7 @@ export interface OrderPayload {
   user_id: number;
   status: string;
   total_price: number;
-  created_at: Date;
+  created_at: string;
   remarks?: string;
 }
 
