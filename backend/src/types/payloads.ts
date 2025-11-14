@@ -53,8 +53,10 @@ export interface TablePayload {
 
 export interface OrderPayload {
   table_id: number;
-  status?: string;
-  total_price?: number;
+  user_id: number;
+  status: string;
+  total_price: number;
+  created_at: Date;
   remarks?: string;
 }
 
@@ -63,10 +65,13 @@ export interface OrderItemPayload {
   item_id: number;
   stall_id: number;
   quantity: number;
-  price: number;
+  unit_price: number;
+  line_subtotal: number;
 }
 
 export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;
+  price_modifier: number;
+  option_name: string;
 }

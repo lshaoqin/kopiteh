@@ -7,17 +7,31 @@ import { SuccessCodes } from '../types/success';
 
 const ITEM_COLUMNS = new Set([
   'table_id',
+  'user_id',
   'status',
   'total_price',
+  'created_at',
   'remarks',
 ]);
 
 export const OrderService = {
-  async findAllByOrder(user_id: number): Promise<ServiceResult<any[]>> {
+  async findAllByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
         'SELECT * FROM Order_Item WHERE user_id = $1 ORDER BY order_id',
         [user_id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async findAllByTable(table_id: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        'SELECT * FROM Order_Item WHERE table_id = $1 ORDER BY order_id',
+        [table_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
@@ -38,11 +52,13 @@ export const OrderService = {
   async create(payload: OrderPayload): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
-        'INSERT INTO Order (table_id, status, total_price, remarks) VALUES ($1,$2,$3,$4) RETURNING *',
+        'INSERT INTO Order (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
         [
           payload.table_id,
+          payload.user_id,
           payload.status ?? null,
           payload.total_price ?? null,
+          payload.created_at,
           payload.remarks ?? null,
         ]
       );
