@@ -4,6 +4,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
+import {MenuItemService} from "./menuItem.service";
 
 const ITEM_COLUMNS = new Set([
   'order_id',
@@ -27,13 +28,18 @@ export const OrderItemService = {
     }
   },
 
-  async findAllByItem(item_id: number): Promise<ServiceResult<any[]>> {
+  async findAllByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
-      const result = await BaseService.query(
-        'SELECT * FROM Order_Item WHERE item_id = $1 ORDER BY order_item_id',
-        [item_id]
-      );
-      return successResponse(SuccessCodes.OK, result.rows);
+      const stallItems = await MenuItemService.findAllByStall(stall_id);
+      const result = [];
+      for (const item of stallItems.payload.data) {
+        const orderItems = await BaseService.query(
+          'SELECT * FROM Order_Item WHERE item_id = $1 ORDER BY order_item_id',
+          [item.item_id]
+        );
+        result.push(...orderItems.rows);
+      }
+      return successResponse(SuccessCodes.OK, result);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

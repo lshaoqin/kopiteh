@@ -8,9 +8,16 @@ import { SuccessCodes } from 'src/types/success';
 import { validateCreateOrderItem, validateUpdateOrderItem } from '../validations/orderItem.validation';
 
 export const OrderItemController = {
-  async getAll(req: Request, res: Response) {
+  async getAllByOrder(req: Request, res: Response) {
     const orderId = Number(req.params.order_id);
     const data = await OrderItemService.findAllByOrder(orderId);
+    const result = successResponse(SuccessCodes.OK, data);
+    return res.status(result.payload.status).json(result);
+  },
+
+  async getAllByStall(req: Request, res: Response) {
+    const orderId = Number(req.params.order_id);
+    const data = await OrderItemService.findAllByStall(orderId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
