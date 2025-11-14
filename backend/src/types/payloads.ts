@@ -1,4 +1,4 @@
-import { OrderStatusCodes, OrderItemStatusCodes } from './orderStatus';
+import { OrderStatusCodes } from './orderStatus';
 
 export interface VenuePayload {
   name: string;
@@ -67,9 +67,7 @@ export interface UpdateOrderPayload extends Partial<OrderPayload> {}
 export interface OrderItemPayload {
   order_id: number;
   item_id: number;
-  stall_id: number;
   quantity: number;
-  status: OrderItemStatusCodes;
   unit_price: number;
   line_subtotal: number;
 }

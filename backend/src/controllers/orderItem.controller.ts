@@ -8,16 +8,9 @@ import { SuccessCodes } from 'src/types/success';
 import { validateCreateOrderItem, validateUpdateOrderItem } from '../validations/orderItem.validation';
 
 export const OrderItemController = {
-  async getAllByOrder(req: Request, res: Response) {
+  async getByOrder(req: Request, res: Response) {
     const orderId = Number(req.params.order_id);
-    const data = await OrderItemService.findAllByOrder(orderId);
-    const result = successResponse(SuccessCodes.OK, data);
-    return res.status(result.payload.status).json(result);
-  },
-
-  async getAllByStall(req: Request, res: Response) {
-    const orderId = Number(req.params.order_id);
-    const data = await OrderItemService.findAllByStall(orderId);
+    const data = await OrderItemService.findByOrder(orderId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
@@ -64,29 +57,6 @@ export const OrderItemController = {
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
       return res.status(result.payload.status).json(result);
     }
-  },
-
-  async updateStatus(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      const data = await OrderItemService.updateStatus(id); // Not sure if this should also update the order status too
-      const result = successResponse(SuccessCodes.OK, data);
-      return res.status(result.payload.status).json(result);
-    } catch (err) {
-      if (err instanceof BadRequestError) {
-        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
-        return res.status(result.payload.status).json(result);
-      }
-      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
-      return res.status(result.payload.status).json(result);
-    }
-  },
-
-  async cancel(req: Request, res: Response) {
-    const id = Number(req.params.id);
-    const data = await OrderItemService.cancel(id);
-    const result = successResponse(SuccessCodes.OK, data);
-    return res.status(result.payload.status).json(result);
   },
 
   async remove(req: Request, res: Response) {

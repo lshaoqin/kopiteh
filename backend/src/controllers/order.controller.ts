@@ -8,9 +8,16 @@ import { SuccessCodes } from 'src/types/success';
 import { validateCreateOrder, validateUpdateOrder } from '../validations/order.validation';
 
 export const OrderController = {
-  async getAll(req: Request, res: Response) {
+  async getByUser(req: Request, res: Response) {
     const userId = Number(req.params.user_id);
-    const data = await OrderService.findAllByUser(userId);
+    const data = await OrderService.findByUser(userId);
+    const result = successResponse(SuccessCodes.OK, data);
+    return res.status(result.payload.status).json(result);
+  },
+
+  async getByStall(req: Request, res: Response) {
+    const orderId = Number(req.params.order_id);
+    const data = await OrderService.findByStall(orderId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
@@ -57,6 +64,29 @@ export const OrderController = {
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
       return res.status(result.payload.status).json(result);
     }
+  },
+
+  async updateStatus(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      const data = await OrderService.updateStatus(id);
+      const result = successResponse(SuccessCodes.OK, data);
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
+      }
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
+    }
+  },
+
+  async cancel(req: Request, res: Response) {
+    const id = Number(req.params.id);
+    const data = await OrderService.cancel(id);
+    const result = successResponse(SuccessCodes.OK, data);
+    return res.status(result.payload.status).json(result);
   },
 
   async remove(req: Request, res: Response) {
