@@ -1,3 +1,5 @@
+import { OrderStatusCodes, OrderItemStatusCodes } from './orderStatus';
+
 export interface VenuePayload {
   name: string;
   address?: string;
@@ -54,7 +56,7 @@ export interface TablePayload {
 export interface OrderPayload {
   table_id: number;
   user_id: number;
-  status: string;
+  status: OrderStatusCodes;
   total_price: number;
   created_at: string;
   remarks?: string;
@@ -67,6 +69,7 @@ export interface OrderItemPayload {
   item_id: number;
   stall_id: number;
   quantity: number;
+  status: OrderItemStatusCodes;
   unit_price: number;
   line_subtotal: number;
 }

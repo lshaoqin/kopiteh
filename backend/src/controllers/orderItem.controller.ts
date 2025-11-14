@@ -66,6 +66,28 @@ export const OrderItemController = {
     }
   },
 
+  async updateStatus(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      const data = await OrderItemService.updateStatus(id); // Not sure if this should also update the order status too
+      const result = successResponse(SuccessCodes.OK, data);
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
+      }
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
+    }
+  },
+
+  async cancel(req: Request, res: Response) {
+    const id = Number(req.params.id);
+    const data = await OrderItemService.cancel(id);
+    const result = successResponse(SuccessCodes.OK, data);
+    return res.status(result.payload.status).json(result);
+  },
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);

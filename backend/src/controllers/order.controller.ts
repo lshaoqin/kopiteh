@@ -59,7 +59,6 @@ export const OrderController = {
     }
   },
 
-
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
     const data = await OrderService.delete(id);

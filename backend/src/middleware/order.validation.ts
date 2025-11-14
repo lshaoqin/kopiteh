@@ -1,6 +1,7 @@
 import { validationResult, body, param } from 'express-validator';
 import { BadRequestError } from '../controllers/errors';
 import type { Request, Response, NextFunction } from 'express';
+import { OrderStatusCodes } from '../types/orderStatus';
 
 const ITEM_FIELDS = ['table_id', 'user_id', 'status', 'total_price', 'created_at', 'remarks'] as const;
 
@@ -33,7 +34,7 @@ export const createOrderValidation = [
   enforceKnownItemFields,
   body('table_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('status').exists({ checkFalsy: true }).isString().trim(),
+  body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
   body('created_at').exists().isString().isISO8601().trim(),
   optionalTextField('remarks', 1000),
