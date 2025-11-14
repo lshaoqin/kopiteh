@@ -1,7 +1,7 @@
 // src/controllers/auth.controller.ts
 import type { Request, Response } from 'express';
 import { AuthService, type CreateAccountPayload, type LoginPayload } from '../services/auth.service';
-import { BadRequestError } from './errors';
+import { BadRequestError, UnauthorizedError } from './errors';
 import { errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 
@@ -63,10 +63,13 @@ export const AuthController = {
         return res.status(r.payload.status).json(r);
       }
 
-      // @ts-expect-error: define AuthService.refreshToken if you haven't yet
       const result = await AuthService.refreshToken(refreshToken);
       return res.status(result.payload.status).json(result);
     } catch (err) {
+      if (err instanceof UnauthorizedError) {
+        const r = errorResponse(ErrorCodes.UNAUTHORIZED, err.message);
+        return res.status(r.payload.status).json(r);
+      }
       if (err instanceof BadRequestError) {
         const r = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
         return res.status(r.payload.status).json(r);

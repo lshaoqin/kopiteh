@@ -5,6 +5,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
+import { error } from 'console';
 
 export interface CreateAccountPayload {
   name: string;
@@ -18,6 +19,10 @@ export interface LoginPayload {
   password: string;
 }
 
+// Define JWT payload interfaces for type safety
+interface AccessTokenPayload { uid: number; }
+interface RefreshTokenPayload { uid: number; }
+
 /* JWT helper functions */
 function signAccessToken(userId: number) {
   return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, { expiresIn: '15m' });
@@ -25,6 +30,12 @@ function signAccessToken(userId: number) {
 
 function signRefreshToken(userId: number) {
   return jwt.sign({ uid: userId }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: '7d' });
+}
+
+// Helper to get the expiration date from a JWT for storing in the DB
+function getExpirationDate(token: string): Date {
+  const payload = jwt.decode(token) as { exp: number };
+  return new Date(payload.exp * 1000);
 }
 
 export const AuthService = {
@@ -42,8 +53,8 @@ export const AuthService = {
 
       const hash = await bcrypt.hash(payload.password, 10);
       const created = await BaseService.query(
-        `INSERT INTO users (name, email, password_hash, role, is_authenticated)
-         VALUES ($1,$2,$3,$4,false)
+        `INSERT INTO users (name, email, password_hash, role)
+         VALUES ($1,$2,$3,$4)
          RETURNING user_id, name, email, role`,
         [payload.name, payload.email, hash, payload.role]
       );
@@ -73,14 +84,13 @@ export const AuthService = {
 
       const accessToken = signAccessToken(user.user_id);
       const refreshToken = signRefreshToken(user.user_id);
+      const expiresAt = getExpirationDate(refreshToken);
 
+      // Store the refresh token in its own table.
       await BaseService.query(
-        `UPDATE users
-           SET is_authenticated = true,
-               access_token = $1,
-               refresh_token = $2
-         WHERE user_id = $3`,
-        [accessToken, refreshToken, user.user_id]
+        `INSERT INTO refresh_token (user_id, token, expires_at)
+         VALUES ($1, $2, $3)`,
+        [user.user_id, refreshToken, expiresAt]
       );
 
       return successResponse(SuccessCodes.OK, {
@@ -123,4 +133,40 @@ export const AuthService = {
       return errorResponse(ErrorCodes.INTERNAL_ERROR, String(error));
     }
   },
+
+  /**
+   * POST /auth/refresh
+   * Securely rotates tokens.
+   */
+  async refreshToken(token: string): Promise<ServiceResult<any>> {
+    const tokenRes = await BaseService.query('SELECT * FROM refresh_token WHERE token = $1', [token]);
+    const storedToken = tokenRes.rows[0];
+
+    if (!storedToken || storedToken.is_revoked) {
+      return errorResponse(ErrorCodes.UNAUTHORIZED, 'Invalid or revoked refresh token')
+    }
+
+    try {
+      const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET as string) as RefreshTokenPayload;
+
+      await BaseService.query('UPDATE refresh_token SET is_revoked = true WHERE token_id = $1', [storedToken.token_id]);
+
+      const newAccessToken = signAccessToken(payload.uid);
+      const newRefreshToken = signRefreshToken(payload.uid);
+      const newExpiresAt = getExpirationDate(newRefreshToken);
+
+      await BaseService.query(
+        `INSERT INTO refresh_token (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+        [payload.uid, newRefreshToken, newExpiresAt]
+      );
+
+      return successResponse(SuccessCodes.OK, {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
+    } catch (err) {
+      await BaseService.query('UPDATE refresh_token SET is_revoked = true WHERE token_id = $1', [storedToken.token_id]);
+      return errorResponse(ErrorCodes.UNAUTHORIZED, 'Invalid or revoked refresh token')
+    }
+  }
 };
