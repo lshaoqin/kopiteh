@@ -1,0 +1,19 @@
+import { Router } from 'express';
+
+import authRoutes from './auth.routes';
+import venueRoutes from './venue.routes';
+import stallRoutes from './stall.routes';
+import menuItemRoutes from './menuItem.routes';
+import menuItemModifierSectionRoutes from './menuItemModifierSection.routes';
+import menuItemModifierRoutes from './menuItemModifier.routes';
+
+const router = Router();
+
+router.use(authRoutes);
+router.use(venueRoutes);
+router.use(stallRoutes);
+router.use(menuItemRoutes);
+router.use(menuItemModifierSectionRoutes);
+router.use(menuItemModifierRoutes);
+
+export default router;
