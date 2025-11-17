@@ -1,17 +1,12 @@
 {
   "compilerOptions": {
 
-    "module": "CommonJS",
+    "module": "Node16",
     "target": "ES2022",
 
     // pick ONE of the two module resolution options below (see section 2)
-    "moduleResolution": "Node",
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@types": ["../types/index"],
-      "@types/*": ["../types/*"]
-    },
+    "moduleResolution": "Node16",
+    
 
     "sourceMap": true,
     "declaration": true,
