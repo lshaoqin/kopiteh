@@ -1,11 +1,15 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import type { ServiceResult } from '../types/responses';
-import { BaseService } from './base.service';
-import { successResponse, errorResponse } from '../types/responses';
-import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
-import { CreateAccountPayload, LoginPayload, VerifyEmailPayload } from '../types/payloads';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import type { ServiceResult } from "../types/responses";
+import { BaseService } from "./base.service";
+import { successResponse, errorResponse } from "../types/responses";
+import { ErrorCodes } from "../types/errors";
+import { SuccessCodes } from "../types/success";
+import {
+  CreateAccountPayload,
+  LoginPayload,
+  VerifyEmailPayload,
+} from "../types/payloads";
 
 function generateSecretCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -13,24 +17,36 @@ function generateSecretCode(): string {
 
 /* JWT helper functions */
 function signAccessToken(userId: number) {
-  return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, { expiresIn: '15m' });
+  return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, {
+    expiresIn: "15m",
+  });
 }
 
 function signRefreshToken(userId: number) {
-  return jwt.sign({ uid: userId }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: '7d' });
+  return jwt.sign({ uid: userId }, process.env.JWT_REFRESH_SECRET as string, {
+    expiresIn: "7d",
+  });
 }
 
 export const AuthService = {
-  /** 
-   * POST /auth/create-account 
+  /**
+   * POST /auth/create-account
    * Creates a new user, hashes password, inserts into DB
    */
-  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<any>> {
+  async createAccount(
+    payload: CreateAccountPayload
+  ): Promise<ServiceResult<any>> {
     try {
       // Check if email already exists
-      const existing = await BaseService.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);
+      const existing = await BaseService.query(
+        "SELECT 1 FROM users WHERE email = $1",
+        [payload.email]
+      );
       if (existing.rowCount && existing.rows[0]) {
-        return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Email already registered');
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Email already registered"
+        );
       }
 
       const hash = await bcrypt.hash(payload.password, 10);
@@ -41,20 +57,29 @@ export const AuthService = {
         `INSERT INTO users (name, email, password_hash, role, is_authenticated, created_at, verify_code, verify_code_expires_at)
          VALUES ($1,$2,$3,$4,false,$5,$6,$7)
          RETURNING user_id, name, email, role, is_authenticated, created_at`,
-        [payload.name, payload.email, hash, payload.role, createdAt, verifyCode, verifyExpiry]
+        [
+          payload.name,
+          payload.email,
+          hash,
+          payload.role,
+          createdAt,
+          verifyCode,
+          verifyExpiry,
+        ]
       );
-      
-      const user = created.rows[0]
+
+      const user = created.rows[0];
 
       return successResponse(SuccessCodes.CREATED, {
-        message: 'Account created. Please check your email for the verification code.',
+        message:
+          "Account created. Please check your email for the verification code.",
         user: {
           user_id: user.user_id,
           name: user.name,
           email: user.email,
           role: user.role,
           is_authenticated: user.is_authenticated,
-          created_at: user.created_at
+          created_at: user.created_at,
         },
       });
     } catch (error) {
@@ -62,38 +87,40 @@ export const AuthService = {
     }
   },
 
-  
-
-  /** 
-   * POST /auth/account-login 
+  /**
+   * POST /auth/account-login
    * Verifies credentials, generates JWT access/refresh tokens
    */
   async login(payload: LoginPayload): Promise<ServiceResult<any>> {
     try {
       const userRes = await BaseService.query(
-        `SELECT user_id, name, email, role, password_hash 
-           FROM users WHERE email = $1`,
+        `SELECT user_id, name, email, role, password_hash, is_authenticated, verify_code_expires_at
+          FROM users
+          WHERE email = $1`,
         [payload.email]
       );
       const user = userRes.rows[0];
-      if (!user) return errorResponse(ErrorCodes.NOT_FOUND, 'User not found');
+      if (!user) return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
 
-      const validPassword = await bcrypt.compare(payload.password, user.password_hash);
-      if (!validPassword) return errorResponse(ErrorCodes.UNAUTHORIZED, 'Invalid credentials');
+      const validPassword = await bcrypt.compare(
+        payload.password,
+        user.password_hash
+      );
+      if (!validPassword)
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid credentials");
 
+      if (!user.is_authenticated) {
+        // you can define a dedicated error code like EMAIL_NOT_VERIFIED
+        return errorResponse(
+          ErrorCodes.EMAIL_NOT_VERIFIED,
+          "Please verify your email before logging in."
+        );
+      }
       const accessToken = signAccessToken(user.user_id);
       const refreshToken = signRefreshToken(user.user_id);
 
-      await BaseService.query(
-        `UPDATE users
-           SET is_authenticated = true,
-               access_token = $1,
-               refresh_token = $2
-         WHERE user_id = $3`,
-        [accessToken, refreshToken, user.user_id]
-      );
-
       return successResponse(SuccessCodes.OK, {
+        message: "Login success!",
         access_token: accessToken,
         refresh_token: refreshToken,
         user: {
@@ -101,6 +128,8 @@ export const AuthService = {
           name: user.name,
           email: user.email,
           role: user.role,
+          is_authenticated: user.is_authenticated,
+          created_at: user.created_at,
         },
       });
     } catch (error) {
@@ -109,7 +138,7 @@ export const AuthService = {
   },
 
   async verifyEmail(payload: VerifyEmailPayload): Promise<ServiceResult<any>> {
-     try {
+    try {
       const res = await BaseService.query(
         `SELECT user_id, name, email, role, is_authenticated, created_at, verify_code, verify_code_expires_at
          FROM users
@@ -119,7 +148,7 @@ export const AuthService = {
 
       const user = res.rows[0];
       if (!user) {
-        return errorResponse(ErrorCodes.NOT_FOUND, 'User not found');
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
       }
 
       if (user.is_authenticated) {
@@ -127,7 +156,7 @@ export const AuthService = {
         const accessToken = signAccessToken(user.user_id);
         const refreshToken = signRefreshToken(user.user_id);
         return successResponse(SuccessCodes.OK, {
-          message: 'Email already verified',
+          message: "Email already verified",
           access_token: accessToken,
           refresh_token: refreshToken,
           user: {
@@ -136,7 +165,7 @@ export const AuthService = {
             email: user.email,
             role: user.role,
             is_authenticated: user.is_authenticated,
-            created_at: user.created_at
+            created_at: user.created_at,
           },
         });
       }
@@ -144,7 +173,7 @@ export const AuthService = {
       if (!user.verify_code || !user.verify_code_expires_at) {
         return errorResponse(
           ErrorCodes.VALIDATION_ERROR,
-          'No verification code set'
+          "No verification code set"
         );
       }
 
@@ -154,14 +183,14 @@ export const AuthService = {
       if (now > expiresAt) {
         return errorResponse(
           ErrorCodes.UNAUTHORIZED,
-          'Verification code expired'
+          "Verification code expired"
         );
       }
 
       if (payload.code !== user.verify_code) {
         return errorResponse(
           ErrorCodes.UNAUTHORIZED,
-          'Invalid verification code'
+          "Invalid verification code"
         );
       }
 
@@ -179,7 +208,7 @@ export const AuthService = {
       const refreshToken = signRefreshToken(user.user_id);
 
       return successResponse(SuccessCodes.OK, {
-        message: 'Email verified successfully',
+        message: "Email verified successfully",
         access_token: accessToken,
         refresh_token: refreshToken,
         user: {
@@ -187,21 +216,16 @@ export const AuthService = {
           name: user.name,
           email: user.email,
           role: user.role,
-          is_authenticated: true
+          is_authenticated: true,
         },
       });
     } catch (error) {
-      return errorResponse(
-        ErrorCodes.DATABASE_ERROR,
-        String(error)
-      );
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
-  
-
-  /** 
-   * GET /auth/auth-check 
+  /**
+   * GET /auth/auth-check
    * Verifies if access token is valid and not expired
    */
   async authCheck(bearerToken?: string): Promise<ServiceResult<any>> {
@@ -210,8 +234,8 @@ export const AuthService = {
         return successResponse(SuccessCodes.OK, { isAuthenticated: false });
       }
 
-      const token = bearerToken.startsWith('Bearer ')
-        ? bearerToken.slice('Bearer '.length)
+      const token = bearerToken.startsWith("Bearer ")
+        ? bearerToken.slice("Bearer ".length)
         : bearerToken;
 
       try {

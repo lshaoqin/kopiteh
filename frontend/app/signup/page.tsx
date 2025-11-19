@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
 import { UserRole, User, CreateAccountPayload } from "../../../types/auth"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
     const [email, setEmail] = useState("")
@@ -13,65 +14,66 @@ export default function Home() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
-    const [user, setUser] = useState<User | "">("")
     const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const router = useRouter();
 
     const handleSignup = async () => {
+        setError("");
+        setSuccess("");
+        setLoading(true);
+
         if (!API_URL) {
-            console.log("API not yet set")
-            return
-        } 
+            setError("API URL is not configured.");
+            setLoading(false);
+            return;
+        }
 
         if (!userName || !email || !password || !role) {
-            setError("Please fill in all fields")
-            return
+            setError("Please fill in all fields");
+            setLoading(false);
+            return;
         }
 
         try {
-            setLoading(true)
-            const createAccountPayLoad: CreateAccountPayload = {
+            const payload: CreateAccountPayload = {
                 name: userName,
-                email: email,
-                password: password,
-                role: role,
-            }
+                email,
+                password,
+                role
+            };
 
             const res = await fetch(`${API_URL}/auth/create-account`, {
                 method: "POST",
-                headers: {
-                "Content-Type": "application/json",
-                },
-                body: JSON.stringify(createAccountPayLoad),
-            })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-            const data = await res.json()
-            if (!res.ok) {
-                // handle errorResponse shape
-                const msg = data?.message || "Failed to create account";
+            // Attempt to parse JSON, but safely
+            // Read raw text so we ALWAYS see something
+            const data = await res.json();
+            console.log("Create-account raw response:", res.status, data);
 
+            // Backend validation error case (status 400)
+            if (!data.success) {
+                const msg =
+                    data?.payload?.details ||
+                    `Request failed: ${res.status}`;
                 setError(msg);
                 return;
             }
-
-            // If success
-            const message = data.payload.data.message; // Account has been created, verification code has been sent through email
+            // Success response
+            const message = data.payload?.data?.message ?? "Account created.";
             setSuccess(message);
-            
-            const user: User = {
-                display_name: data.payload.data.name,
-                user_id: data.payload.data.user_id,
-                email: data.payload.data.email,
-                role: data.payload.data.role,
-                created_at: data.payload.data.created_at
-            }
 
-            setUser(user);
-
-            
-        } catch {
-            
+            router.push(`/verifyemail?email=${encodeURIComponent(email)}`)
+        } catch (err: any) {
+            console.error("Signup error:", err);
+            setError(err.message || "Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
         }
-    }
+    };
+
 
     return (
         <main className="min-h-screen flex items-center justify-center">
@@ -90,15 +92,16 @@ export default function Home() {
                         <FormField className="flex flex-col space-y-1" variant="email" label="Email" inputProps={{ value: email, onChange: (e) => setEmail(e.target.value) }} />
                         <FormField className="flex flex-col space-y-1" variant="password" label="Password" inputProps={{ value: password, onChange: (e) => setPassword(e.target.value) }} />
                     </div>
-                    <Button onClick={() => {
-                        console.log("Email:", email)
-                        console.log("Password:", password)
-                    }} variant="signin">
-                        {loading ? "Sign In" : "Loading..."}
+                    <Button onClick={handleSignup} variant="signin">
+                        {loading ? "Loading..." : "Sign Up"}
                     </Button>
-                    <div className="mt-2 w-full flex justify-center">
-                        <text className="underline text-sm">Forgot password?</text>
-                    </div>
+                    {error && (
+                        <div className="w-full flex justify-center">
+                            <p className="text-red-500 text-sm mt-2">
+                                {error}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

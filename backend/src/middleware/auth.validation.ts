@@ -6,7 +6,7 @@ export const createAccountValidation = [
   body('name').exists({ checkFalsy: true }).isString().trim().isLength({ max: 255 }),
   body('email').exists({ checkFalsy: true }).isEmail().withMessage('Valid email required'),
   body('password').exists({ checkFalsy: true }).isLength({ min: 6 }).withMessage('Password must be at least 6 chars'),
-  body('role').exists({ checkFalsy: true }).isString().isIn(['admin', 'user']),
+  body('role').exists({ checkFalsy: true }).isString().isIn(['admin', 'user', 'runner']),
 ];
 
 export const loginValidation = [

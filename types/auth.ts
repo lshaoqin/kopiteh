@@ -9,6 +9,16 @@ export interface CreateAccountPayload {
   role: UserRole;
 }
 
+export interface VerifyEmailPayload {
+  email: string;
+  code: string; 
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string; 
+}
+
 export interface User {
   user_id: ID;
   email: string;

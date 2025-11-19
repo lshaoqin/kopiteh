@@ -3,10 +3,95 @@
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
+import { LoginPayload } from "../../../types/auth"
+import { useAuthStore } from "@/stores/auth.store"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const API_URL = process.env.NEXT_PUBLIC_API_URL
+  const router = useRouter();
+
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const setUser = useAuthStore((state) => state.setUser);
+  const handleLogin = async () => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    if (!API_URL) {
+      setError("API URL is not configured.");
+      return;
+    }
+
+    if (!email || !password) {
+      setError("Please enter both your email and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload: LoginPayload = {
+        email,
+        password
+      };
+
+      const res = await fetch(`${API_URL}/auth/account-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid JSON response from server.");
+      }
+
+      console.log(data)
+
+      if (!res.ok || data?.success === false) {
+        const msg =
+          data?.payload?.details ||
+          data?.payload?.message ||
+          data?.message ||
+          "Verification failed. Please check your code and try again.";
+        setError(msg);
+        return;
+      }
+
+      const payloadData = data?.payload?.data || {};
+      const accessToken: string | undefined = payloadData.access_token;
+      const user = payloadData.user;
+
+      const message: string =
+        payloadData.message ||            // "Email verified successfully"
+        data?.payload?.message ||         // "Request processed successfully."
+        "Email verified successfully.";
+
+
+      setAccessToken(accessToken);
+      setUser(user);
+      const role = data.payload.data.user.role
+      setSuccess(message);
+      console.log(role)
+
+      setTimeout(() => {
+        router.push(`/${role}`);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+
+  }
   return (
     <main className="min-h-screen flex items-center justify-center">
       <div className="w-[400px] items-center flex flex-col justify-center border-1 rounded-md shadow-lg ">
@@ -22,12 +107,26 @@ export default function Home() {
             <FormField className="flex flex-col space-y-1" variant="email" label="Email" inputProps={{ value: email, onChange: (e) => setEmail(e.target.value) }} />
             <FormField className="flex flex-col space-y-1" variant="password" label="Password" inputProps={{ value: password, onChange: (e) => setPassword(e.target.value) }} />
           </div>
-          <Button onClick={() => {
-            console.log("Email:", email)
-            console.log("Password:", password)
-          }} variant="signin">
-            Sign In
+          <Button onClick={handleLogin} variant="signin">
+            Log In
           </Button>
+          {error && (
+            <div className="flex justify-center w-full">
+              <p className="text-red-500 text-sm mt-2">
+                {error}
+              </p>
+            </div>
+
+          )}
+
+          {success && (
+            <div className="flex justify-center w-full">
+              <p className="text-green-600 text-sm mt-2">
+                {success}
+              </p>
+            </div>
+
+          )}
           <div className="mt-2 w-full flex justify-center">
             <text className="underline text-sm">Forgot password?</text>
           </div>
