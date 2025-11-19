@@ -70,3 +70,20 @@ export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;
 }
+
+export interface CreateAccountPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: string; // e.g. "admin" | "user"
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface VerifyEmailPayload {
+  email: string;
+  code: string; // 6-digit secret code
+}

@@ -1,12 +1,8 @@
 'use client'
 
-
-import type { Stall } from "../../types/stall"
 import Link from "next/link";
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
 
 
 export default function Home() {

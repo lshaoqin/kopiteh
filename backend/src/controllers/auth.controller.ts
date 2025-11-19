@@ -1,6 +1,7 @@
 // src/controllers/auth.controller.ts
 import type { Request, Response } from 'express';
-import { AuthService, type CreateAccountPayload, type LoginPayload } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
+import { CreateAccountPayload, LoginPayload, VerifyEmailPayload } from '../types/payloads';
 import { BadRequestError } from './errors';
 import { errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
@@ -9,7 +10,7 @@ export const AuthController = {
   // POST /auth/create-account
   async createAccount(req: Request, res: Response) {
     try {
-      const payload = req.body as CreateAccountPayload;
+      const payload: CreateAccountPayload = req.body;
       const result = await AuthService.createAccount(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -45,6 +46,24 @@ export const AuthController = {
       const result = await AuthService.authCheck(bearer);
       return res.status(result.payload.status).json(result);
     } catch (_err) {
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(r.payload.status).json(r);
+    }
+  },
+
+  async verifyEmail(req: Request, res: Response) {
+    try {
+      const payload = req.body as VerifyEmailPayload;
+      const result = await AuthService.verifyEmail(payload);
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const r = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
+        return res.status(r.payload.status).json(r);
+      }
       const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
       return res.status(r.payload.status).json(r);
     }
