@@ -25,7 +25,7 @@ export const AuthService = {
    * POST /auth/create-account 
    * Creates a new user, hashes password, inserts into DB
    */
-  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<User>> {
+  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<any>> {
     try {
       // Check if email already exists
       const existing = await BaseService.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);

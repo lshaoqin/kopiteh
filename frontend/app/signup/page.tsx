@@ -58,7 +58,7 @@ export default function Home() {
             setSuccess(message);
             
             const user: User = {
-                name: data.payload.data.name,
+                display_name: data.payload.data.name,
                 user_id: data.payload.data.user_id,
                 email: data.payload.data.email,
                 role: data.payload.data.role,

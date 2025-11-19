@@ -12,7 +12,7 @@ export interface CreateAccountPayload {
 export interface User {
   user_id: ID;
   email: string;
-  name: string;
+  display_name: string;
   role: UserRole;
   created_at: string; // ISO
 }

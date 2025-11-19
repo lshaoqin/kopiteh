@@ -6,10 +6,13 @@ import { Pool } from 'pg';
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MIGRATIONS_DIR = path.join(__dirname, '../migrations');
+const MIGRATIONS_DIR = path.join(__dirname, '../../migrations');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ user: process.env.DB_USER ?? process.env.POSTGRES_USER,
+  host: process.env.DB_HOST ?? process.env.POSTGRES_HOST,
+  database: process.env.DB_NAME ?? process.env.POSTGRES_DB,
+  password: process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD,
+  port: parseInt(process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432', 10), });
 
 async function run() {
   const client = await pool.connect();
