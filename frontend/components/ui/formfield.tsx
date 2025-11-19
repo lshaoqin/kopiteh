@@ -3,7 +3,7 @@ import { EmailInput, PasswordInput, TextInput, NumberInput } from "@/components/
 function FormField({ className, variant, label, inputProps }) {
     return (
         <div className={className}>
-            <text>{label}</text>
+            <label>{label}</label>
             {variant == "email" ? (<EmailInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
              variant == "password" ? (<PasswordInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
              variant == "text" ? (<TextInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 

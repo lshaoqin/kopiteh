@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
 
-    "module": "Node16",
-    "target": "ES2022",
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
 
-    // pick ONE of the two module resolution options below (see section 2)
-    "moduleResolution": "Node16",
-    
 
     "sourceMap": true,
     "declaration": true,
