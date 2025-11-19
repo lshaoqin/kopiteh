@@ -54,6 +54,7 @@ export const createVenueValidation = [
 
 export const updateVenueValidation = [
   enforceKnownVenueFields,
+  venueIdParamValidation,
   requireAtLeastOneVenueField,
   optionalTextField('name'),
   optionalTextField('address'),
