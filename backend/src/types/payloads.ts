@@ -75,7 +75,7 @@ export interface CreateAccountPayload {
   name: string;
   email: string;
   password: string;
-  role: string; // e.g. "admin" | "user"
+  secretCode: string;
 }
 
 export interface LoginPayload {
@@ -101,4 +101,12 @@ export interface ResetPasswordPayload {
   email: string;
   code: string;
   newPassword: string;
+}
+
+export interface RefreshTokenPayload {
+  refreshToken: string;
+}
+
+export interface LogoutPayload {
+  refreshToken: string
 }

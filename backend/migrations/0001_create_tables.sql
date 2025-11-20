@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS users (
   reset_password_expires_at TIMESTAMPTZ
 );
 
+-- user sessions
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_session_id UUID PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  refresh_token_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- stalls
 CREATE TABLE IF NOT EXISTS stall (

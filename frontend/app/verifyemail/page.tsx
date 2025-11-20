@@ -13,6 +13,7 @@ export default function VerifyEmailPage() {
     const router = useRouter();
 
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
+    const setRefreshToken = useAuthStore((state) => state.setRefreshToken);
     const setUser = useAuthStore((state) => state.setUser);
 
     const [email, setEmail] = useState("");
@@ -77,6 +78,7 @@ export default function VerifyEmailPage() {
 
             const payloadData = data?.payload?.data || {};
             const accessToken: string | undefined = payloadData.access_token;
+            const refreshToken: string | undefined = payloadData.refresh_token;
             const user = payloadData.user;
 
             const message: string =
@@ -86,6 +88,7 @@ export default function VerifyEmailPage() {
 
 
             setAccessToken(accessToken);
+            setRefreshToken(refreshToken);
             setUser(user);
             const role = data.payload.data.user.role
             setSuccess(message);

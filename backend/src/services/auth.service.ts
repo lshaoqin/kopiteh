@@ -5,6 +5,8 @@ import { BaseService } from "./base.service";
 import { successResponse, errorResponse } from "../types/responses";
 import { ErrorCodes } from "../types/errors";
 import { SuccessCodes } from "../types/success";
+import crypto from "crypto";
+
 import {
   CreateAccountPayload,
   LoginPayload,
@@ -12,6 +14,8 @@ import {
   ForgotPasswordPayload,
   VerifyResetCodePayload,
   ResetPasswordPayload,
+  RefreshTokenPayload,
+  LogoutPayload,
 } from "../types/payloads";
 
 function generateSecretCode(): string {
@@ -25,10 +29,48 @@ function signAccessToken(userId: number) {
   });
 }
 
-function signRefreshToken(userId: number) {
-  return jwt.sign({ uid: userId }, process.env.JWT_REFRESH_SECRET as string, {
-    expiresIn: "7d",
-  });
+function signRefreshToken(userId: number, sessionId: string) {
+  return jwt.sign(
+    { user_id: userId, session_id: sessionId },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "30d" }
+  );
+}
+
+function hashRefreshToken(token: string) {
+  return bcrypt.hash(token, 10);
+}
+
+function compareRefreshToken(token: string, hash: string) {
+  return bcrypt.compare(token, hash);
+}
+
+function generateSessionId(): string {
+  return crypto.randomUUID();
+}
+
+async function createSessionWithId(
+  userId: number,
+  sessionId: string,
+  refreshToken: string
+): Promise<void> {
+  try {
+    console.log("[createSessionWithId] called with:", { userId, sessionId });
+
+    const hashed = await hashRefreshToken(refreshToken);
+
+    const result = await BaseService.query(
+      `INSERT INTO user_sessions (user_session_id, user_id, refresh_token_hash)
+       VALUES ($1, $2, $3)
+       RETURNING user_session_id, user_id, created_at`,
+      [sessionId, userId, hashed]
+    );
+
+    console.log("[createSessionWithId] insert OK:", result.rows[0]);
+  } catch (err) {
+    console.error("[createSessionWithId] ERROR inserting session:", err);
+    throw err;
+  }
 }
 
 export const AuthService = {
@@ -41,6 +83,20 @@ export const AuthService = {
   ): Promise<ServiceResult<any>> {
     try {
       // Check if email already exists
+      const adminCode = process.env.ADMIN_SIGNUP_CODE;
+      const runnerCode = process.env.RUNNER_SIGNUP_CODE;
+      const userCode = process.env.USER_SIGNUP_CODE;
+
+      let role: "admin" | "runner" | "user" | null = null;
+      if (payload.secretCode === adminCode) {
+        role = "admin";
+      } else if (payload.secretCode === runnerCode) {
+        role = "runner";
+      } else if (payload.secretCode === userCode) {
+        role = "user";
+      } else {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid signup code");
+      }
       const existing = await BaseService.query(
         "SELECT 1 FROM users WHERE email = $1",
         [payload.email]
@@ -64,7 +120,7 @@ export const AuthService = {
           payload.name,
           payload.email,
           hash,
-          payload.role,
+          role,
           createdAt,
           verifyCode,
           verifyExpiry,
@@ -120,7 +176,11 @@ export const AuthService = {
         );
       }
       const accessToken = signAccessToken(user.user_id);
-      const refreshToken = signRefreshToken(user.user_id);
+
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
 
       return successResponse(SuccessCodes.OK, {
         message: "Login success!",
@@ -140,6 +200,39 @@ export const AuthService = {
     }
   },
 
+  async logout(payload: LogoutPayload): Promise<ServiceResult<any>> {
+    const { refreshToken } = payload;
+
+    try {
+      if (!refreshToken) {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Missing refresh token");
+      }
+
+      // Decode refresh token to get session_id
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET as string
+      ) as { user_id: number; session_id: string };
+
+      const { session_id } = decoded;
+
+      // Delete the session
+      await BaseService.query(
+        `DELETE FROM user_sessions WHERE user_session_id = $1`,
+        [session_id]
+      );
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Successfully logged out",
+      });
+    } catch (err) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED,
+        "Invalid or expired refresh token"
+      );
+    }
+  },
+
   async verifyEmail(payload: VerifyEmailPayload): Promise<ServiceResult<any>> {
     try {
       const res = await BaseService.query(
@@ -155,22 +248,10 @@ export const AuthService = {
       }
 
       if (user.is_authenticated) {
-        // Already verified; you might still want to return tokens here or not.
-        const accessToken = signAccessToken(user.user_id);
-        const refreshToken = signRefreshToken(user.user_id);
-        return successResponse(SuccessCodes.OK, {
-          message: "Email already verified",
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          user: {
-            user_id: user.user_id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            is_authenticated: user.is_authenticated,
-            created_at: user.created_at,
-          },
-        });
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Email already verified. Please log in."
+        );
       }
 
       if (!user.verify_code || !user.verify_code_expires_at) {
@@ -208,7 +289,11 @@ export const AuthService = {
       );
 
       const accessToken = signAccessToken(user.user_id);
-      const refreshToken = signRefreshToken(user.user_id);
+
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
 
       return successResponse(SuccessCodes.OK, {
         message: "Email verified successfully",
@@ -364,16 +449,12 @@ export const AuthService = {
         [newHash, user.user_id]
       );
 
-      // 3. Optionally auto-login: create new tokens + session
       const accessToken = signAccessToken(user.user_id);
-      const refreshToken = signRefreshToken(user.user_id);
 
-      // const refreshHash = await bcrypt.hash(refreshToken, 10);
-      // await BaseService.query(
-      //   `INSERT INTO user_sessions (user_id, refresh_token_hash)
-      //  VALUES ($1, $2)`,
-      //   [user.user_id, refreshHash]
-      // );
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
 
       return successResponse(SuccessCodes.OK, {
         message: "Password has been reset successfully.",
@@ -408,6 +489,81 @@ export const AuthService = {
       }
     } catch (error) {
       return errorResponse(ErrorCodes.INTERNAL_ERROR, String(error));
+    }
+  },
+
+  async refreshToken(
+    payload: RefreshTokenPayload
+  ): Promise<ServiceResult<any>> {
+    const { refreshToken } = payload;
+
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET as string
+      ) as { user_id: number; session_id: string; iat: number; exp: number };
+
+      const { user_id, session_id } = decoded;
+
+      const sessionRes = await BaseService.query(
+        `SELECT refresh_token_hash FROM user_sessions WHERE user_session_id = $1`,
+        [session_id]
+      );
+      const session = sessionRes.rows[0];
+      if (!session) {
+        return errorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          "Session not found or has been revoked"
+        );
+      }
+
+      const match = await compareRefreshToken(
+        refreshToken,
+        session.refresh_token_hash
+      );
+      if (!match) {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid refresh token");
+      }
+
+      // rotate tokens
+      const newAccessToken = signAccessToken(user_id);
+      const newRefreshToken = signRefreshToken(user_id, session_id);
+      const newHash = await hashRefreshToken(newRefreshToken);
+
+      await BaseService.query(
+        `UPDATE user_sessions
+         SET refresh_token_hash = $1
+       WHERE user_session_id = $2`,
+        [newHash, session_id]
+      );
+
+      //user details
+      const res = await BaseService.query(
+        `SELECT user_id, name, email, role, is_authenticated, created_at
+       FROM users
+       WHERE user_id = $1`,
+        [user_id]
+      );
+      const user = res.rows[0];
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Tokens refreshed",
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        user: {
+          user_id: user.user_id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          is_authenticated: user.is_authenticated,
+          created_at: user.created_at,
+        },
+      });
+    } catch (error) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED,
+        "Invalid or expired refresh token"
+      );
     }
   },
 };

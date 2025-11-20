@@ -7,7 +7,9 @@ import {
   VerifyEmailPayload,
   ForgotPasswordPayload,
   VerifyResetCodePayload,
-  ResetPasswordPayload
+  ResetPasswordPayload,
+  RefreshTokenPayload,
+  LogoutPayload,
 } from "../types/payloads";
 import { BadRequestError } from "./errors";
 import { errorResponse } from "../types/responses";
@@ -148,27 +150,14 @@ export const AuthController = {
     }
   },
 
-  // POST /auth/refresh   (requires AuthService.refreshToken to be implemented)
   async refreshToken(req: Request, res: Response) {
     try {
-      // accept refresh token via Authorization header or body.refresh_token
-      const bearer = req.headers.authorization;
-      const tokenFromHeader = bearer?.startsWith("Bearer ")
-        ? bearer.slice("Bearer ".length)
-        : undefined;
-      const refreshToken =
-        tokenFromHeader ?? (req.body?.refresh_token as string | undefined);
+      // Accept either "refresh_token" or "refreshToken" from the frontend
+      const payload: RefreshTokenPayload = {
+        refreshToken: req.body.refresh_token ?? req.body.refreshToken,
+      };
 
-      if (!refreshToken) {
-        const r = errorResponse(
-          ErrorCodes.UNAUTHORIZED,
-          "Missing refresh token"
-        );
-        return res.status(r.payload.status).json(r);
-      }
-
-      // @ts-expect-error: define AuthService.refreshToken if you haven't yet
-      const result = await AuthService.refreshToken(refreshToken);
+      const result = await AuthService.refreshToken(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -178,10 +167,28 @@ export const AuthController = {
         );
         return res.status(r.payload.status).json(r);
       }
-      const r = errorResponse(
-        ErrorCodes.UNAUTHORIZED,
-        "Invalid or expired refresh token"
-      );
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(r.payload.status).json(r);
+    }
+  },
+
+  async logout(req: Request, res: Response) {
+    try {
+      const payload: LogoutPayload = {
+        refreshToken: req.body.refresh_token ?? req.body.refreshToken,
+      };
+
+      const result = await AuthService.logout(payload);
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const r = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
+        return res.status(r.payload.status).json(r);
+      }
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
       return res.status(r.payload.status).json(r);
     }
   },

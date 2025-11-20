@@ -6,7 +6,7 @@ export interface CreateAccountPayload {
   name: string;
   email: string;
   password: string;
-  role: UserRole;
+  secretCode: string;
 }
 
 export interface VerifyEmailPayload {
@@ -37,7 +37,7 @@ export interface ResetPasswordPayload {
 export interface User {
   user_id: ID;
   email: string;
-  display_name: string;
+  name: string;
   role: UserRole;
   created_at: string; // ISO
 }
