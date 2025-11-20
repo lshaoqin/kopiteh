@@ -6,6 +6,7 @@ import { useState } from "react"
 import { LoginPayload } from "../../../types/auth"
 import { useAuthStore } from "@/stores/auth.store"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export default function Home() {
   const [email, setEmail] = useState("")
@@ -99,8 +100,10 @@ export default function Home() {
           <div>
             <h1 className="font-bold text-2xl">Welcome Back!</h1>
             <div className="flex flex-row space-x-1 mt-1">
-              <text>Login below or</text>
-              <text className="font-semibold underline">create an account</text>
+              <label>Login below or</label>
+              <Link href="/signup">
+                <label className="font-semibold underline">create an account</label>
+              </Link>
             </div>
           </div>
           <div className="flex flex-col space-y-5 my-6">
@@ -127,9 +130,11 @@ export default function Home() {
             </div>
 
           )}
-          <div className="mt-2 w-full flex justify-center">
-            <text className="underline text-sm">Forgot password?</text>
-          </div>
+          <Link href="/forgotpassword">
+            <div className="mt-2 w-full flex justify-center">
+              <label className="underline text-sm">Forgot password?</label>
+            </div>
+          </Link>
         </div>
       </div>
     </main>

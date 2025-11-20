@@ -5,6 +5,7 @@ import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
 import { UserRole, User, CreateAccountPayload } from "../../../types/auth"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export default function Home() {
     const [email, setEmail] = useState("")
@@ -82,8 +83,10 @@ export default function Home() {
                     <div>
                         <h1 className="font-bold text-2xl">Create an Account</h1>
                         <div className="flex flex-row space-x-1 mt-1">
-                            <text>Enter your account details below or</text>
-                            <text className="font-semibold underline">log in</text>
+                            <label>Enter your account details below or</label>
+                            <Link href="/login">
+                                <label className="font-semibold underline">log in</label>
+                            </Link>
                         </div>
                     </div>
                     <div className="flex flex-col space-y-5 my-6">

@@ -9,6 +9,9 @@ import {
   CreateAccountPayload,
   LoginPayload,
   VerifyEmailPayload,
+  ForgotPasswordPayload,
+  VerifyResetCodePayload,
+  ResetPasswordPayload,
 } from "../types/payloads";
 
 function generateSecretCode(): string {
@@ -218,6 +221,164 @@ export const AuthService = {
           role: user.role,
           is_authenticated: true,
         },
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async forgotPassword(
+    payload: ForgotPasswordPayload
+  ): Promise<ServiceResult<any>> {
+    const { email } = payload;
+
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, email FROM users WHERE email = $1`,
+        [email]
+      );
+
+      const user = userRes.rows[0];
+
+      // SECURITY: Always return success, even if user not found,
+      // to avoid leaking which emails are registered.
+      if (!user) {
+        return successResponse(SuccessCodes.OK, {
+          message:
+            "If an account with that email exists, a reset code has been sent.",
+        });
+      }
+
+      const code = generateSecretCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await BaseService.query(
+        `UPDATE users
+         SET reset_password_code = $1,
+             reset_password_expires_at = $2
+       WHERE user_id = $3`,
+        [code, expiry, user.user_id]
+      );
+
+      return successResponse(SuccessCodes.OK, {
+        message:
+          "If an account with that email exists, a reset code has been sent.",
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async verifyResetCode(
+    payload: VerifyResetCodePayload
+  ): Promise<ServiceResult<any>> {
+    const { email, code } = payload;
+
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, reset_password_code, reset_password_expires_at
+       FROM users
+       WHERE email = $1`,
+        [email]
+      );
+
+      const user = userRes.rows[0];
+      if (!user) {
+        // For security you can also choose generic message, but this is fine for internal UI
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+      }
+
+      if (!user.reset_password_code || !user.reset_password_expires_at) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "No active reset request"
+        );
+      }
+
+      if (user.reset_password_code !== code) {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, "Invalid reset code");
+      }
+
+      if (new Date(user.reset_password_expires_at) < new Date()) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Reset code has expired"
+        );
+      }
+
+      // Code is valid
+      return successResponse(SuccessCodes.OK, {
+        message: "Reset code is valid",
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async resetPassword(
+    payload: ResetPasswordPayload
+  ): Promise<ServiceResult<any>> {
+    const { email, code, newPassword } = payload;
+
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, reset_password_code, reset_password_expires_at
+       FROM users
+       WHERE email = $1`,
+        [email]
+      );
+
+      const user = userRes.rows[0];
+      if (!user) {
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+      }
+
+      if (!user.reset_password_code || !user.reset_password_expires_at) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "No active reset request"
+        );
+      }
+
+      if (user.reset_password_code !== code) {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, "Invalid reset code");
+      }
+
+      if (new Date(user.reset_password_expires_at) < new Date()) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Reset code has expired"
+        );
+      }
+
+      // All good → hash new password
+      const newHash = await bcrypt.hash(newPassword, 10);
+
+      // 1. Update password & clear reset fields
+      await BaseService.query(
+        `UPDATE users
+         SET password_hash = $1,
+             reset_password_code = NULL,
+             reset_password_expires_at = NULL
+       WHERE user_id = $2`,
+        [newHash, user.user_id]
+      );
+
+      // 3. Optionally auto-login: create new tokens + session
+      const accessToken = signAccessToken(user.user_id);
+      const refreshToken = signRefreshToken(user.user_id);
+
+      // const refreshHash = await bcrypt.hash(refreshToken, 10);
+      // await BaseService.query(
+      //   `INSERT INTO user_sessions (user_id, refresh_token_hash)
+      //  VALUES ($1, $2)`,
+      //   [user.user_id, refreshHash]
+      // );
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Password has been reset successfully.",
+        access_token: accessToken,
+        refresh_token: refreshToken,
       });
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));

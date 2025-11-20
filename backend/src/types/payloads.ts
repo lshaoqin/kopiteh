@@ -87,3 +87,18 @@ export interface VerifyEmailPayload {
   email: string;
   code: string; // 6-digit secret code
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface VerifyResetCodePayload {
+  email: string;
+  code: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  code: string;
+  newPassword: string;
+}

@@ -13,6 +13,9 @@ router.post('/auth/create-account', createAccountValidation, runValidation, Auth
 router.post('/auth/account-login', loginValidation, runValidation, AuthController.login);
 router.get('/auth/auth-check', AuthController.authCheck);
 router.post('/auth/verify-email', AuthController.verifyEmail);
+router.post('/auth/forgot-password', AuthController.forgotPassword);
+router.post('/auth/verify-reset-code', AuthController.verifyResetCode);
+router.post('/auth/reset-password', AuthController.resetPassword);
 router.post('/auth/refresh', AuthController.refreshToken);
 
 export default router;
