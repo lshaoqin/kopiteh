@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
         setSuccess(message + " You can now log in with your new password.");
         setTimeout(() => {
           router.push("/login");
-        }, 1500);
+        }, 2000);
       }
     } catch (err: any) {
       console.error("Reset password error:", err);
@@ -169,19 +169,31 @@ export default function ResetPasswordPage() {
             />
           </div>
 
-          <Button onClick={handleResetPassword} variant="signin">
-            {loading ? "Resetting..." : "Reset Password"}
+          <Button
+            onClick={handleResetPassword}
+            variant="signin"
+            disabled={loading || !email || !code || !newPassword || !confirmPassword}
+            className="w-full flex items-center justify-center"
+          >
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span>Resetting...</span>
+              </div>
+            ) : (
+              "Reset Password"
+            )}
           </Button>
 
           {error && (
             <div className="flex justify-center w-full">
-              <p className="text-red-500 text-sm mt-2">{error}</p>
+              <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
             </div>
           )}
 
           {success && (
             <div className="flex justify-center w-full">
-              <p className="text-green-600 text-sm mt-2">{success}</p>
+              <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
             </div>
           )}
         </div>

@@ -138,26 +138,33 @@ export default function VerifyEmailPage() {
                         />
                     </div>
 
-                    <Button onClick={handleVerify} variant="signin">
-                        {loading ? "Verifying..." : "Verify Email"}
+                    <Button
+                        onClick={handleVerify}
+                        variant="signin"
+                        disabled={loading || !email || !code}
+                        className="w-full flex items-center justify-center"
+                    >
+                        {loading ? (
+                            <div className="flex items-center space-x-2">
+                                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                <span>Verifying...</span>
+                            </div>
+                        ) : (
+                            "Verify Email"
+                        )}
                     </Button>
+
 
                     {error && (
                         <div className="flex justify-center w-full">
-                            <p className="text-red-500 text-sm mt-2">
-                                {error}
-                            </p>
+                            <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
                         </div>
-
                     )}
 
                     {success && (
                         <div className="flex justify-center w-full">
-                            <p className="text-green-600 text-sm mt-2">
-                                {success}
-                            </p>
+                            <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
                         </div>
-
                     )}
                 </div>
             </div>

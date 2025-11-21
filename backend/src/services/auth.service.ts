@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from "../types/responses";
 import { ErrorCodes } from "../types/errors";
 import { SuccessCodes } from "../types/success";
 import crypto from "crypto";
+import sgMail from "@sendgrid/mail";
 
 import {
   CreateAccountPayload,
@@ -20,6 +21,53 @@ import {
 
 function generateSecretCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// SendGrip setup
+
+// Checks
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`[EmailService] Missing env var: ${name}`);
+  }
+  return value;
+}
+
+// Now these are typed as plain `string`
+const EMAIL_API_KEY = requireEnv("KOPITEH_BACKEND_EMAIL_API_KEY");
+const EMAIL_FROM = requireEnv("EMAIL_FROM");
+
+sgMail.setApiKey(EMAIL_API_KEY);
+
+async function sendVerificationEmail(to: string, name: string, code: string) {
+  await sgMail.send({
+    to,
+    from: EMAIL_FROM,
+    subject: "Your Kopiteh Verification Code",
+    text: `Your Kopiteh email verification code is: ${code}\n\nIf you did not request this, please ignore this email.`,
+    html: `
+      <p>Hi, ${name}</p>
+      <p>Your <strong>Kopiteh</strong> email verification code is:</p>
+      <h2>${code}</h2>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    `,
+  });
+}
+
+async function sendResetCodeEmail(to: string, name: string, code: string) {
+  await sgMail.send({
+    to,
+    from: EMAIL_FROM,
+    subject: "Kopiteh - Password Reset Code",
+    text: `Your Kopiteh password reset code is: ${code}\n\nIf you did not request this, please ignore this email.`,
+    html: `
+      <p>Hi, ${name}</p>
+      <p>Your <strong>Kopiteh</strong> password reset code is:</p>
+      <h2>${code}</h2>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    `,
+  });
 }
 
 /* JWT helper functions */
@@ -115,7 +163,7 @@ export const AuthService = {
       const created = await BaseService.query(
         `INSERT INTO users (name, email, password_hash, role, is_authenticated, created_at, verify_code, verify_code_expires_at)
          VALUES ($1,$2,$3,$4,false,$5,$6,$7)
-         RETURNING user_id, name, email, role, is_authenticated, created_at`,
+         RETURNING user_id, name, email, role, is_authenticated, created_at, verify_code`,
         [
           payload.name,
           payload.email,
@@ -128,6 +176,17 @@ export const AuthService = {
       );
 
       const user = created.rows[0];
+
+      try {
+        await sendVerificationEmail(user.email, user.name, user.verify_code);
+        console.log("email sent?");
+      } catch (err) {
+        console.error("Failed to send verification email:", err);
+        return errorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Account created but failed to send verification email."
+        );
+      }
 
       return successResponse(SuccessCodes.CREATED, {
         message:
@@ -318,38 +377,50 @@ export const AuthService = {
     const { email } = payload;
 
     try {
-      const userRes = await BaseService.query(
-        `SELECT user_id, email FROM users WHERE email = $1`,
-        [email]
-      );
-
-      const user = userRes.rows[0];
-
-      // SECURITY: Always return success, even if user not found,
-      // to avoid leaking which emails are registered.
-      if (!user) {
-        return successResponse(SuccessCodes.OK, {
-          message:
-            "If an account with that email exists, a reset code has been sent.",
-        });
-      }
-
       const code = generateSecretCode();
       const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-      await BaseService.query(
+      // Single query: update + get back user info if they exist
+      const result = await BaseService.query(
         `UPDATE users
          SET reset_password_code = $1,
              reset_password_expires_at = $2
-       WHERE user_id = $3`,
-        [code, expiry, user.user_id]
+       WHERE email = $3
+       RETURNING user_id, name, email`,
+        [code, expiry, email]
       );
 
-      return successResponse(SuccessCodes.OK, {
+      const user = result.rows[0];
+
+      // Generic success message (don't leak whether email exists)
+      const genericSuccess = successResponse(SuccessCodes.OK, {
         message:
           "If an account with that email exists, a reset code has been sent.",
       });
+
+      // If no user was updated (email not found), just return generic success
+      if (!user) {
+        return genericSuccess;
+      }
+
+      // If user exists, try to send reset email
+      try {
+        await sendResetCodeEmail(user.email, user.name, code);
+        console.log("Password reset code sent");
+      } catch (err) {
+        console.error(
+          "[AuthService.forgotPassword] Failed to send reset email:",
+          err
+        );
+        return errorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Failed to send password reset email."
+        );
+      }
+
+      return genericSuccess;
     } catch (error) {
+      console.error("[AuthService.forgotPassword] DB error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },

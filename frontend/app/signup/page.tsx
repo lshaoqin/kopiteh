@@ -75,7 +75,9 @@ export default function Home() {
             const message = data.payload?.data?.message ?? "Account created.";
             setSuccess(message);
 
-            router.push(`/verifyemail?email=${encodeURIComponent(email)}`)
+            setTimeout(() => {
+                router.push(`/verifyemail?email=${encodeURIComponent(email)}`)
+            }, 2000);
         } catch (err: any) {
             console.error("Signup error:", err);
             setError(err.message || "Something went wrong. Please try again.");
@@ -104,14 +106,30 @@ export default function Home() {
                         <FormField className="flex flex-col space-y-1" variant="password" label="Password" inputProps={{ value: password, onChange: (e) => setPassword(e.target.value) }} />
                         <FormField className="flex flex-col space-y-1" variant="password" label="Access Code" inputProps={{ value: secretCode, onChange: (e) => setSecretCode(e.target.value) }} />
                     </div>
-                    <Button onClick={handleSignup} variant="signin">
-                        {loading ? "Loading..." : "Sign Up"}
+                    <Button
+                        onClick={handleSignup}
+                        variant="signin"
+                        disabled={loading || !email || !password || !userName || !secretCode}
+                        className="w-full flex items-center justify-center"
+                    >
+                        {loading ? (
+                            <div className="flex items-center space-x-2">
+                                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                <span>Signing up...</span>
+                            </div>
+                        ) : (
+                            "Sign Up"
+                        )}
                     </Button>
                     {error && (
-                        <div className="w-full flex justify-center">
-                            <p className="text-red-500 text-sm mt-2">
-                                {error}
-                            </p>
+                        <div className="flex justify-center w-full">
+                            <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="flex justify-center w-full">
+                            <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
                         </div>
                     )}
                 </div>
