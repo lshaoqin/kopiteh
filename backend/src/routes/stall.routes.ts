@@ -16,7 +16,7 @@ router.get('/stalls/:id', stallIdParamValidation, runValidation, StallController
 
 // Protected writes
 router.post('/stalls', authenticateToken, createStallValidation, runValidation, StallController.create);
-router.put('/stalls/:id', authenticateToken, updateStallValidation, runValidation, StallController.update);
+router.put('/stalls/:id', authenticateToken, ...updateStallValidation, runValidation, StallController.update);
 router.delete('/stalls/:id', authenticateToken, stallIdParamValidation, runValidation, StallController.remove);
 
 export default router;

@@ -70,3 +70,43 @@ export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;
 }
+
+export interface CreateAccountPayload {
+  name: string;
+  email: string;
+  password: string;
+  secretCode: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface VerifyEmailPayload {
+  email: string;
+  code: string; // 6-digit secret code
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface VerifyResetCodePayload {
+  email: string;
+  code: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
+export interface RefreshTokenPayload {
+  refreshToken: string;
+}
+
+export interface LogoutPayload {
+  refreshToken: string
+}

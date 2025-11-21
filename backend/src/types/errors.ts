@@ -4,6 +4,7 @@ export enum ErrorCodes {
   DATABASE_ERROR = 'DATABASE_ERROR',
   UNAUTHORIZED = 'UNAUTHORIZED',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
+  EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED'
 }
 
 export const errorTemplates: Record<ErrorCodes, { message: string; status: number }> = {
@@ -27,4 +28,8 @@ export const errorTemplates: Record<ErrorCodes, { message: string; status: numbe
     message: 'An internal server error occurred.',
     status: 500,
   },
+  [ErrorCodes.EMAIL_NOT_VERIFIED]: {
+    message: 'Email not yet verified.',
+    status: 403,
+  }
 };

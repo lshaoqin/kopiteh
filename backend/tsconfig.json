@@ -1,17 +1,10 @@
 {
   "compilerOptions": {
 
-    "module": "CommonJS",
-    "target": "ES2022",
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
 
-    // pick ONE of the two module resolution options below (see section 2)
-    "moduleResolution": "Node",
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@types": ["../types/index"],
-      "@types/*": ["../types/*"]
-    },
 
     "sourceMap": true,
     "declaration": true,

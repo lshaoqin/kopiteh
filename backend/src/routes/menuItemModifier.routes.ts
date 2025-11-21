@@ -16,7 +16,7 @@ router.get('/modifiers/:id', modifierIdParamValidation, runValidation, MenuItemM
 
 // Protected writes
 router.post('/modifiers', authenticateToken, createModifierValidation, runValidation, MenuItemModifierController.create);
-router.put('/modifiers/:id', authenticateToken, updateModifierValidation, runValidation, MenuItemModifierController.update);
+router.put('/modifiers/:id', authenticateToken, ...updateModifierValidation, runValidation, MenuItemModifierController.update);
 router.delete('/modifiers/:id', authenticateToken, modifierIdParamValidation, runValidation, MenuItemModifierController.remove);
 
 export default router;

@@ -4,7 +4,7 @@ import { MenuItemModifierService } from '../services/menuItemModifier.service';
 import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from 'src/types/success';
+import { SuccessCodes } from '../types/success';
 import {
   validateCreateMenuItemModifier,
   validateUpdateMenuItemModifier,

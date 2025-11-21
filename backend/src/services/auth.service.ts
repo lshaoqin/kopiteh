@@ -1,97 +1,203 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import type { ServiceResult } from '../types/responses';
-import { BaseService } from './base.service';
-import { successResponse, errorResponse } from '../types/responses';
-import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
-import type { User } from '../../../types/auth';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import type { ServiceResult } from "../types/responses";
+import { BaseService } from "./base.service";
+import { successResponse, errorResponse } from "../types/responses";
+import { ErrorCodes } from "../types/errors";
+import { SuccessCodes } from "../types/success";
+import crypto from "crypto";
+import sgMail from "@sendgrid/mail";
 
-export interface CreateAccountPayload {
-  name: string;
-  email: string;
-  password: string;
-  role: string; // e.g. "admin" | "user"
+import {
+  CreateAccountPayload,
+  LoginPayload,
+  VerifyEmailPayload,
+  ForgotPasswordPayload,
+  VerifyResetCodePayload,
+  ResetPasswordPayload,
+  RefreshTokenPayload,
+  LogoutPayload,
+} from "../types/payloads";
+
+function generateSecretCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export interface LoginPayload {
-  email: string;
-  password: string;
+// SendGrip setup
+
+// Checks
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`[EmailService] Missing env var: ${name}`);
+  }
+  return value;
+}
+
+// Now these are typed as plain `string`
+const EMAIL_API_KEY = requireEnv("KOPITEH_BACKEND_EMAIL_API_KEY");
+const EMAIL_FROM = requireEnv("EMAIL_FROM");
+
+sgMail.setApiKey(EMAIL_API_KEY);
+
+async function sendVerificationEmail(to: string, name: string, code: string) {
+  await sgMail.send({
+    to,
+    from: EMAIL_FROM,
+    subject: "Your Kopiteh Verification Code",
+    text: `Your Kopiteh email verification code is: ${code}\n\nIf you did not request this, please ignore this email.`,
+    html: `
+      <p>Hi, ${name}</p>
+      <p>Your <strong>Kopiteh</strong> email verification code is:</p>
+      <h2>${code}</h2>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    `,
+  });
+}
+
+async function sendResetCodeEmail(to: string, name: string, code: string) {
+  await sgMail.send({
+    to,
+    from: EMAIL_FROM,
+    subject: "Kopiteh - Password Reset Code",
+    text: `Your Kopiteh password reset code is: ${code}\n\nIf you did not request this, please ignore this email.`,
+    html: `
+      <p>Hi, ${name}</p>
+      <p>Your <strong>Kopiteh</strong> password reset code is:</p>
+      <h2>${code}</h2>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    `,
+  });
 }
 
 /* JWT helper functions */
 function signAccessToken(userId: number) {
-  return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, { expiresIn: '15m' });
+  return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, {
+    expiresIn: "15m",
+  });
 }
 
-function signRefreshToken(userId: number) {
-  return jwt.sign({ uid: userId }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: '7d' });
+function signRefreshToken(userId: number, sessionId: string) {
+  return jwt.sign(
+    { user_id: userId, session_id: sessionId },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "30d" }
+  );
+}
+
+function hashRefreshToken(token: string) {
+  return bcrypt.hash(token, 10);
+}
+
+function compareRefreshToken(token: string, hash: string) {
+  return bcrypt.compare(token, hash);
+}
+
+function generateSessionId(): string {
+  return crypto.randomUUID();
+}
+
+async function createSessionWithId(
+  userId: number,
+  sessionId: string,
+  refreshToken: string
+): Promise<void> {
+  try {
+    console.log("[createSessionWithId] called with:", { userId, sessionId });
+
+    const hashed = await hashRefreshToken(refreshToken);
+
+    const result = await BaseService.query(
+      `INSERT INTO user_sessions (user_session_id, user_id, refresh_token_hash)
+       VALUES ($1, $2, $3)
+       RETURNING user_session_id, user_id, created_at`,
+      [sessionId, userId, hashed]
+    );
+
+    console.log("[createSessionWithId] insert OK:", result.rows[0]);
+  } catch (err) {
+    console.error("[createSessionWithId] ERROR inserting session:", err);
+    throw err;
+  }
 }
 
 export const AuthService = {
-  /** 
-   * POST /auth/create-account 
+  /**
+   * POST /auth/create-account
    * Creates a new user, hashes password, inserts into DB
    */
-  async createAccount(payload: CreateAccountPayload): Promise<ServiceResult<User>> {
+  async createAccount(
+    payload: CreateAccountPayload
+  ): Promise<ServiceResult<any>> {
     try {
       // Check if email already exists
-      const existing = await BaseService.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);
+      const adminCode = process.env.ADMIN_SIGNUP_CODE;
+      const runnerCode = process.env.RUNNER_SIGNUP_CODE;
+      const userCode = process.env.USER_SIGNUP_CODE;
+
+      let role: "admin" | "runner" | "user" | null = null;
+      if (payload.secretCode === adminCode) {
+        role = "admin";
+      } else if (payload.secretCode === runnerCode) {
+        role = "runner";
+      } else if (payload.secretCode === userCode) {
+        role = "user";
+      } else {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid signup code");
+      }
+      const existing = await BaseService.query(
+        "SELECT 1 FROM users WHERE email = $1",
+        [payload.email]
+      );
       if (existing.rowCount && existing.rows[0]) {
-        return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Email already registered');
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Email already registered"
+        );
       }
 
       const hash = await bcrypt.hash(payload.password, 10);
+      const verifyCode = generateSecretCode();
+      const verifyExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      const createdAt = new Date(Date.now());
       const created = await BaseService.query(
-        `INSERT INTO users (name, email, password_hash, role, is_authenticated)
-         VALUES ($1,$2,$3,$4,false)
-         RETURNING user_id, name, email, role`,
-        [payload.name, payload.email, hash, payload.role]
+        `INSERT INTO users (name, email, password_hash, role, is_authenticated, created_at, verify_code, verify_code_expires_at)
+         VALUES ($1,$2,$3,$4,false,$5,$6,$7)
+         RETURNING user_id, name, email, role, is_authenticated, created_at, verify_code`,
+        [
+          payload.name,
+          payload.email,
+          hash,
+          role,
+          createdAt,
+          verifyCode,
+          verifyExpiry,
+        ]
       );
 
-      return successResponse(SuccessCodes.CREATED, created.rows[0]);
-    } catch (error) {
-      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
-    }
-  },
+      const user = created.rows[0];
 
-  /** 
-   * POST /auth/account-login 
-   * Verifies credentials, generates JWT access/refresh tokens
-   */
-  async login(payload: LoginPayload): Promise<ServiceResult<any>> {
-    try {
-      const userRes = await BaseService.query(
-        `SELECT user_id, name, email, role, password_hash 
-           FROM users WHERE email = $1`,
-        [payload.email]
-      );
-      const user = userRes.rows[0];
-      if (!user) return errorResponse(ErrorCodes.NOT_FOUND, 'User not found');
+      try {
+        await sendVerificationEmail(user.email, user.name, user.verify_code);
+        console.log("email sent?");
+      } catch (err) {
+        console.error("Failed to send verification email:", err);
+        return errorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Account created but failed to send verification email."
+        );
+      }
 
-      const validPassword = await bcrypt.compare(payload.password, user.password_hash);
-      if (!validPassword) return errorResponse(ErrorCodes.UNAUTHORIZED, 'Invalid credentials');
-
-      const accessToken = signAccessToken(user.user_id);
-      const refreshToken = signRefreshToken(user.user_id);
-
-      await BaseService.query(
-        `UPDATE users
-           SET is_authenticated = true,
-               access_token = $1,
-               refresh_token = $2
-         WHERE user_id = $3`,
-        [accessToken, refreshToken, user.user_id]
-      );
-
-      return successResponse(SuccessCodes.OK, {
-        access_token: accessToken,
-        refresh_token: refreshToken,
+      return successResponse(SuccessCodes.CREATED, {
+        message:
+          "Account created. Please check your email for the verification code.",
         user: {
           user_id: user.user_id,
           name: user.name,
           email: user.email,
           role: user.role,
+          is_authenticated: user.is_authenticated,
+          created_at: user.created_at,
         },
       });
     } catch (error) {
@@ -99,8 +205,340 @@ export const AuthService = {
     }
   },
 
-  /** 
-   * GET /auth/auth-check 
+  /**
+   * POST /auth/account-login
+   * Verifies credentials, generates JWT access/refresh tokens
+   */
+  async login(payload: LoginPayload): Promise<ServiceResult<any>> {
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, name, email, role, password_hash, is_authenticated, verify_code_expires_at
+          FROM users
+          WHERE email = $1`,
+        [payload.email]
+      );
+      const user = userRes.rows[0];
+      if (!user) return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+
+      const validPassword = await bcrypt.compare(
+        payload.password,
+        user.password_hash
+      );
+      if (!validPassword)
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid credentials");
+
+      if (!user.is_authenticated) {
+        // you can define a dedicated error code like EMAIL_NOT_VERIFIED
+        return errorResponse(
+          ErrorCodes.EMAIL_NOT_VERIFIED,
+          "Please verify your email before logging in."
+        );
+      }
+      const accessToken = signAccessToken(user.user_id);
+
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Login success!",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user: {
+          user_id: user.user_id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          is_authenticated: user.is_authenticated,
+          created_at: user.created_at,
+        },
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async logout(payload: LogoutPayload): Promise<ServiceResult<any>> {
+    const { refreshToken } = payload;
+
+    try {
+      if (!refreshToken) {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Missing refresh token");
+      }
+
+      // Decode refresh token to get session_id
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET as string
+      ) as { user_id: number; session_id: string };
+
+      const { session_id } = decoded;
+
+      // Delete the session
+      await BaseService.query(
+        `DELETE FROM user_sessions WHERE user_session_id = $1`,
+        [session_id]
+      );
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Successfully logged out",
+      });
+    } catch (err) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED,
+        "Invalid or expired refresh token"
+      );
+    }
+  },
+
+  async verifyEmail(payload: VerifyEmailPayload): Promise<ServiceResult<any>> {
+    try {
+      const res = await BaseService.query(
+        `SELECT user_id, name, email, role, is_authenticated, created_at, verify_code, verify_code_expires_at
+         FROM users
+         WHERE email = $1`,
+        [payload.email]
+      );
+
+      const user = res.rows[0];
+      if (!user) {
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+      }
+
+      if (user.is_authenticated) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Email already verified. Please log in."
+        );
+      }
+
+      if (!user.verify_code || !user.verify_code_expires_at) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "No verification code set"
+        );
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(user.verify_code_expires_at);
+
+      if (now > expiresAt) {
+        return errorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          "Verification code expired"
+        );
+      }
+
+      if (payload.code !== user.verify_code) {
+        return errorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          "Invalid verification code"
+        );
+      }
+
+      // Code is valid → mark user as authenticated and clear code
+      await BaseService.query(
+        `UPDATE users
+           SET is_authenticated = true,
+               verify_code = NULL,
+               verify_code_expires_at = NULL
+         WHERE user_id = $1`,
+        [user.user_id]
+      );
+
+      const accessToken = signAccessToken(user.user_id);
+
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Email verified successfully",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user: {
+          user_id: user.user_id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          is_authenticated: true,
+        },
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async forgotPassword(
+    payload: ForgotPasswordPayload
+  ): Promise<ServiceResult<any>> {
+    const { email } = payload;
+
+    try {
+      const code = generateSecretCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      // Single query: update + get back user info if they exist
+      const result = await BaseService.query(
+        `UPDATE users
+         SET reset_password_code = $1,
+             reset_password_expires_at = $2
+       WHERE email = $3
+       RETURNING user_id, name, email`,
+        [code, expiry, email]
+      );
+
+      const user = result.rows[0];
+
+      // Generic success message (don't leak whether email exists)
+      const genericSuccess = successResponse(SuccessCodes.OK, {
+        message:
+          "If an account with that email exists, a reset code has been sent.",
+      });
+
+      // If no user was updated (email not found), just return generic success
+      if (!user) {
+        return genericSuccess;
+      }
+
+      // If user exists, try to send reset email
+      try {
+        await sendResetCodeEmail(user.email, user.name, code);
+        console.log("Password reset code sent");
+      } catch (err) {
+        console.error(
+          "[AuthService.forgotPassword] Failed to send reset email:",
+          err
+        );
+        return errorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Failed to send password reset email."
+        );
+      }
+
+      return genericSuccess;
+    } catch (error) {
+      console.error("[AuthService.forgotPassword] DB error:", error);
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async verifyResetCode(
+    payload: VerifyResetCodePayload
+  ): Promise<ServiceResult<any>> {
+    const { email, code } = payload;
+
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, reset_password_code, reset_password_expires_at
+       FROM users
+       WHERE email = $1`,
+        [email]
+      );
+
+      const user = userRes.rows[0];
+      if (!user) {
+        // For security you can also choose generic message, but this is fine for internal UI
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+      }
+
+      if (!user.reset_password_code || !user.reset_password_expires_at) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "No active reset request"
+        );
+      }
+
+      if (user.reset_password_code !== code) {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, "Invalid reset code");
+      }
+
+      if (new Date(user.reset_password_expires_at) < new Date()) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Reset code has expired"
+        );
+      }
+
+      // Code is valid
+      return successResponse(SuccessCodes.OK, {
+        message: "Reset code is valid",
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async resetPassword(
+    payload: ResetPasswordPayload
+  ): Promise<ServiceResult<any>> {
+    const { email, code, newPassword } = payload;
+
+    try {
+      const userRes = await BaseService.query(
+        `SELECT user_id, reset_password_code, reset_password_expires_at
+       FROM users
+       WHERE email = $1`,
+        [email]
+      );
+
+      const user = userRes.rows[0];
+      if (!user) {
+        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
+      }
+
+      if (!user.reset_password_code || !user.reset_password_expires_at) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "No active reset request"
+        );
+      }
+
+      if (user.reset_password_code !== code) {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, "Invalid reset code");
+      }
+
+      if (new Date(user.reset_password_expires_at) < new Date()) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Reset code has expired"
+        );
+      }
+
+      // All good → hash new password
+      const newHash = await bcrypt.hash(newPassword, 10);
+
+      // 1. Update password & clear reset fields
+      await BaseService.query(
+        `UPDATE users
+         SET password_hash = $1,
+             reset_password_code = NULL,
+             reset_password_expires_at = NULL
+       WHERE user_id = $2`,
+        [newHash, user.user_id]
+      );
+
+      const accessToken = signAccessToken(user.user_id);
+
+      // Refresh Token logic -- stored in user_sessions table
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Password has been reset successfully.",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  /**
+   * GET /auth/auth-check
    * Verifies if access token is valid and not expired
    */
   async authCheck(bearerToken?: string): Promise<ServiceResult<any>> {
@@ -109,8 +547,8 @@ export const AuthService = {
         return successResponse(SuccessCodes.OK, { isAuthenticated: false });
       }
 
-      const token = bearerToken.startsWith('Bearer ')
-        ? bearerToken.slice('Bearer '.length)
+      const token = bearerToken.startsWith("Bearer ")
+        ? bearerToken.slice("Bearer ".length)
         : bearerToken;
 
       try {
@@ -122,6 +560,81 @@ export const AuthService = {
       }
     } catch (error) {
       return errorResponse(ErrorCodes.INTERNAL_ERROR, String(error));
+    }
+  },
+
+  async refreshToken(
+    payload: RefreshTokenPayload
+  ): Promise<ServiceResult<any>> {
+    const { refreshToken } = payload;
+
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET as string
+      ) as { user_id: number; session_id: string; iat: number; exp: number };
+
+      const { user_id, session_id } = decoded;
+
+      const sessionRes = await BaseService.query(
+        `SELECT refresh_token_hash FROM user_sessions WHERE user_session_id = $1`,
+        [session_id]
+      );
+      const session = sessionRes.rows[0];
+      if (!session) {
+        return errorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          "Session not found or has been revoked"
+        );
+      }
+
+      const match = await compareRefreshToken(
+        refreshToken,
+        session.refresh_token_hash
+      );
+      if (!match) {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid refresh token");
+      }
+
+      // rotate tokens
+      const newAccessToken = signAccessToken(user_id);
+      const newRefreshToken = signRefreshToken(user_id, session_id);
+      const newHash = await hashRefreshToken(newRefreshToken);
+
+      await BaseService.query(
+        `UPDATE user_sessions
+         SET refresh_token_hash = $1
+       WHERE user_session_id = $2`,
+        [newHash, session_id]
+      );
+
+      //user details
+      const res = await BaseService.query(
+        `SELECT user_id, name, email, role, is_authenticated, created_at
+       FROM users
+       WHERE user_id = $1`,
+        [user_id]
+      );
+      const user = res.rows[0];
+
+      return successResponse(SuccessCodes.OK, {
+        message: "Tokens refreshed",
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        user: {
+          user_id: user.user_id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          is_authenticated: user.is_authenticated,
+          created_at: user.created_at,
+        },
+      });
+    } catch (error) {
+      return errorResponse(
+        ErrorCodes.UNAUTHORIZED,
+        "Invalid or expired refresh token"
+      );
     }
   },
 };

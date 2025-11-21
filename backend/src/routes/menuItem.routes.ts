@@ -16,7 +16,7 @@ router.get('/items/:id', menuItemIdParamValidation, runValidation, MenuItemContr
 
 // Protected writes
 router.post('/items', authenticateToken, createMenuItemValidation, runValidation, MenuItemController.create);
-router.put('/items/:id', authenticateToken, updateMenuItemValidation, runValidation, MenuItemController.update);
+router.put('/items/:id', authenticateToken, ...updateMenuItemValidation, runValidation, MenuItemController.update);
 router.delete('/items/:id', authenticateToken, menuItemIdParamValidation, runValidation, MenuItemController.remove);
 
 export default router;

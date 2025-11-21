@@ -16,7 +16,7 @@ router.get('/sections/:id', sectionIdParamValidation, runValidation, MenuItemMod
 
 // Protected writes
 router.post('/sections', authenticateToken, createSectionValidation, runValidation, MenuItemModifierSectionController.create);
-router.put('/sections/:id', authenticateToken, updateSectionValidation, runValidation, MenuItemModifierSectionController.update);
+router.put('/sections/:id', authenticateToken, ...updateSectionValidation, runValidation, MenuItemModifierSectionController.update);
 router.delete('/sections/:id', authenticateToken, sectionIdParamValidation, runValidation, MenuItemModifierSectionController.remove);
 
 export default router;

@@ -1,6 +1,4 @@
 import dotenv from 'dotenv';
-dotenv.config();
-
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import db from './config/database';

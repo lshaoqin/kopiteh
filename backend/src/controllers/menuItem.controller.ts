@@ -4,7 +4,7 @@ import { MenuItemService } from '../services/menuItem.service';
 import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from 'src/types/success';
+import { SuccessCodes } from '../types/success';
 import { validateCreateMenuItem, validateUpdateMenuItem } from '../validations/menuItem.validation';
 
 export const MenuItemController = {
