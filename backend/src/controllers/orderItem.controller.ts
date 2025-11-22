@@ -8,14 +8,14 @@ import { SuccessCodes } from 'src/types/success';
 import { validateCreateOrderItem, validateUpdateOrderItem } from '../validations/orderItem.validation';
 
 export const OrderItemController = {
-  async getAllByOrder(req: Request, res: Response) {
-    const orderId = Number(req.params.order_id);
-    const data = await OrderItemService.findAllByOrder(orderId);
+  async getByOrder(req: Request, res: Response) {
+    const orderId = Number(req.qparams.order_id);
+    const data = await OrderItemService.findByOrder(orderId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
-  async getAllByStall(req: Request, res: Response) {
+  async getByStall(req: Request, res: Response) {
     const orderId = Number(req.params.order_id);
     const data = await OrderItemService.findAllByStall(orderId);
     const result = successResponse(SuccessCodes.OK, data);
@@ -69,7 +69,7 @@ export const OrderItemController = {
   async updateStatus(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const data = await OrderItemService.updateStatus(id); // Not sure if this should also update the order status too
+      const data = await OrderItemService.updateStatus(id);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {

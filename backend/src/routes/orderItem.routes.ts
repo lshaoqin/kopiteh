@@ -10,18 +10,16 @@ import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Public reads (general users)
-router.get('/order/:order_id/orderItem', orderItemIdParamValidation, OrderItemController.getAllByOrder);
+// Public reads
 router.get('/orderItem/:id', orderItemIdParamValidation, runValidation, OrderItemController.getById);
-router.post('/orderItem', authenticateToken, createOrderItemValidation, runValidation, OrderItemController.create);
+router.get('/orderItem/order/:order_id', orderItemIdParamValidation, OrderItemController.getByOrder);
+router.get('/stall/:stall_id/orderItem', orderItemIdParamValidation, OrderItemController.getByStall);
+
+// Public writes
 router.put('/orderItem/:id', authenticateToken, updateOrderItemValidation, runValidation, OrderItemController.update);
-router.put('/orderItem/:id', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
-
-// Public reads (runners)
-router.get('/stall/:stall_id/orderItem', orderItemIdParamValidation, OrderItemController.getAllByStall);
 router.put('/orderItem/:id/updateStatus', authenticateToken, updateOrderItemValidation, runValidation, OrderItemController.updateStatus);
+router.put('/orderItem/:id', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
+router.post('/orderItem', authenticateToken, createOrderItemValidation, runValidation, OrderItemController.create);
 
-// Protected writes
-router.delete('/orderItem/:id', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.remove);
 
 export default router;

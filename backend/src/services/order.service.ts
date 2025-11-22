@@ -4,6 +4,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
+import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
 
 const ITEM_COLUMNS = new Set([
   'table_id',
@@ -15,10 +16,10 @@ const ITEM_COLUMNS = new Set([
 ]);
 
 export const OrderService = {
-  async findAllByUser(user_id: number): Promise<ServiceResult<any[]>> {
+  async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order_Item WHERE user_id = $1 ORDER BY order_id',
+        'SELECT * FROM Order WHERE user_id = $1 ORDER BY order_id',
         [user_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -27,10 +28,27 @@ export const OrderService = {
     }
   },
 
-  async findAllByTable(table_id: number): Promise<ServiceResult<any[]>> {
+  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order_Item WHERE table_id = $1 ORDER BY order_id',
+        `SELECT * FROM Order WHERE order_id IN (
+          SELECT order_id FROM Order_Item WHERE item_id IN (
+            SELECT item_id FROM Menu_Item WHERE stall_id = $1
+          )
+        ) ORDER BY order_id`,
+        [stall_id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  // Currently not used but kept for future reference
+  async findByTable(table_id: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        'SELECT * FROM Order WHERE table_id = $1 ORDER BY order_id',
         [table_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -84,6 +102,42 @@ export const OrderService = {
       if (!result.rows[0])
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async updateStatus(id: number): Promise<ServiceResult<any>> {
+    try {
+      // get the list of order items for the order
+      const orderItemStatus = await BaseService.query(
+        'SELECT status FROM Order_Item WHERE order_id = $1',
+        [id]
+      );
+      // check if order_items are all served or cancelled
+      const allCompleted = orderItemStatus.rows.every(
+        (item: any) => item.status === OrderItemStatusCodes.SERVED || item.status === OrderItemStatusCodes.CANCELLED);
+      const allCancelled = orderItemStatus.rows.every(
+        (item: any) => item.status === OrderItemStatusCodes.CANCELLED);
+      let result;
+      if (allCompleted) {
+        if (allCancelled) {
+          result = await BaseService.query(
+            'UPDATE Order SET status = $1 WHERE order_id = $2 RETURNING *', 
+            [OrderStatusCodes.CANCELLED, id]
+          )
+        } else {
+          result = await BaseService.query(
+            'UPDATE Order SET status = $1 WHERE order_id = $2 RETURNING *', 
+            [OrderStatusCodes.COMPLETED, id]
+          )
+        }
+      } else {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Not all order items are completed');
+      }
+      if (result.rowCount === 0)
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
+      return successResponse<null>(SuccessCodes.OK, null);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

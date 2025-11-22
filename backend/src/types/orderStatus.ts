@@ -1,6 +1,7 @@
 export enum OrderStatusCodes {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum OrderItemStatusCodes {
