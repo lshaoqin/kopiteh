@@ -1,9 +1,8 @@
 import { validationResult, body, param } from 'express-validator';
 import { BadRequestError } from '../controllers/errors';
 import type { Request, Response, NextFunction } from 'express';
-import { OrderItemStatusCodes } from '../types/orderStatus';
 
-const ITEM_FIELDS = ['order_id', 'item_id', 'quantity', 'status', 'unit_price', 'line_subtotal'] as const;
+const ITEM_FIELDS = ['order_id', 'item_id', 'quantity', 'unit_price', 'line_subtotal'] as const;
 
 const optionalNonNegativeNum = (f: string) =>
   body(f).optional().isFloat({ min: 0 }).withMessage(`${f} must be non-negative`);
@@ -28,7 +27,6 @@ export const createOrderItemValidation = [
   enforceKnownItemFields,
   body('order_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('item_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderItemStatusCodes)),
   body('quantity').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('unit_price').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('line_subtotal').exists({ checkFalsy: true }).isInt({ gt: 0 }),

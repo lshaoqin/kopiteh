@@ -30,7 +30,7 @@ export const OrderItemService = {
     }
   },
 
-  async findAllByStall(stall_id: number): Promise<ServiceResult<any[]>> {
+  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const stallItems = await MenuItemService.findAllByStall(stall_id);
       const result = [];

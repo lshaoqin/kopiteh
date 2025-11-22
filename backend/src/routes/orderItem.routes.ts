@@ -21,5 +21,4 @@ router.put('/orderItem/:id/updateStatus', authenticateToken, updateOrderItemVali
 router.put('/orderItem/:id', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
 router.post('/orderItem', authenticateToken, createOrderItemValidation, runValidation, OrderItemController.create);
 
-
 export default router;
