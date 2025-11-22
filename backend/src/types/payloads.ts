@@ -1,4 +1,5 @@
-import { OrderStatusCodes } from './orderStatus';
+import { OrderItem } from '@types';
+import { OrderStatusCodes, OrderItemStatusCodes } from './orderStatus';
 
 export interface VenuePayload {
   name: string;
@@ -67,6 +68,7 @@ export interface UpdateOrderPayload extends Partial<OrderPayload> {}
 export interface OrderItemPayload {
   order_id: number;
   item_id: number;
+  status: OrderItemStatusCodes;
   quantity: number;
   unit_price: number;
   line_subtotal: number;

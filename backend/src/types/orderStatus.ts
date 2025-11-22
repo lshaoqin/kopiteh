@@ -5,14 +5,14 @@ export enum OrderStatusCodes {
 }
 
 export enum OrderItemStatusCodes {
-  CONFIRMED = 'INCOMING',
+  INCOMING = 'INCOMING',
   PREPARING = 'PREPARING',
   SERVED = 'SERVED',
   CANCELLED = 'CANCELLED',
 }
 
 // For updating to the next status
-export const NextOrderStatusMap: { [key in OrderStatusCodes]?: OrderStatusCodes } = {
-  [OrderStatusCodes.CONFIRMED]: OrderStatusCodes.PREPARING,
-  [OrderStatusCodes.PREPARING]: OrderStatusCodes.SERVED,
+export const NextOrderStatusMap: { [key in OrderItemStatusCodes]?: OrderItemStatusCodes } = {
+  [OrderItemStatusCodes.INCOMING]: OrderItemStatusCodes.PREPARING,
+  [OrderItemStatusCodes.PREPARING]: OrderItemStatusCodes.SERVED,
 };

@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS menu_item_modifier (
 CREATE INDEX IF NOT EXISTS idx_modifier_item_id ON menu_item_modifier (item_id);
 
 -- tables in a venue
-CREATE TABLE IF NOT EXISTS "table" (
+CREATE TABLE IF NOT EXISTS table (
   table_id     SERIAL PRIMARY KEY,
   venue_id     INTEGER NOT NULL REFERENCES venue(venue_id) ON DELETE CASCADE,
   table_number VARCHAR,
@@ -68,9 +68,10 @@ CREATE TABLE IF NOT EXISTS "table" (
 CREATE INDEX IF NOT EXISTS idx_table_venue_id ON "table" (venue_id);
 
 -- orders
-CREATE TABLE IF NOT EXISTS "order" (
+CREATE TABLE IF NOT EXISTS order (
   order_id    SERIAL PRIMARY KEY,
   table_id    INTEGER NOT NULL REFERENCES "table"(table_id) ON DELETE RESTRICT,
+  user_id     INTEGER NOT NULL REFERENCES "user"(user_id) ON DELETE RESTRICT,
   status      VARCHAR NOT NULL DEFAULT 'pending',
   total_price DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_price >= 0),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -83,7 +84,7 @@ CREATE TABLE IF NOT EXISTS order_item (
   order_item_id SERIAL PRIMARY KEY,
   order_id      INTEGER NOT NULL REFERENCES "order"(order_id) ON DELETE CASCADE,
   item_id       INTEGER NOT NULL REFERENCES menu_item(item_id) ON DELETE RESTRICT,
-  stall_id      INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE RESTRICT,
+  status        VARCHAR NOT NULL DEFAULT 'INCOMING',
   quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0)
 );
@@ -96,6 +97,8 @@ CREATE TABLE IF NOT EXISTS order_item_modifiers (
   order_item_option_id SERIAL PRIMARY KEY,
   order_item_id        INTEGER NOT NULL REFERENCES order_item(order_item_id) ON DELETE CASCADE,
   option_id            INTEGER NOT NULL REFERENCES menu_item_modifier(option_id) ON DELETE RESTRICT
+  price_modifier       DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price_modifier >= 0)
+  option_name          VARCHAR NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_order_item_modifiers_order_item_id ON order_item_modifiers (order_item_id);
 CREATE INDEX IF NOT EXISTS idx_order_item_modifiers_option_id ON order_item_modifiers (option_id);
