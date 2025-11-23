@@ -1,29 +1,32 @@
 import type { Request, Response } from 'express';
-import type { VenuePayload, UpdateVenuePayload } from '../types/payloads';
-import { VenueService } from '../services/venue.service';
+import type { StallPayload, UpdateStallPayload } from '../types/payloads';
+import { StallService } from '../services/stall.service';
 import { BadRequestError } from './errors';
-import { successResponse, errorResponse } from '../types/responses';
+import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
+import { SuccessCodes } from 'src/types/success';
+import { validateCreateStall, validateUpdateStall } from '../validations/stall.validation';
 
-export const VenueController = {
+export const StallController = {
   async getAll(req: Request, res: Response) {
-    const data = await VenueService.findAll();
+    const venueId = Number(req.params.venue_id);
+    const data = await StallService.findAllByVenue(venueId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.findById(id);
+    const data = await StallService.findById(id);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
-      const payload = req.body as VenuePayload;
-      const data = await VenueService.create(payload);
+      const payload = req.body as StallPayload;
+      validateCreateStall(payload);
+      const data = await StallService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -39,8 +42,9 @@ export const VenueController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const payload = req.body as UpdateVenuePayload;
-      const data = await VenueService.update(id, payload);
+      const payload = req.body as UpdateStallPayload;
+      validateUpdateStall(payload);
+      const data = await StallService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -55,11 +59,8 @@ export const VenueController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.delete(id);
+    const data = await StallService.delete(id);
     const result = successResponse(SuccessCodes.OK, data);
-    if (!result.success) {
-      return res.status(result.payload.status).json(result);
-    }
     return res.status(result.payload.status).json(result);
-  }
+  },
 };

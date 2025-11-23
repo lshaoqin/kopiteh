@@ -1,29 +1,35 @@
 import type { Request, Response } from 'express';
-import type { VenuePayload, UpdateVenuePayload } from '../types/payloads';
-import { VenueService } from '../services/venue.service';
+import type { MenuItemModifierSectionPayload } from '../types/payloads';
+import { MenuItemModifierSectionService } from '../services/menuItemModifierSection.service';
 import { BadRequestError } from './errors';
-import { successResponse, errorResponse } from '../types/responses';
+import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
+import { SuccessCodes } from 'src/types/success';
+import {
+  validateCreateMenuItemModifierSection,
+  validateUpdateMenuItemModifierSection,
+} from '../validations/menuItemModifierSection.validation';
 
-export const VenueController = {
+export const MenuItemModifierSectionController = {
   async getAll(req: Request, res: Response) {
-    const data = await VenueService.findAll();
+    const itemId = Number(req.params.item_id);
+    const data = await MenuItemModifierSectionService.findAllByItem(itemId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.findById(id);
+    const data = await MenuItemModifierSectionService.findById(id);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
-      const payload = req.body as VenuePayload;
-      const data = await VenueService.create(payload);
+      const payload = req.body as MenuItemModifierSectionPayload;
+      validateCreateMenuItemModifierSection(payload);
+      const data = await MenuItemModifierSectionService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -39,8 +45,9 @@ export const VenueController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const payload = req.body as UpdateVenuePayload;
-      const data = await VenueService.update(id, payload);
+      const payload = req.body as Partial<MenuItemModifierSectionPayload>;
+      validateUpdateMenuItemModifierSection(payload);
+      const data = await MenuItemModifierSectionService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -55,11 +62,8 @@ export const VenueController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.delete(id);
+    const data = await MenuItemModifierSectionService.delete(id);
     const result = successResponse(SuccessCodes.OK, data);
-    if (!result.success) {
-      return res.status(result.payload.status).json(result);
-    }
     return res.status(result.payload.status).json(result);
-  }
+  },
 };

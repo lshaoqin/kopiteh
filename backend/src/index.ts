@@ -1,8 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
-import venueRoutes from './routes/venue.routes';
 import db from './config/database';
+import routes from './routes';
 
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -15,7 +19,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 // mount api routes
-app.use('/api/venues', venueRoutes);
+app.use('/api', routes);
 
 // quick db check route (optional)
 app.get('/_db_health', async (_req: Request, res: Response) => {

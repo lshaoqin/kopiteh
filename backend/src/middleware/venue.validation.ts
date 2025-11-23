@@ -30,6 +30,7 @@ export const createVenueValidation = [
 export const updateVenueValidation = [
   enforceKnownFields(VENUE_FIELDS as readonly string[]),
   requireAtLeastOneField(VENUE_FIELDS as readonly string[]),
+  venueIdParamValidation,
   optionalTextField('name'),
   optionalTextField('address'),
   optionalTextField('description', 1000),
