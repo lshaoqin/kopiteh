@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { VenueController } from '../controllers/venue.controller';
+import { runValidation } from '../middleware/base.validation';
 import {
   createVenueValidation,
-  runValidation,
   updateVenueValidation,
   venueIdParamValidation,
-} from '../middleware/validation';
+} from '../middleware/venue.validation';
 
 const router = Router();
 

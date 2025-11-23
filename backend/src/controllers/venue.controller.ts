@@ -5,7 +5,6 @@ import { BadRequestError } from './errors';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { validateCreateVenue, validateUpdateVenue } from '../validations/venue.validation';
 
 export const VenueController = {
   async getAll(req: Request, res: Response) {
@@ -23,7 +22,6 @@ export const VenueController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as VenuePayload;
-      validateCreateVenue(payload);
       const result = await VenueService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -41,7 +39,6 @@ export const VenueController = {
       const id = Number(req.params.id);
       if (Number.isNaN(id)) return res.status(400).json({ success: false, error: { message: 'Invalid id' } });
       const payload = req.body as UpdateVenuePayload;
-      validateUpdateVenue(payload);
       const result = await VenueService.update(id, payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {

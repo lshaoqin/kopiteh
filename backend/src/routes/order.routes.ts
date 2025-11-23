@@ -4,20 +4,19 @@ import {
   createOrderValidation,
   updateOrderValidation,
   orderIdParamValidation,
-  runValidation,
 } from '../middleware/order.validation'
+import { runValidation } from '../middleware/base.validation';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // Public reads
-router.get('/order/user/:user_id', orderIdParamValidation, OrderController.getByUser);
-router.get('/order/stall/:stall_id', orderIdParamValidation, OrderController.getByStall); // For runners
 router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.getById);
+router.get('/order/user/:user_id', orderIdParamValidation, runValidation, OrderController.getByUser);
 
 // Public writes
 router.post('/order', authenticateToken, createOrderValidation, runValidation, OrderController.create);
 router.put('/order/:id', authenticateToken, updateOrderValidation, runValidation, OrderController.update);
-router.put('/order/:id', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
+router.put('/order/:id/cancel', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
 
 export default router;

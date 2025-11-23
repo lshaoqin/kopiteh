@@ -6,7 +6,6 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from 'src/types/success';
-import { validateCreateOrder, validateUpdateOrder } from '../validations/order.validation';
 
 export const OrderController = {
   async getByUser(req: Request, res: Response) {
@@ -33,7 +32,6 @@ export const OrderController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as OrderPayload;
-      validateCreateOrder(payload);
       const data = await OrderService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
@@ -53,7 +51,6 @@ export const OrderController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateOrderPayload;
-      validateUpdateOrder(payload);
       const data = await OrderService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
