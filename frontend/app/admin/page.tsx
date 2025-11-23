@@ -10,19 +10,7 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [stalls, setStalls] = useState<Stall[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const accessToken = useAuthStore.getState().accessToken;
-  const refreshToken = useAuthStore.getState().refreshToken;
   const user: User = useAuthStore.getState().user
-  useEffect(() => {
-    async function fetchStalls() {
-      console.log('this is access token', accessToken);
-      console.log('this is refresh token', refreshToken);
-      console.log(user)
-    }
-
-    fetchStalls()
-  }, [accessToken, refreshToken, user])
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -69,7 +57,6 @@ export default function Home() {
         <h1>Stalls:</h1>
         {stalls.length > 0 ? (
           <ul>
-            {/* ✅ Type-safe access to stall.id and stall.name */}
             {stalls.map((stall) => (
               <li key={stall.stall_id}>{stall.name}</li>
             ))}

@@ -1,7 +1,5 @@
 'use client'
 
-import type { Stall } from "../../../types/stall"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/stores/auth.store"
@@ -10,18 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true)
-  const accessToken = useAuthStore.getState().accessToken;
-  const refreshToken = useAuthStore.getState().refreshToken;
   const user: User = useAuthStore.getState().user
-  useEffect(() => {
-    async function fetchStalls() {
-      console.log('this is access token', accessToken);
-      console.log('this is refresh token', refreshToken);
-      console.log(user)
-    }
-
-    fetchStalls()
-  }, [accessToken, refreshToken, user])
   const router = useRouter();
 
   const handleLogout = async () => {
