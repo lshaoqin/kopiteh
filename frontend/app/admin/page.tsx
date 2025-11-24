@@ -1,70 +1,28 @@
-'use client'
+// app/admin/page.tsx
+"use client";
 
-import type { Stall } from "../../../types/stall"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { useAuthStore } from "@/stores/auth.store"
-import { User } from "../../../types/auth"
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth.store";
 
-export default function Home() {
-  const [stalls, setStalls] = useState<Stall[]>([])
-  const user: User = useAuthStore.getState().user
+export default function AdminIndexPage() {
   const router = useRouter();
+  const { user, isHydrated } = useAuthStore(); 
 
-  const handleLogout = async () => {
-  try {
-    const refreshToken = useAuthStore.getState().refreshToken;
-    const logoutStore = useAuthStore.getState().logout;
+  useEffect(() => {
+    if (!isHydrated) return;
 
-    if (!refreshToken) {
-      logoutStore();
-      router.push("/login");
+    if (!user) {
+      router.replace("/admin/auth/login");
       return;
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-      }),
-    });
-
-    await res.json();
-
-    logoutStore();
-
-    // Redirect to login
-    router.push("/login");
-  } catch (err) {
-    console.error("Logout failed:", err);
-
-    // Still clear local state to avoid being stuck
-    useAuthStore.getState().logout();
-    router.push("/login");
-  }
-};
+    router.replace("/admin/main/home");
+  }, [user, isHydrated, router]);
 
   return (
-    <main className="p-2">
-      <div>
-        <h1>Hi admin {user.name}</h1>
-        <Button onClick={handleLogout}>
-          Logout
-        </Button>
-        <h1>Stalls:</h1>
-        {stalls.length > 0 ? (
-          <ul>
-            {stalls.map((stall) => (
-              <li key={stall.stall_id}>{stall.name}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No stalls found.</p>
-        )}
-      </div>
-    </main>
-  )
+    <div className="flex items-center justify-center min-h-screen text-gray-500">
+      Loading...
+    </div>
+  );
 }

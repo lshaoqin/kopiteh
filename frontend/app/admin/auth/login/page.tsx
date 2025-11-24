@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
-import { LoginPayload } from "../../../types/auth"
+import { LoginPayload } from "../../../../../types/auth"
 import { useAuthStore } from "@/stores/auth.store"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -81,12 +81,10 @@ export default function Home() {
       setAccessToken(accessToken);
       setRefreshToken(refreshToken);
       setUser(user);
-      const role = data.payload.data.user.role
       setSuccess(message);
-      console.log(role)
 
       setTimeout(() => {
-        router.push(`/${role}`);
+        router.push("/admin/main/home");
       }, 1500);
     } catch (err: any) {
       console.error("Signup error:", err);
@@ -104,7 +102,7 @@ export default function Home() {
             <h1 className="font-bold text-2xl">Welcome Back!</h1>
             <div className="flex flex-row space-x-1 mt-1">
               <label>Login below or</label>
-              <Link href="/signup">
+              <Link href="/admin/auth/signup">
                 <label className="font-semibold underline">create an account</label>
               </Link>
             </div>
@@ -139,7 +137,7 @@ export default function Home() {
               <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
             </div>
           )}
-          <Link href="/forgotpassword">
+          <Link href="/admin/auth/forgotpassword">
             <div className="mt-2 w-full flex justify-center">
               <label className="underline text-sm">Forgot password?</label>
             </div>

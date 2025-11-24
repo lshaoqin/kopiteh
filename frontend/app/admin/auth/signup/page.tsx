@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
-import { UserRole, User, CreateAccountPayload } from "../../../types/auth"
+import { UserRole, User, CreateAccountPayload } from "../../../../../types/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -76,7 +76,7 @@ export default function Home() {
             setSuccess(message);
 
             setTimeout(() => {
-                router.push(`/verifyemail?email=${encodeURIComponent(email)}`)
+                router.push(`/admin/auth/verifyemail?email=${encodeURIComponent(email)}`)
             }, 2000);
         } catch (err: any) {
             console.error("Signup error:", err);
@@ -95,7 +95,7 @@ export default function Home() {
                         <h1 className="font-bold text-2xl">Create an Account</h1>
                         <div className="flex flex-row space-x-1 mt-1">
                             <label>Enter your account details below or</label>
-                            <Link href="/login">
+                            <Link href="/admin/auth/login">
                                 <label className="font-semibold underline">log in</label>
                             </Link>
                         </div>

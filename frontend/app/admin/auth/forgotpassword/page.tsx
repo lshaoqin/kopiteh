@@ -1,57 +1,41 @@
-// app/verify-email/page.tsx
 'use client';
 
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/formfield";
-import { useAuthStore } from "@/stores/auth.store";
-import { VerifyEmailPayload } from "../../../types/auth";
+import { ForgotPasswordPayload } from "../../../../../types/auth";
 
-export default function VerifyEmailPage() {
-    const searchParams = useSearchParams();
+export default function ForgotPasswordPage() {
     const router = useRouter();
 
-    const setAccessToken = useAuthStore((state) => state.setAccessToken);
-    const setRefreshToken = useAuthStore((state) => state.setRefreshToken);
-    const setUser = useAuthStore((state) => state.setUser);
-
     const [email, setEmail] = useState("");
-    const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    // optional: prefill email from query ?email=...
-    useEffect(() => {
-        const e = searchParams.get("email");
-        if (e) setEmail(e);
-    }, [searchParams]);
-
-    const handleVerify = async () => {
+    const handleForgotPassword = async () => {
         setError(null);
         setSuccess(null);
+
+        if (!email) {
+            setError("Please enter your email.");
+            return;
+        }
 
         if (!API_URL) {
             setError("API URL is not configured.");
             return;
         }
 
-        if (!email || !code) {
-            setError("Please enter both your email and verification code.");
-            return;
-        }
-
         setLoading(true);
 
         try {
-            const payload: VerifyEmailPayload = {
-                email,
-                code
-            };
-            const res = await fetch(`${API_URL}/auth/verify-email`, {
+            const payload: ForgotPasswordPayload = { email };
+
+            const res = await fetch(`${API_URL}/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -60,46 +44,35 @@ export default function VerifyEmailPage() {
             let data: any;
             try {
                 data = await res.json();
+                console.log(data)
             } catch {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            console.log(data)
+            console.log("forgot-password response:", data);
 
+            // Server ALWAYS returns success (even if email not found)
+            // so we treat ANY ok response as success.
             if (!res.ok || data?.success === false) {
                 const msg =
-                    data?.payload?.details ||
                     data?.payload?.message ||
                     data?.message ||
-                    "Verification failed. Please check your code and try again.";
+                    "Something went wrong. Please try again.";
                 setError(msg);
                 return;
             }
 
-            const payloadData = data?.payload?.data || {};
-            const accessToken: string | undefined = payloadData.access_token;
-            const refreshToken: string | undefined = payloadData.refresh_token;
-            const user = payloadData.user;
+            // Show success message
+            setSuccess("If an account exists, we've sent a reset code to your email.");
 
-            const message: string =
-                payloadData.message ||            // "Email verified successfully"
-                data?.payload?.message ||         // "Request processed successfully."
-                "Email verified successfully.";
-
-
-            setAccessToken(accessToken);
-            setRefreshToken(refreshToken);
-            setUser(user);
-            const role = data.payload.data.user.role
-            setSuccess(message);
-            console.log(role)
-
+            // Redirect after 2 seconds
             setTimeout(() => {
-                router.push(`/${role}`);
-            }, 1500);
+                router.push(`/admin/auth/resetpassword?email=${encodeURIComponent(email)}`);
+            }, 2000);
+
         } catch (err: any) {
-            console.error("Verify email error:", err);
-            setError(err.message || "Something went wrong. Please try again.");
+            console.error("Forgot password error:", err);
+            setError(err.message || "Something went wrong.");
         } finally {
             setLoading(false);
         }
@@ -110,9 +83,9 @@ export default function VerifyEmailPage() {
             <div className="w-[400px] items-center flex flex-col justify-center border-1 rounded-md shadow-lg">
                 <div className="p-5 flex flex-col w-full h-full text-grey-primary">
                     <div>
-                        <h1 className="font-bold text-2xl">Verify your email</h1>
+                        <h1 className="font-bold text-2xl">Forgot your password?</h1>
                         <p className="text-sm mt-1">
-                            We’ve sent a 6-digit code to your email. Enter it below to activate your account.
+                            Enter your email and we’ll send you a 6-digit reset code.
                         </p>
                     </div>
 
@@ -126,34 +99,23 @@ export default function VerifyEmailPage() {
                                 onChange: (e) => setEmail(e.target.value),
                             }}
                         />
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="text"
-                            label="Verification Code"
-                            inputProps={{
-                                value: code,
-                                onChange: (e) => setCode(e.target.value),
-                                maxLength: 6,
-                            }}
-                        />
                     </div>
 
                     <Button
-                        onClick={handleVerify}
+                        onClick={handleForgotPassword}
                         variant="signin"
-                        disabled={loading || !email || !code}
+                        disabled={loading || !email}
                         className="w-full flex items-center justify-center"
                     >
                         {loading ? (
                             <div className="flex items-center space-x-2">
                                 <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                <span>Verifying...</span>
+                                <span>Sending...</span>
                             </div>
                         ) : (
-                            "Verify Email"
+                            "Send Reset Code"
                         )}
                     </Button>
-
 
                     {error && (
                         <div className="flex justify-center w-full">

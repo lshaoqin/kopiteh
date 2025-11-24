@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/formfield";
 import { useAuthStore } from "@/stores/auth.store";
-import { ResetPasswordPayload } from "../../../types/auth";
+import { ResetPasswordPayload } from "../../../../../types/auth";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -97,17 +97,16 @@ export default function ResetPasswordPage() {
         setAccessToken(accessToken);
         setUser(user);
 
-        const role = user.role;
         setSuccess(message);
 
         setTimeout(() => {
-          router.push(`/${role}`);
+          router.push("/admin/home");
         }, 1500);
       } else {
         // If you chose not to auto-login on backend:
         setSuccess(message + " You can now log in with your new password.");
         setTimeout(() => {
-          router.push("/login");
+          router.push("/admin/auth/login");
         }, 2000);
       }
     } catch (err: any) {
