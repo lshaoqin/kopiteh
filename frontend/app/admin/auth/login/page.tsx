@@ -148,7 +148,7 @@ export default function Home() {
               </div>
             </Link>
             <div className="flex flex-row space-x-1 text-grey-primary text-md">
-              <label className="text-grey-primary/70">Dont have an account yet?</label>
+              <label className="text-grey-primary/70">Don&apos;t have an account yet?</label>
               <Link href="/admin/auth/signup">
                 <label className="font-semibold underline ">Register here!</label>
               </Link>
