@@ -10,16 +10,22 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [stalls, setStalls] = useState<Stall[]>([])
-  const user: User = useAuthStore.getState().user
+  const { user, isHydrated, logout } = useAuthStore();
   const router = useRouter();
 
+  if (!isHydrated || !user) {
+    return (
+      <main className="flex items-center justify-center min-h-screen text-gray-500">
+        Loading...
+      </main>
+    );
+  }
   const handleLogout = async () => {
   try {
     const refreshToken = useAuthStore.getState().refreshToken;
-    const logoutStore = useAuthStore.getState().logout;
 
     if (!refreshToken) {
-      logoutStore();
+      logout();
       router.push("/login");
       return;
     }
@@ -34,7 +40,7 @@ export default function Home() {
 
     await res.json();
 
-    logoutStore();
+    logout();
 
     // Redirect to login
     router.push("/admin/auth/login");
