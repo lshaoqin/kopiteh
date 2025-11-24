@@ -4,41 +4,59 @@ import type { Stall } from "../../../types/stall"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { useAuthStore } from "@/stores/auth.store"
+import { User } from "../../../types/auth"
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [stalls, setStalls] = useState<Stall[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const user: User = useAuthStore.getState().user
+  const router = useRouter();
 
-  useEffect(() => {
-    async function fetchStalls() {
-      try {
-        const response = await fetch("http://localhost:4000/stalls")
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} ${response.statusText}`)
-        }
+  const handleLogout = async () => {
+  try {
+    const refreshToken = useAuthStore.getState().refreshToken;
+    const logoutStore = useAuthStore.getState().logout;
 
-        const data: Stall[] = await response.json()
-        setStalls(data)
-      } catch (err) {
-        console.error("Failed to fetch stalls:", err)
-      } finally {
-        setLoading(false)
-      }
+    if (!refreshToken) {
+      logoutStore();
+      router.push("/login");
+      return;
     }
 
-    fetchStalls()
-  }, [])
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+      }),
+    });
 
-  if (loading) return <p>Loading...</p>
+    await res.json();
+
+    logoutStore();
+
+    // Redirect to login
+    router.push("/login");
+  } catch (err) {
+    console.error("Logout failed:", err);
+
+    // Still clear local state to avoid being stuck
+    useAuthStore.getState().logout();
+    router.push("/login");
+  }
+};
 
   return (
     <main className="p-2">
       <div>
+        <h1>Hi admin {user.name}</h1>
+        <Button onClick={handleLogout}>
+          Logout
+        </Button>
         <h1>Stalls:</h1>
         {stalls.length > 0 ? (
           <ul>
-            {/* ✅ Type-safe access to stall.id and stall.name */}
             {stalls.map((stall) => (
               <li key={stall.stall_id}>{stall.name}</li>
             ))}
@@ -46,14 +64,6 @@ export default function Home() {
         ) : (
           <p>No stalls found.</p>
         )}
-      </div>
-
-      <div className="flex flex-col w-[100px] space-y-3 my-4">
-        <Button>Default</Button>
-        <Button variant="secondary">Secondary</Button>
-        <Button variant="destructive">Destructive</Button>
-        <Button variant="outline">Outline</Button>
-        <Search className="w-4 h-4 text-muted-foreground" />
       </div>
     </main>
   )

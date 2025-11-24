@@ -2,21 +2,21 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "dev": "ts-node src/index.ts",
+    "seed": "ts-node src/seed.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "seed": "node --loader ts-node/esm src/seed.ts",
-    "migrate": "node scripts/migrate.ts",
-    "migrate:rollback": "node scripts/rollback.ts"
+    "migrate": "ts-node src/scripts/migrate.ts",
+    "migrate:rollback": "ts-node src/scripts/rollback.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -24,11 +24,6 @@
     "express-validator": "^7.3.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3"
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
-    }
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

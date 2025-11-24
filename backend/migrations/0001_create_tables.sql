@@ -11,6 +11,29 @@ CREATE TABLE IF NOT EXISTS venue (
   opening_hours VARCHAR
 );
 
+-- users
+CREATE TABLE IF NOT EXISTS users (
+  user_id                   SERIAL PRIMARY KEY,
+  name                      VARCHAR(255) NOT NULL,
+  email                     VARCHAR(255) NOT NULL UNIQUE,
+  password_hash             VARCHAR(255) NOT NULL,
+  role                      VARCHAR(50) NOT NULL DEFAULT 'user',
+  is_authenticated          BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  verify_code               VARCHAR(6),         
+  verify_code_expires_at    TIMESTAMPTZ,
+  reset_password_code       VARCHAR(6),
+  reset_password_expires_at TIMESTAMPTZ
+);
+
+-- user sessions
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_session_id UUID PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  refresh_token_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- stalls
 CREATE TABLE IF NOT EXISTS stall (
   stall_id     SERIAL PRIMARY KEY,

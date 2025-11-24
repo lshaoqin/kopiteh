@@ -1,37 +1,28 @@
-'use client'
+// app/page.tsx
+"use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth.store";
 
-import type { Stall } from "../../types/stall"
-import Link from "next/link";
+export default function IndexPage() {
+  const router = useRouter();
+  const { user, isHydrated } = useAuthStore();
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+  useEffect(() => {
+    if (!isHydrated) return; // Wait for AuthBootstrap + hydration
 
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
 
-export default function Home() {
-
+    router.replace(`/${user.role}`); // e.g. /admin, /runner, /ordering
+  }, [user, isHydrated, router]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="w-[400px] h-[300px] items-center flex flex-col justify-center border-1 rounded-md shadow-lg">
-        <div className="my-2 flex justify-center items-center flex-col w-full">
-          <div>
-            <h1 className="font-semibold text-2xl">Choose a Module</h1>
-          </div>
-          <div className="flex flex-col space-y-5 my-5">
-            <Button className="bg-primary1 h-11 rounded-md">
-              <Link href="/admin">Admin</Link>
-            </Button>
-            <Button className="bg-primary1 h-11 rounded-md">
-              <Link href="/runner">Runner</Link>
-            </Button>
-            <Button className="bg-primary1 h-11 rounded-md">
-              <Link href="/ordering">Ordering</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </main>
-  )
+    <div className="flex items-center justify-center min-h-screen text-gray-500">
+      Loading...
+    </div>
+  );
 }
