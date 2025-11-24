@@ -117,25 +117,8 @@ export default function VerifyEmailPage() {
                     </div>
 
                     <div className="flex flex-col space-y-5 my-6">
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="email"
-                            label="Email"
-                            inputProps={{
-                                value: email,
-                                onChange: (e) => setEmail(e.target.value),
-                            }}
-                        />
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="text"
-                            label="Verification Code"
-                            inputProps={{
-                                value: code,
-                                onChange: (e) => setCode(e.target.value),
-                                maxLength: 6,
-                            }}
-                        />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: code, placeholder: "Email Verficiation Code", onChange: (e) => setCode(e.target.value), maxLength: 6 }} />
                     </div>
 
                     <Button

@@ -100,11 +100,11 @@ export default function Home() {
                             </Link>
                         </div>
                     </div>
-                    <div className="flex flex-col space-y-5 my-6">
-                        <FormField className="flex flex-col space-y-1" variant="text" label="User Name" inputProps={{ value: userName, onChange: (e) => setUserName(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="email" label="Email" inputProps={{ value: email, onChange: (e) => setEmail(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="password" label="Password" inputProps={{ value: password, onChange: (e) => setPassword(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="password" label="Access Code" inputProps={{ value: secretCode, onChange: (e) => setSecretCode(e.target.value) }} />
+                    <div className="flex flex-col space-y-5 my-6">            
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="text" label="" inputProps={{ value: userName, placeholder: "User Name", onChange: (e) => setUserName(e.target.value) }} />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: password, placeholder: "Password", onChange: (e) => setPassword(e.target.value) }} />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: secretCode, placeholder: "Secret Code", onChange: (e) => setSecretCode(e.target.value) }} />
                     </div>
                     <Button
                         onClick={handleSignup}

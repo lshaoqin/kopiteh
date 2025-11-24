@@ -141,3 +141,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .placeholder-center::placeholder {
+    text-align: center;
+  }
+}
