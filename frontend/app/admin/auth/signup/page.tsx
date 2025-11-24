@@ -6,6 +6,7 @@ import { useState } from "react"
 import { UserRole, User, CreateAccountPayload } from "../../../../../types/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useAuthStore } from "@/stores/auth.store"
 
 export default function Home() {
     const [email, setEmail] = useState("")
@@ -17,6 +18,9 @@ export default function Home() {
     const [success, setSuccess] = useState<string | null>(null)
     const API_URL = process.env.NEXT_PUBLIC_API_URL
     const router = useRouter();
+    const setAccessToken = useAuthStore((state) => state.setAccessToken);
+    const setRefreshToken = useAuthStore((state) => state.setRefreshToken);
+    const setUser = useAuthStore((state) => state.setUser);
 
     const handleSignup = async () => {
         setError("");
@@ -72,11 +76,20 @@ export default function Home() {
                 return;
             }
             // Success response
-            const message = data.payload?.data?.message ?? "Account created.";
+            const message = data.payload?.data?.message ?? "Account has been created. Has been created, redirecting you back to the main page";
             setSuccess(message);
 
+            const payloadData = data?.payload?.data || {};
+            const accessToken: string | undefined = payloadData.access_token;
+            const refreshToken: string | undefined = payloadData.refresh_token;
+            const user = payloadData.user;
+
+            setAccessToken(accessToken);
+            setRefreshToken(refreshToken);
+            setUser(user);
+
             setTimeout(() => {
-                router.push(`/admin/auth/verifyemail?email=${encodeURIComponent(email)}`)
+                router.push("/admin/main/home");
             }, 2000);
         } catch (err: any) {
             console.error("Signup error:", err);
@@ -106,36 +119,45 @@ export default function Home() {
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="text" label="" inputProps={{ value: userName, placeholder: "User Name", onChange: (e) => {
-                                setUserName(e.target.value)
-                                setError(null);} }} />
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="text" label="" inputProps={{
+                                value: userName, placeholder: "User Name", onChange: (e) => {
+                                    setUserName(e.target.value)
+                                    setError(null);
+                                }
+                            }} />
                         <FormField className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => {
-                                setEmail(e.target.value)
-                                setError(null);}
-                                 }} />
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{
+                                value: email, placeholder: "Email", onChange: (e) => {
+                                    setEmail(e.target.value)
+                                    setError(null);
+                                }
+                            }} />
                         <FormField className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: password, placeholder: "Password", onChange: (e) => {
-                                setPassword(e.target.value)
-                                setError(null);
-                            } }} />
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{
+                                value: password, placeholder: "Password", onChange: (e) => {
+                                    setPassword(e.target.value)
+                                    setError(null);
+                                }
+                            }} />
                         <FormField className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: secretCode, placeholder: "Secret Code", onChange: (e) => {
-                            setSecretCode(e.target.value)
-                            setError(null);
-                            } }} />
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{
+                                value: secretCode, placeholder: "Secret Code", onChange: (e) => {
+                                    setSecretCode(e.target.value)
+                                    setError(null);
+                                }
+                            }} />
                     </div>
                     <div className="flex flex-col justify-center items-center w-full space-y-2">
                         <Button

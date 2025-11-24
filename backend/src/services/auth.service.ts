@@ -11,7 +11,6 @@ import sgMail from "@sendgrid/mail";
 import {
   CreateAccountPayload,
   LoginPayload,
-  VerifyEmailPayload,
   ForgotPasswordPayload,
   VerifyResetCodePayload,
   ResetPasswordPayload,
@@ -39,21 +38,6 @@ const EMAIL_API_KEY = requireEnv("KOPITEH_BACKEND_EMAIL_API_KEY");
 const EMAIL_FROM = requireEnv("EMAIL_FROM");
 
 sgMail.setApiKey(EMAIL_API_KEY);
-
-async function sendVerificationEmail(to: string, name: string, code: string) {
-  await sgMail.send({
-    to,
-    from: EMAIL_FROM,
-    subject: "Your Kopiteh Verification Code",
-    text: `Your Kopiteh email verification code is: ${code}\n\nIf you did not request this, please ignore this email.`,
-    html: `
-      <p>Hi, ${name}</p>
-      <p>Your <strong>Kopiteh</strong> email verification code is:</p>
-      <h2>${code}</h2>
-      <p>If you did not request this, you can safely ignore this email.</p>
-    `,
-  });
-}
 
 async function sendResetCodeEmail(to: string, name: string, code: string) {
   await sgMail.send({
@@ -130,21 +114,13 @@ export const AuthService = {
     payload: CreateAccountPayload
   ): Promise<ServiceResult<any>> {
     try {
-      // Check if email already exists
       const adminCode = process.env.ADMIN_SIGNUP_CODE;
-      const runnerCode = process.env.RUNNER_SIGNUP_CODE;
-      const userCode = process.env.USER_SIGNUP_CODE;
+      const role = "admin"
 
-      let role: "admin" | "runner" | "user" | null = null;
-      if (payload.secretCode === adminCode) {
-        role = "admin";
-      } else if (payload.secretCode === runnerCode) {
-        role = "runner";
-      } else if (payload.secretCode === userCode) {
-        role = "user";
-      } else {
-        return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid signup code");
+      if (payload.secretCode !== adminCode) {
+         return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid signup code");
       }
+
       const existing = await BaseService.query(
         "SELECT 1 FROM users WHERE email = $1",
         [payload.email]
@@ -157,40 +133,26 @@ export const AuthService = {
       }
 
       const hash = await bcrypt.hash(payload.password, 10);
-      const verifyCode = generateSecretCode();
-      const verifyExpiry = new Date(Date.now() + 15 * 60 * 1000);
       const createdAt = new Date(Date.now());
       const created = await BaseService.query(
-        `INSERT INTO users (name, email, password_hash, role, is_authenticated, created_at, verify_code, verify_code_expires_at)
-         VALUES ($1,$2,$3,$4,false,$5,$6,$7)
-         RETURNING user_id, name, email, role, is_authenticated, created_at, verify_code`,
-        [
-          payload.name,
-          payload.email,
-          hash,
-          role,
-          createdAt,
-          verifyCode,
-          verifyExpiry,
-        ]
+        `INSERT INTO users (name, email, password_hash, role, is_authenticated, created_at)
+         VALUES ($1,$2,$3,$4,true,$5)
+         RETURNING user_id, name, email, role, is_authenticated, created_at`,
+        [payload.name, payload.email, hash, role, createdAt]
       );
 
       const user = created.rows[0];
 
-      try {
-        await sendVerificationEmail(user.email, user.name, user.verify_code);
-        console.log("email sent?");
-      } catch (err) {
-        console.error("Failed to send verification email:", err);
-        return errorResponse(
-          ErrorCodes.INTERNAL_ERROR,
-          "Account created but failed to send verification email."
-        );
-      }
+      const accessToken = signAccessToken(user.user_id);
+
+      const sessionId = generateSessionId();
+      const refreshToken = signRefreshToken(user.user_id, sessionId);
+      await createSessionWithId(user.user_id, sessionId, refreshToken);
 
       return successResponse(SuccessCodes.CREATED, {
-        message:
-          "Account created. Please check your email for the verification code.",
+        message: "Account created successfully.",
+        access_token: accessToken,
+        refresh_token: refreshToken,
         user: {
           user_id: user.user_id,
           name: user.name,
@@ -227,13 +189,6 @@ export const AuthService = {
       if (!validPassword)
         return errorResponse(ErrorCodes.UNAUTHORIZED, "Invalid credentials");
 
-      if (!user.is_authenticated) {
-        // you can define a dedicated error code like EMAIL_NOT_VERIFIED
-        return errorResponse(
-          ErrorCodes.EMAIL_NOT_VERIFIED,
-          "Please verify your email before logging in."
-        );
-      }
       const accessToken = signAccessToken(user.user_id);
 
       // Refresh Token logic -- stored in user_sessions table
@@ -289,85 +244,6 @@ export const AuthService = {
         ErrorCodes.UNAUTHORIZED,
         "Invalid or expired refresh token"
       );
-    }
-  },
-
-  async verifyEmail(payload: VerifyEmailPayload): Promise<ServiceResult<any>> {
-    try {
-      const res = await BaseService.query(
-        `SELECT user_id, name, email, role, is_authenticated, created_at, verify_code, verify_code_expires_at
-         FROM users
-         WHERE email = $1`,
-        [payload.email]
-      );
-
-      const user = res.rows[0];
-      if (!user) {
-        return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
-      }
-
-      if (user.is_authenticated) {
-        return errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          "Email already verified. Please log in."
-        );
-      }
-
-      if (!user.verify_code || !user.verify_code_expires_at) {
-        return errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          "No verification code set"
-        );
-      }
-
-      const now = new Date();
-      const expiresAt = new Date(user.verify_code_expires_at);
-
-      if (now > expiresAt) {
-        return errorResponse(
-          ErrorCodes.UNAUTHORIZED,
-          "Verification code expired"
-        );
-      }
-
-      if (payload.code !== user.verify_code) {
-        return errorResponse(
-          ErrorCodes.UNAUTHORIZED,
-          "Invalid verification code"
-        );
-      }
-
-      // Code is valid → mark user as authenticated and clear code
-      await BaseService.query(
-        `UPDATE users
-           SET is_authenticated = true,
-               verify_code = NULL,
-               verify_code_expires_at = NULL
-         WHERE user_id = $1`,
-        [user.user_id]
-      );
-
-      const accessToken = signAccessToken(user.user_id);
-
-      // Refresh Token logic -- stored in user_sessions table
-      const sessionId = generateSessionId();
-      const refreshToken = signRefreshToken(user.user_id, sessionId);
-      await createSessionWithId(user.user_id, sessionId, refreshToken);
-
-      return successResponse(SuccessCodes.OK, {
-        message: "Email verified successfully",
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        user: {
-          user_id: user.user_id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          is_authenticated: true,
-        },
-      });
-    } catch (error) {
-      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
