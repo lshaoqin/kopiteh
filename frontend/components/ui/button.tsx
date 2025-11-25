@@ -19,7 +19,8 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        signin: "bg-primary1 hover:bg-grey-primary/70 text-white py-3 rounded-xl"
+        signin: "bg-primary1 hover:bg-grey-primary/70 text-white py-3 rounded-xl",
+        logout: "justify-start text-xl w-full py-4 text-white h-auto hover:bg-primary2"
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
