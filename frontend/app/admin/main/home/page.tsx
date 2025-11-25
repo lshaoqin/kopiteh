@@ -14,11 +14,7 @@ export default function Home() {
   const router = useRouter();
 
   if (!isHydrated || !user) {
-    return (
-      <main className="flex items-center justify-center min-h-screen text-gray-500">
-        Loading...
-      </main>
-    );
+    return null;
   }
   const handleLogout = async () => {
   try {
