@@ -4,9 +4,14 @@ import { useAuthStore } from "@/stores/auth.store"
 import { HomeIcon, ChartNoAxesCombined, SettingsIcon, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
+import React from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+
 
 function AdminSideBar() {
     const { user, isHydrated, logout } = useAuthStore();
+    const pathname = usePathname();
     const router = useRouter();
     if (!isHydrated || !user) {
         return null;
@@ -14,17 +19,17 @@ function AdminSideBar() {
     const menuItems = [
         {
             name: "Home",
-            href: "/admin",
+            href: "/admin/main/home",
             icon: <HomeIcon className="w-6 h-6" />,
         },
         {
             name: "View Analytics",
-            href: "/admin/viewanalytics",
+            href: "/admin/main/viewanalytics",
             icon: <ChartNoAxesCombined className="w-6 h-6" />,
         },
         {
             name: "Manage Stalls",
-            href: "/admin/managestalls",
+            href: "/admin/main/managestalls",
             icon: <SettingsIcon className="w-6 h-6" />,
         },
     ];
@@ -58,35 +63,43 @@ function AdminSideBar() {
     };
     return (
         <div className="h-screen w-[352px] bg-primary1 rounded-r-xl">
-            <div className="flex justify-between flex-col h-full py-7">
+            <div className="flex justify-between flex-col h-full py-5">
                 <div className="w-full flex justify-center flex-col">
-                    <h1 className="text-white font-bold text-5xl text-center">VSB</h1>
-                    <div className="space-y-2">
+                    <h1 className="text-white font-extrabold text-5xl text-center">VSB</h1>
+                    <div className="space-y-2 mt-9 flex flex-row">
                         <div>
 
                         </div>
-                        <label className="text-white text-xl">{user.name}</label>
+                        <label className="text-white text-xl pl-[32px] pr-[57px]">{user.name}</label>
                     </div>
                 </div>
 
                 <div className="w-full pl-[32px] pr-[57px]">
                     <ul className="mt-6 space-y-6">
-                        {menuItems.map((item) => (
-                            <li key={item.name}>
-                                <a
-                                    href={item.href}
-                                    className="flex items-center gap-3 text-white hover:opacity-80"
-                                >
-                                    {item.icon}
-                                    <span className="text-lg">{item.name}</span>
-                                </a>
-                            </li>
-                        ))}
+                        {menuItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <li key={item.name} className="w-[263px] h-[63px]">
+                                    <a
+                                        href={item.href}
+                                        className={cn(
+                                            "flex h-full items-center gap-2 px-4 text-white transition-all",
+                                            isActive
+                                                ? "bg-white text-[#048442] rounded-r-[32px] font-bold shadow-sm"
+                                                : "hover:opacity-80"
+                                        )}
+                                    >
+                                        {React.cloneElement(item.icon, { className: "h-[55px] w-[47px]", strokeWidth: 0.8 })}
+                                        <span className="font-bold text-xl">{item.name}</span>
+                                    </a>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
                 <div className="pl-[32px] pr-[57px]">
                     <Button onClick={handleLogout} variant="logout">
-                        <LogOut className="size-[32px]"/>
+                        <LogOut className="h-[55px] w-[47px]" strokeWidth={0.8} />
                         <label>Log Out</label>
                     </Button>
                 </div>
