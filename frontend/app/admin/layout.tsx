@@ -12,27 +12,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isHydrated } = useAuthStore();
 
   useEffect(() => {
-  if (!isHydrated) return;
+    if (!isHydrated) return;
 
-  const isPublicAuthRoute = pathname.startsWith("/admin/auth");
-  const isAdminRoot = pathname === "/admin";
-  const isMainRoute = pathname.startsWith("/admin/main");
+    const isAuthRoute = pathname.startsWith("/admin/auth");
+    const isAdminRoot = pathname === "/admin" || pathname === "/admin/";
+    const isMainRoot = pathname === "/admin/main" || pathname === "/admin/main/";
 
-  if (!user) {
-    if (!isPublicAuthRoute) {
-      router.replace("/admin/auth/login");
+    if (!user) {
+      if (!isAuthRoute) {
+        router.replace("/admin/auth/login");
+      }
+      return;
     }
-    return;
-  }
 
-  if (user) {
-    if (isPublicAuthRoute || isAdminRoot || isMainRoute) {
+    if (isAuthRoute || isAdminRoot || isMainRoot) {
       router.replace("/admin/main/home");
       return;
     }
-  }
-}, [user, isHydrated, pathname, router]);
 
+  }, [user, isHydrated, pathname, router]);
 
   return <AuthContext>{children}</AuthContext>;
 }
