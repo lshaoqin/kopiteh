@@ -23,12 +23,10 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
     const init = async () => {
       // No refresh token => user is effectively logged out
       if (!refreshToken) {
-        console.log("here")
         setBootstrapped(true);
         return;
       }
 
-      console.log(refreshToken);
 
       // No access token but have refresh token (auto-login)
       if (!accessToken) {
