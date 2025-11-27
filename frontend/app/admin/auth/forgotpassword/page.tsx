@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/formfield";
-import { ForgotPasswordPayload } from "../../../types/auth";
+import { ForgotPasswordPayload } from "../../../../../types/auth";
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
@@ -44,15 +44,10 @@ export default function ForgotPasswordPage() {
             let data: any;
             try {
                 data = await res.json();
-                console.log(data)
             } catch {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            console.log("forgot-password response:", data);
-
-            // Server ALWAYS returns success (even if email not found)
-            // so we treat ANY ok response as success.
             if (!res.ok || data?.success === false) {
                 const msg =
                     data?.payload?.message ||
@@ -67,7 +62,7 @@ export default function ForgotPasswordPage() {
 
             // Redirect after 2 seconds
             setTimeout(() => {
-                router.push(`/resetpassword?email=${encodeURIComponent(email)}`);
+                router.push(`/admin/auth/resetpassword?email=${encodeURIComponent(email)}`);
             }, 2000);
 
         } catch (err: any) {
@@ -90,15 +85,13 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     <div className="flex flex-col space-y-5 my-6">
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="email"
-                            label="Email"
-                            inputProps={{
-                                value: email,
-                                onChange: (e) => setEmail(e.target.value),
-                            }}
-                        />
+                        <FormField 
+                            className="flex flex-col space-y-1" 
+                            classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                            variant="email" 
+                            label="" 
+                            inputProps={{ value: email, placeholder: "Email", onChange: (e) => {setEmail(e.target.value); setError(null);} }} />
                     </div>
 
                     <Button

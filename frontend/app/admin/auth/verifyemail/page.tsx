@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/formfield";
 import { useAuthStore } from "@/stores/auth.store";
-import { VerifyEmailPayload } from "../../../types/auth";
+import { VerifyEmailPayload } from "../../../../../types/auth";
 
 export default function VerifyEmailPage() {
     const searchParams = useSearchParams();
@@ -64,8 +64,6 @@ export default function VerifyEmailPage() {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            console.log(data)
-
             if (!res.ok || data?.success === false) {
                 const msg =
                     data?.payload?.details ||
@@ -92,10 +90,9 @@ export default function VerifyEmailPage() {
             setUser(user);
             const role = data.payload.data.user.role
             setSuccess(message);
-            console.log(role)
 
             setTimeout(() => {
-                router.push(`/${role}`);
+                router.push("/admin/main/home");
             }, 1500);
         } catch (err: any) {
             console.error("Verify email error:", err);
@@ -117,25 +114,8 @@ export default function VerifyEmailPage() {
                     </div>
 
                     <div className="flex flex-col space-y-5 my-6">
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="email"
-                            label="Email"
-                            inputProps={{
-                                value: email,
-                                onChange: (e) => setEmail(e.target.value),
-                            }}
-                        />
-                        <FormField
-                            className="flex flex-col space-y-1"
-                            variant="text"
-                            label="Verification Code"
-                            inputProps={{
-                                value: code,
-                                onChange: (e) => setCode(e.target.value),
-                                maxLength: 6,
-                            }}
-                        />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
+                        <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: code, placeholder: "Email Verficiation Code", onChange: (e) => setCode(e.target.value), maxLength: 6 }} />
                     </div>
 
                     <Button

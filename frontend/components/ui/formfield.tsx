@@ -1,14 +1,14 @@
 import { EmailInput, PasswordInput, TextInput, NumberInput } from "@/components/ui/input"
 
-function FormField({ className, variant, label, inputProps }) {
+function FormField({ className, classNameOut, classNameIn, variant, label, inputProps }) {
     return (
         <div className={className}>
-            <label>{label}</label>
-            {variant == "email" ? (<EmailInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
-             variant == "password" ? (<PasswordInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
-             variant == "text" ? (<TextInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
-             variant == "number" ? (<NumberInput className="p-2 bg-white rounded-sm border-1" {...inputProps}/>) : 
-             <TextInput className="p-2 bg-white rounded-sm border-1"/>}
+           {label ? <label>{label}</label> : <label></label>}
+            {variant == "email" ? (<EmailInput classNameOut={classNameOut} classNameIn={classNameIn} {...inputProps}/>) : 
+             variant == "password" ? (<PasswordInput classNameOut={classNameOut} classNameIn={classNameIn} {...inputProps}/>) : 
+             variant == "text" ? (<TextInput classNameOut={classNameOut} classNameIn={classNameIn} {...inputProps}/>) : 
+             variant == "number" ? (<NumberInput classNameOut={classNameOut} classNameIn={classNameIn} {...inputProps}/>) : 
+             <TextInput classNameOut={classNameOut} classNameIn={classNameIn}/>}
         </div>
     )
 }

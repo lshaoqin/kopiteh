@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
 import { useState } from "react"
-import { UserRole, User, CreateAccountPayload } from "../../../types/auth"
+import { UserRole, User, CreateAccountPayload } from "../../../../../types/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -57,7 +57,6 @@ export default function Home() {
             try {
                 data = JSON.parse(raw);
             } catch (e) {
-                console.log("Non-JSON response:", raw);
                 setError("Server returned an invalid response.");
                 setLoading(false);
                 return;
@@ -76,7 +75,7 @@ export default function Home() {
             setSuccess(message);
 
             setTimeout(() => {
-                router.push(`/verifyemail?email=${encodeURIComponent(email)}`)
+                router.push(`/admin/auth/verifyemail?email=${encodeURIComponent(email)}`)
             }, 2000);
         } catch (err: any) {
             console.error("Signup error:", err);
@@ -95,16 +94,40 @@ export default function Home() {
                         <h1 className="font-bold text-2xl">Create an Account</h1>
                         <div className="flex flex-row space-x-1 mt-1">
                             <label>Enter your account details below or</label>
-                            <Link href="/login">
+                            <Link href="/admin/auth/login">
                                 <label className="font-semibold underline">log in</label>
                             </Link>
                         </div>
                     </div>
-                    <div className="flex flex-col space-y-5 my-6">
-                        <FormField className="flex flex-col space-y-1" variant="text" label="User Name" inputProps={{ value: userName, onChange: (e) => setUserName(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="email" label="Email" inputProps={{ value: email, onChange: (e) => setEmail(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="password" label="Password" inputProps={{ value: password, onChange: (e) => setPassword(e.target.value) }} />
-                        <FormField className="flex flex-col space-y-1" variant="password" label="Access Code" inputProps={{ value: secretCode, onChange: (e) => setSecretCode(e.target.value) }} />
+                    <div className="flex flex-col space-y-5 my-6">            
+                        <FormField 
+                            className="flex flex-col space-y-1" 
+                            classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                            variant="text" 
+                            label="" 
+                            inputProps={{ value: userName, placeholder: "User Name", onChange: (e) => {setUserName(e.target.value); setError(null); }}} />
+                        <FormField 
+                            className="flex flex-col space-y-1" 
+                            classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                            variant="email" 
+                            label="" 
+                            inputProps={{ value: email, placeholder: "Email", onChange: (e) => {setEmail(e.target.value); setError(null);}}} />
+                        <FormField 
+                            className="flex flex-col space-y-1" 
+                            classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                            variant="password" 
+                            label="" 
+                            inputProps={{ value: password, placeholder: "Password", onChange: (e) => {setPassword(e.target.value); setError(null);}}} />
+                        <FormField 
+                            className="flex flex-col space-y-1" 
+                            classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                            variant="password" 
+                            label="" 
+                            inputProps={{ value: secretCode, placeholder: "Secret Code", onChange: (e) => {setSecretCode(e.target.value); setError(null);}}} />
                     </div>
                     <Button
                         onClick={handleSignup}

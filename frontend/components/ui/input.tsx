@@ -21,58 +21,74 @@ function Input({
   );
 }
 
-function EmailInput({className, ...props}) {
+function EmailInput({classNameOut, classNameIn, ...props}) {
   return (
-    <div className={className}>
+    <div className={classNameOut}>
       <input
       type="email"
       inputMode="email"
       autoComplete="email"
-      className="focus:outline-none text-grey-primary w-full"
+      className={classNameIn}
       {...props} />
     </div>
   )
 }
 
-function TextInput({className, ...props}) {
+function TextInput({classNameOut, classNameIn, ...props}) {
   return (
-    <div className={className}>
+    <div className={classNameOut}>
       <input
       type="text"
       inputMode="text"
-      className="focus:outline-none text-grey-primary w-full"
+      className={classNameIn}
       {...props} />
     </div>
   )
 }
 
-function NumberInput({className, ...props}) {
+function NumberInput({classNameOut, classNameIn, ...props}) {
   return (
-    <div className={className}>
+    <div className={classNameOut}>
       <input
       type="number"
       inputMode="decimal"
-      className="focus:outline-none text-grey-primary w-full"
+      className={classNameIn}
       {...props} />
     </div>
   )
 }
 
-function PasswordInput({className, autoComplete = "current-password", ...props}) {
+function PasswordInput({
+  classNameOut,
+  classNameIn,
+  autoComplete = "current-password",
+  ...props
+}) {
   const [show, setShow] = useState(false)
-  return (
-    <div className={cn("flex items-center justify-between", className)}>
-      <input
-      type={show ? "text" : "password"}
-      autoComplete={autoComplete}
-      className="focus:outline-none w-full"
-      {...props} />
+  const [focused, setFocused] = useState(false)
 
-      <button onClick={() => setShow(!show)} className="text-grey-primary">
-        {show ? <EyeOff /> : <Eye />}
-      </button>
+  return (
+    <div className={cn("flex items-center justify-between", classNameOut)}>
+      <input
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        className={classNameIn}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        {...props}
+      />
+
+      {(focused) && (
+        <button
+          onClick={() => setShow(!show)}
+          onMouseDown={(e) => e.preventDefault()}
+          type="button"
+          className="text-grey-primary text-center ml-2"
+        >
+          {show ? <EyeOff /> : <Eye />}
+        </button>
+      )}
     </div>
-    
   )
 }
 
