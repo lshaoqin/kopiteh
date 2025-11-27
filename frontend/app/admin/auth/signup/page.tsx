@@ -57,7 +57,6 @@ export default function Home() {
             try {
                 data = JSON.parse(raw);
             } catch (e) {
-                console.log("Non-JSON response:", raw);
                 setError("Please make sure that your password contains at least 6 characters and your secret code is correct.");
                 setLoading(false);
                 return;
@@ -79,7 +78,6 @@ export default function Home() {
                 router.push(`/admin/auth/verifyemail?email=${encodeURIComponent(email)}`)
             }, 2000);
         } catch (err: any) {
-            console.error("Signup error:", err);
             setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
