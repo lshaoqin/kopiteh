@@ -58,8 +58,6 @@ export default function Home() {
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||
-          data?.payload?.message ||
-          data?.message ||
           "Verification failed. Please check your code and try again.";
         setError(msg);
         return;
