@@ -70,29 +70,31 @@ function AdminSideBar() {
                         <div>
 
                         </div>
-                        <label className="text-white text-xl pl-[32px] pr-[57px]">{user.name}</label>
+                        <label className="text-white text-xl pl-[32px] pr-[57px] font-bold">{user.name}</label>
                     </div>
                 </div>
 
-                <div className="w-full pl-[32px] pr-[57px]">
-                    <ul className="mt-6 space-y-6">
+                <div className="w-full">
+                    <ul className="mt-6 space-y-6 ">
                         {menuItems.map((item) => {
                             const isActive = pathname === item.href;
                             return (
-                                <li key={item.name} className="w-[263px] h-[63px]">
-                                    <a
-                                        href={item.href}
-                                        className={cn(
-                                            "flex h-full items-center gap-2 px-4 text-white transition-all",
-                                            isActive
-                                                ? "bg-white text-[#048442] rounded-r-[32px] font-bold shadow-sm"
-                                                : "hover:opacity-80"
-                                        )}
-                                    >
-                                        {React.cloneElement(item.icon, { className: "h-[55px] w-[47px]", strokeWidth: 0.8 })}
-                                        <span className="font-bold text-xl">{item.name}</span>
-                                    </a>
-                                </li>
+                                <div key={item.name} className={cn("w-full", isActive ? "bg-white rounded-r-[32px] shadow-sm" : "bg-transparent")}>
+                                    <li key={item.name} className="w-[263px] h-[70px] ml-[32px] mr-[57px]">
+                                        <a
+                                            href={item.href}
+                                            className={cn(
+                                                "flex h-full items-center gap-2 px-4 text-white transition-all",
+                                                isActive
+                                                    ? "text-[#048442] rounded-r-[32px] font-bold"
+                                                    : "hover:opacity-80"
+                                            )}
+                                        >
+                                            {React.cloneElement(item.icon, { className: "h-[55px] w-[47px]", strokeWidth: 0.8 })}
+                                            <span className="font-bold text-xl">{item.name}</span>
+                                        </a>
+                                    </li>
+                                </div>
                             );
                         })}
                     </ul>
