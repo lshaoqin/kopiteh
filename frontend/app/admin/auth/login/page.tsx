@@ -55,8 +55,6 @@ export default function Home() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      console.log(data)
-
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||

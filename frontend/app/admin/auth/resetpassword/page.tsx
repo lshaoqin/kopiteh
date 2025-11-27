@@ -71,8 +71,6 @@ export default function ResetPasswordPage() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      console.log("reset-password response:", data);
-
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||

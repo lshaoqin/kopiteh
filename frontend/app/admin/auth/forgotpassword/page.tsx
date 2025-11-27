@@ -44,15 +44,10 @@ export default function ForgotPasswordPage() {
             let data: any;
             try {
                 data = await res.json();
-                console.log(data)
             } catch {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            console.log("forgot-password response:", data);
-
-            // Server ALWAYS returns success (even if email not found)
-            // so we treat ANY ok response as success.
             if (!res.ok || data?.success === false) {
                 const msg =
                     data?.payload?.message ||

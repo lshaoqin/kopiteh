@@ -57,7 +57,6 @@ export default function Home() {
             try {
                 data = JSON.parse(raw);
             } catch (e) {
-                console.log("Non-JSON response:", raw);
                 setError("Server returned an invalid response.");
                 setLoading(false);
                 return;

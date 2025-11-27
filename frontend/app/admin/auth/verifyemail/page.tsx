@@ -64,8 +64,6 @@ export default function VerifyEmailPage() {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            console.log(data)
-
             if (!res.ok || data?.success === false) {
                 const msg =
                     data?.payload?.details ||
@@ -92,7 +90,6 @@ export default function VerifyEmailPage() {
             setUser(user);
             const role = data.payload.data.user.role
             setSuccess(message);
-            console.log(role)
 
             setTimeout(() => {
                 router.push("/admin/main/home");
