@@ -61,7 +61,6 @@ export default function Home() {
             try {
                 data = JSON.parse(raw);
             } catch (e) {
-                console.log("Non-JSON response:", raw);
                 setError("Please make sure that your password contains at least 6 characters and your secret code is correct.");
                 setLoading(false);
                 return;
@@ -92,7 +91,6 @@ export default function Home() {
                 router.push("/admin/main/home");
             }, 2000);
         } catch (err: any) {
-            console.error("Signup error:", err);
             setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
@@ -114,7 +112,8 @@ export default function Home() {
                         </div>
                     </div>
                     <div className="flex flex-col space-y-[41px] w-full">
-                        <FormField className="flex flex-col space-y-1"
+                        <FormField 
+                            className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}

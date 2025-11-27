@@ -71,8 +71,6 @@ export default function ResetPasswordPage() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      console.log("reset-password response:", data);
-
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||
@@ -130,10 +128,34 @@ export default function ResetPasswordPage() {
 
           <div className="flex flex-col space-y-5 my-6">
 
-            <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
-            <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: code, placeholder: "Code", onChange: (e) => setCode(e.target.value), maxLength: 6 }} />
-            <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: newPassword, placeholder: "New Password", onChange: (e) => setNewPassword(e.target.value) }} />
-            <FormField className="flex flex-col space-y-1" classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: confirmPassword, placeholder: "Confirm New Password", onChange: (e) => setConfirmPassword(e.target.value) }} />
+            <FormField 
+              className="flex flex-col space-y-1" 
+              classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+              classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+              variant="email" 
+              label="" 
+              inputProps={{ value: email, placeholder: "Email", onChange: (e) => {setEmail(e.target.value); setError(null);} }} />
+            <FormField 
+              className="flex flex-col space-y-1" 
+              classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+              classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+              variant="password" 
+              label="" 
+              inputProps={{ value: code, placeholder: "Code", onChange: (e) => {setCode(e.target.value); setError(null);}, maxLength: 6 }} />
+            <FormField 
+              className="flex flex-col space-y-1" 
+              classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+              classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+              variant="password" 
+              label="" 
+              inputProps={{ value: newPassword, placeholder: "New Password", onChange: (e) => {setNewPassword(e.target.value); setError(null);} }} />
+            <FormField 
+              className="flex flex-col space-y-1" 
+              classNameOut="p-2 bg-white rounded-sm border-1 transition-all duration-200 ease-out focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80" 
+              classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+              variant="password" 
+              label="" 
+              inputProps={{ value: confirmPassword, placeholder: "Confirm New Password", onChange: (e) => {setConfirmPassword(e.target.value); setError(null);} }} />
           </div>
 
           <Button

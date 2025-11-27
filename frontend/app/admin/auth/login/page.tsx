@@ -55,13 +55,9 @@ export default function Home() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      console.log(data)
-
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||
-          data?.payload?.message ||
-          data?.message ||
           "Verification failed. Please check your code and try again.";
         setError(msg);
         return;
@@ -104,14 +100,24 @@ export default function Home() {
           </div>
           <div className="w-full">
             <div className="flex flex-col space-y-[41px] w-full">
-              <FormField className="flex flex-col space-y-1" classNameOut={`
-                p-3 bg-white rounded-2xl transition-all duration-200 ease-out
-                ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                `} classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
-              <FormField className="flex flex-col space-y-1" classNameOut={`
-                p-3 bg-white rounded-2xl transition-all duration-200 ease-out
-                ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                `} classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: password, placeholder: "Password", onChange: (e) => setPassword(e.target.value) }} />
+              <FormField 
+                className="flex flex-col space-y-1" 
+                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
+                  ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
+                `} 
+                classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                variant="email" 
+                label="" 
+                inputProps={{ value: email, placeholder: "Email", onChange: (e) => {setEmail(e.target.value); setError(null);} }} />
+              <FormField 
+                className="flex flex-col space-y-1" 
+                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
+                  ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
+                `} 
+                classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" 
+                variant="password" 
+                label="" 
+                inputProps={{ value: password, placeholder: "Password", onChange: (e) => {setPassword(e.target.value); setError(null);} }} />
             </div>
           </div>
 
@@ -148,7 +154,7 @@ export default function Home() {
               </div>
             </Link>
             <div className="flex flex-row space-x-1 text-grey-primary text-md">
-              <label className="text-grey-primary/70">Dont have an account yet?</label>
+              <label className="text-grey-primary/70">Don&apos;t have an account yet?</label>
               <Link href="/admin/auth/signup">
                 <label className="font-semibold underline ">Register here!</label>
               </Link>
