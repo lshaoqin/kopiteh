@@ -101,62 +101,57 @@ export default function Home() {
     return (
         <main className="min-h-screen flex items-center justify-center">
             <div className="w-[400px] items-center flex flex-col justify-center">
-                <div className="p-5 flex flex-col w-full h-full space-y-[79px] items-center">
+                <div className="p-5 flex flex-col w-full h-full space-y-20 items-center">
                     <div className="flex items-center flex-col">
                         <h1 className="font-extrabold text-4xl text-center">Create an Account</h1>
                         <div className="flex flex-row space-x-1 mt-2 text-grey-primary">
                             <label className="text-grey-primary/70">Enter your account details below or</label>
-                            <Link href="/admin/auth/login">
-                                <label className="font-semibold underline">log in</label>
+                            <Link href="/admin/auth/login" className="font-semibold underline cursor-pointer">
+                                <span>log in</span>
                             </Link>
                         </div>
                     </div>
-                    <div className="flex flex-col space-y-[41px] w-full">
-                        <FormField 
+                    <div className="flex flex-col space-y-10 w-full">
+                        <FormField
                             className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="text" label="" inputProps={{
-                                value: userName, placeholder: "User Name", onChange: (e) => {
-                                    setUserName(e.target.value)
-                                    setError(null);
-                                }
-                            }} />
-                        <FormField className="flex flex-col space-y-1"
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                            variant="text"
+                            label=""
+                            inputProps={{ value: userName, placeholder: "Username", onChange: (e) => { setUserName(e.target.value); setError(null); } }} />
+                        <FormField
+                            className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{
-                                value: email, placeholder: "Email", onChange: (e) => {
-                                    setEmail(e.target.value)
-                                    setError(null);
-                                }
-                            }} />
-                        <FormField className="flex flex-col space-y-1"
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                            variant="email"
+                            label=""
+                            inputProps={{ value: email, placeholder: "Email", onChange: (e) => { setEmail(e.target.value); setError(null); } }} />
+                        <FormField
+                            className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{
-                                value: password, placeholder: "Password", onChange: (e) => {
-                                    setPassword(e.target.value)
-                                    setError(null);
-                                }
-                            }} />
-                        <FormField className="flex flex-col space-y-1"
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                            variant="password"
+                            label=""
+                            inputProps={{ value: password, placeholder: "Password", onChange: (e) => { setPassword(e.target.value); setError(null); } }} />
+                        <FormField
+                            className="flex flex-col space-y-1"
                             classNameOut={`
                                 p-3 bg-white rounded-2xl transition-all duration-200 ease-out
                                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
                             `}
-                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{
-                                value: secretCode, placeholder: "Secret Code", onChange: (e) => {
-                                    setSecretCode(e.target.value)
-                                    setError(null);
-                                }
-                            }} />
+                            classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                            variant="password"
+                            label=""
+                            inputProps={{ value: secretCode, placeholder: "Secret Code", onChange: (e) => { setSecretCode(e.target.value); setError(null); } }} />
                     </div>
                     <div className="flex flex-col justify-center items-center w-full space-y-2">
                         <Button
