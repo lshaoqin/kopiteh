@@ -93,13 +93,13 @@ export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <div className="w-[400px] items-center flex flex-col justify-center">
-        <div className="p-5 flex flex-col w-full h-full space-y-[79px] items-center">
+        <div className="p-5 flex flex-col w-full h-full space-y-20 items-center">
           <div className="flex items-center flex-col">
             <h1 className=" font-extrabold text-4xl text-center">Login</h1>
 
           </div>
           <div className="w-full">
-            <div className="flex flex-col space-y-[41px] w-full">
+            <div className="flex flex-col space-y-10 w-full">
               <FormField 
                 className="flex flex-col space-y-1" 
                 classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
@@ -148,15 +148,15 @@ export default function Home() {
                 <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
               </div>
             )}
-            <Link href="/admin/auth/forgotpassword">
+            <Link href="/admin/auth/forgotpassword" className="cursor-pointer">
               <div className="w-full flex">
-                <label className="text-sm text-grey-primary/80">Forgot password?</label>
+                <span className="text-sm text-grey-primary/80">Forgot password?</span>
               </div>
             </Link>
             <div className="flex flex-row space-x-1 text-grey-primary text-md">
               <label className="text-grey-primary/70">Don&apos;t have an account yet?</label>
-              <Link href="/admin/auth/signup">
-                <label className="font-semibold underline ">Register here!</label>
+              <Link href="/admin/auth/signup" className="font-semibold underline cursor-pointer">
+                <span>Register here!</span>
               </Link>
             </div>
 
