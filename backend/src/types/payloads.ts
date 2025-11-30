@@ -83,11 +83,6 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface VerifyEmailPayload {
-  email: string;
-  code: string; // 6-digit secret code
-}
-
 export interface ForgotPasswordPayload {
   email: string;
 }
