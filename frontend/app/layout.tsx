@@ -2,8 +2,8 @@ import "./globals.css"
 import { Inter } from "next/font/google";
 
 export const metadata = {
-  title: "Your App",
-  description: "Description",
+  title: "The Volunteer Switchboard Ordering Helper",
+  description: "An app that processes orders for Kopi Teh or Moi sessions.",
 }
 
 const inter = Inter({

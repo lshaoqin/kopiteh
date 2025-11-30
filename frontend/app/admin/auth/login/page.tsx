@@ -55,13 +55,9 @@ export default function Home() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      console.log(data)
-
       if (!res.ok || data?.success === false) {
         const msg =
           data?.payload?.details ||
-          data?.payload?.message ||
-          data?.message ||
           "Verification failed. Please check your code and try again.";
         setError(msg);
         return;
@@ -97,21 +93,31 @@ export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <div className="w-[400px] items-center flex flex-col justify-center">
-        <div className="p-5 flex flex-col w-full h-full space-y-[79px] items-center">
+        <div className="p-5 flex flex-col w-full h-full space-y-20 items-center">
           <div className="flex items-center flex-col">
             <h1 className=" font-extrabold text-4xl text-center">Login</h1>
 
           </div>
           <div className="w-full">
-            <div className="flex flex-col space-y-[41px] w-full">
-              <FormField className="flex flex-col space-y-1" classNameOut={`
-                p-3 bg-white rounded-2xl transition-all duration-200 ease-out
-                ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                `} classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="email" label="" inputProps={{ value: email, placeholder: "Email", onChange: (e) => setEmail(e.target.value) }} />
-              <FormField className="flex flex-col space-y-1" classNameOut={`
-                p-3 bg-white rounded-2xl transition-all duration-200 ease-out
-                ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                `} classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent" variant="password" label="" inputProps={{ value: password, placeholder: "Password", onChange: (e) => setPassword(e.target.value) }} />
+            <div className="flex flex-col space-y-10 w-full">
+              <FormField
+                className="flex flex-col space-y-1"
+                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
+                  ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
+                `}
+                classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                variant="email"
+                label=""
+                inputProps={{ value: email, placeholder: "Email", onChange: (e) => { setEmail(e.target.value); setError(null); } }} />
+              <FormField
+                className="flex flex-col space-y-1"
+                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
+                  ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
+                `}
+                classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
+                variant="password"
+                label=""
+                inputProps={{ value: password, placeholder: "Password", onChange: (e) => { setPassword(e.target.value); setError(null); } }} />
             </div>
           </div>
 
@@ -142,15 +148,18 @@ export default function Home() {
                 <p className="text-green-600 text-sm mt-2 text-center">{success}</p>
               </div>
             )}
-            <Link href="/admin/auth/forgotpassword">
-              <div className="w-full flex">
-                <label className="text-sm text-grey-primary/80">Forgot password?</label>
-              </div>
-            </Link>
+            <Button
+              onClick={() => {
+                router.push(`/admin/auth/forgotpassword?email=${encodeURIComponent(email)}`);
+              }}
+              className="cursor-pointer bg-transparent hover:bg-transparent"
+            >
+              <span className="text-sm text-grey-primary/80">Forgot password?</span>
+            </Button>
             <div className="flex flex-row space-x-1 text-grey-primary text-md">
-              <label className="text-grey-primary/70">Dont have an account yet?</label>
-              <Link href="/admin/auth/signup">
-                <label className="font-semibold underline ">Register here!</label>
+              <label className="text-grey-primary/70">Don&apos;t have an account yet?</label>
+              <Link href="/admin/auth/signup" className="font-semibold underline cursor-pointer">
+                <span>Register here!</span>
               </Link>
             </div>
 

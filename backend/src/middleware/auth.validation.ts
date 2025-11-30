@@ -33,6 +33,28 @@ export const loginValidation = [
   body("password").exists({ checkFalsy: true }).isLength({ min: 6 }),
 ];
 
+export const forgotPasswordValidation = [
+  body("email")
+    .exists({ checkFalsy: true })
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Valid email required"),
+
+  body("name")
+    .exists({ checkFalsy: true })
+    .withMessage("Name is required")
+    .isString()
+    .trim()
+    .isLength({ min: 1, max: 255 })
+    .withMessage("Name must be between 1 and 255 characters"),
+
+  body("newPassword")
+    .exists({ checkFalsy: true })
+    .withMessage("New password is required")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
+];
+
 export const runValidation = (
   req: Request,
   _res: Response,
