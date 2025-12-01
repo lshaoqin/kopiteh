@@ -16,42 +16,6 @@ import {
   LogoutPayload,
 } from "../types/payloads";
 
-function generateSecretCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// SendGrip setup
-
-// Checks
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`[EmailService] Missing env var: ${name}`);
-  }
-  return value;
-}
-
-// Now these are typed as plain `string`
-const EMAIL_API_KEY = requireEnv("KOPITEH_BACKEND_EMAIL_API_KEY");
-const EMAIL_FROM = requireEnv("EMAIL_FROM");
-
-sgMail.setApiKey(EMAIL_API_KEY);
-
-async function sendResetCodeEmail(to: string, name: string, code: string) {
-  await sgMail.send({
-    to,
-    from: EMAIL_FROM,
-    subject: "Kopiteh - Password Reset Code",
-    text: `Your Kopiteh password reset code is: ${code}\n\nIf you did not request this, please ignore this email.`,
-    html: `
-      <p>Hi, ${name}</p>
-      <p>Your <strong>Kopiteh</strong> password reset code is:</p>
-      <h2>${code}</h2>
-      <p>If you did not request this, you can safely ignore this email.</p>
-    `,
-  });
-}
-
 /* JWT helper functions */
 function signAccessToken(userId: number) {
   return jwt.sign({ uid: userId }, process.env.JWT_SECRET as string, {
