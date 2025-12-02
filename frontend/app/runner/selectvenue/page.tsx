@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
@@ -9,13 +9,12 @@ export default function Home() {
 
   return (
     <main className="p-2">
+      <Button onClick={() => router.push('/runner')}>
+        Back
+      </Button>
       <div>
-        <Button className="bg-primary1 h-11 rounded-md">
-          Companion Volunteer
-        </Button>
-        <Button className="bg-primary1 h-11 rounded-md" onClick={() => router.push('/runner/selectvenue')}>
-          Runner
-        </Button>
+        Hey Runner
+        Select your venue
       </div>
     </main>
   )
