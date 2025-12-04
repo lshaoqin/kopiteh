@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default async function Home() {
+export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
