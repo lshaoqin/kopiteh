@@ -1,11 +1,9 @@
 import type { ID, Decimal } from "./common";
 
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
+  | "incoming"
   | "preparing"
   | "served"
-  | "paid"
   | "cancelled"; // adjust to your actual status list
 
 export interface Order {

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { VenueController } from '../controllers/venue.controller';
+import { runValidation } from '../middleware/base.validation';
 import {
   createVenueValidation,
-  runValidation,
   updateVenueValidation,
   venueIdParamValidation,
 } from '../middleware/venue.validation';
