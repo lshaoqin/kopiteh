@@ -11,12 +11,12 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/venues/:venue_id/stalls', stallIdParamValidation, StallController.getAll);
+router.get('/stalls/venue/:venue_id', stallIdParamValidation, StallController.getAll);
 router.get('/stalls/:id', stallIdParamValidation, runValidation, StallController.getById);
 
 // Protected writes
-router.post('/stalls', authenticateToken, createStallValidation, runValidation, StallController.create);
-router.put('/stalls/:id', authenticateToken, ...updateStallValidation, runValidation, StallController.update);
-router.delete('/stalls/:id', authenticateToken, stallIdParamValidation, runValidation, StallController.remove);
+router.post('/stalls/create', authenticateToken, createStallValidation, runValidation, StallController.create);
+router.put('/stalls/update/:id', authenticateToken, ...updateStallValidation, runValidation, StallController.update);
+router.delete('/stalls/remove/:id', authenticateToken, stallIdParamValidation, runValidation, StallController.remove);
 
 export default router;

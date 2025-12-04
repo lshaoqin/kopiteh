@@ -10,16 +10,10 @@ import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/', VenueController.getAll);
-router.get('/:id', venueIdParamValidation, runValidation, VenueController.getById);
-router.post('/', authenticateToken, createVenueValidation, runValidation, VenueController.create);
-router.put(
-  '/:id',
-  authenticateToken,
-  ...updateVenueValidation,
-  runValidation,
-  VenueController.update,
-);
-router.delete('/:id', authenticateToken, venueIdParamValidation, runValidation, VenueController.remove);
+router.get('/venue', VenueController.getAll);
+router.get('/venue/:id', venueIdParamValidation, runValidation, VenueController.getById);
+router.post('/venue/create', authenticateToken, createVenueValidation, runValidation, VenueController.create);
+router.put('/venue/update/:id', authenticateToken, ...updateVenueValidation, runValidation, VenueController.update);
+router.delete('/venue/remove/:id', authenticateToken, venueIdParamValidation, runValidation, VenueController.remove);
 
 export default router;
