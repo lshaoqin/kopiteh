@@ -221,7 +221,6 @@ export const AuthService = {
       const user = userRes.rows[0];
 
       if (!user) {
-        // You can choose to hide this, but this is fine for internal UI
         return errorResponse(ErrorCodes.NOT_FOUND, "User not found");
       }
 
@@ -232,7 +231,7 @@ export const AuthService = {
         );
       }
 
-      // If no user was updated (email not found), just return generic success
+      // update the user password
       const hash = await bcrypt.hash(newPassword, 10);
 
       await BaseService.query(
@@ -244,7 +243,6 @@ export const AuthService = {
         [hash, user.user_id]
       );
 
-      // 5. No tokens here – user will log in again manually
       return successResponse(SuccessCodes.OK, {
         message: "Password has been reset successfully. Please log in again.",
       });
