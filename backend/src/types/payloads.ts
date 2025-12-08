@@ -1,4 +1,3 @@
-import { OrderItem } from '@types';
 import { OrderStatusCodes, OrderItemStatusCodes } from './orderStatus';
 
 export interface VenuePayload {
