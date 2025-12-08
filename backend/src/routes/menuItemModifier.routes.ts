@@ -11,12 +11,12 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/items/:item_id/modifiers', modifierIdParamValidation, MenuItemModifierController.getAll);
+router.get('/modifiers/items/:item_id', modifierIdParamValidation, MenuItemModifierController.getAll);
 router.get('/modifiers/:id', modifierIdParamValidation, runValidation, MenuItemModifierController.getById);
 
 // Protected writes
-router.post('/modifiers', authenticateToken, createModifierValidation, runValidation, MenuItemModifierController.create);
-router.put('/modifiers/:id', authenticateToken, ...updateModifierValidation, runValidation, MenuItemModifierController.update);
-router.delete('/modifiers/:id', authenticateToken, modifierIdParamValidation, runValidation, MenuItemModifierController.remove);
+router.post('/modifiers/create', authenticateToken, createModifierValidation, runValidation, MenuItemModifierController.create);
+router.put('/modifiers/update/:id', authenticateToken, ...updateModifierValidation, runValidation, MenuItemModifierController.update);
+router.delete('/modifiers/remove/:id', authenticateToken, modifierIdParamValidation, runValidation, MenuItemModifierController.remove);
 
 export default router;

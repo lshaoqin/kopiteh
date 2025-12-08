@@ -16,9 +16,9 @@ router.get('/orderItem/order/:order_id', orderItemIdParamValidation, OrderItemCo
 router.get('/orderItem/stall/:stall_id', orderItemIdParamValidation, OrderItemController.getByStall); // for runners
 
 // Public writes
-router.put('/orderItem/:id', authenticateToken, updateOrderItemValidation, runValidation, OrderItemController.update);
-router.put('/orderItem/:id/updateStatus', authenticateToken, updateOrderItemValidation, runValidation, OrderItemController.updateStatus);
-router.put('/orderItem/:id/cancel', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
-router.post('/orderItem', authenticateToken, createOrderItemValidation, runValidation, OrderItemController.create);
+router.put('/orderItem/update/:id', authenticateToken, ...updateOrderItemValidation, runValidation, OrderItemController.update);
+router.put('/orderItem/updateStatus/:id', authenticateToken, ...updateOrderItemValidation, runValidation, OrderItemController.updateStatus);
+router.put('/orderItem/cancel/:id', authenticateToken, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
+router.post('/orderItem/create', authenticateToken, createOrderItemValidation, runValidation, OrderItemController.create);
 
 export default router;

@@ -15,8 +15,8 @@ router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.
 router.get('/order/user/:user_id', orderIdParamValidation, runValidation, OrderController.getByUser);
 
 // Public writes
-router.post('/order', authenticateToken, createOrderValidation, runValidation, OrderController.create);
-router.put('/order/:id', authenticateToken, updateOrderValidation, runValidation, OrderController.update);
-router.put('/order/:id/cancel', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
+router.post('/order/create', authenticateToken, createOrderValidation, runValidation, OrderController.create);
+router.put('/order/update/:id', authenticateToken, ...updateOrderValidation, runValidation, OrderController.update);
+router.put('/order/cancel/:id', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
 
 export default router;
