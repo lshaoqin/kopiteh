@@ -4,11 +4,11 @@ import { OrderItemService } from '../services/orderItem.service';
 import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from 'src/types/success';
+import { SuccessCodes } from '../types/success';
 
 export const OrderItemController = {
   async getByOrder(req: Request, res: Response) {
-    const orderId = Number(req.qparams.order_id);
+    const orderId = Number(req.params.order_id);
     const data = await OrderItemService.findByOrder(orderId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
