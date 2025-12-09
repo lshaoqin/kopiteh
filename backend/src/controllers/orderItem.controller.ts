@@ -15,8 +15,8 @@ export const OrderItemController = {
   },
 
   async getByStall(req: Request, res: Response) {
-    const orderId = Number(req.params.order_id);
-    const data = await OrderItemService.findByStall(orderId);
+    const stallId = Number(req.params.stall_id);
+    const data = await OrderItemService.findByStall(stallId);
     const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },

@@ -11,7 +11,6 @@ import { OrderService } from './order.service';
 const ITEM_COLUMNS = new Set([
   'order_id',
   'item_id',
-  'stall_id',
   'quantity',
   'unit_price',
   'line_subtotal',
@@ -33,6 +32,11 @@ export const OrderItemService = {
   async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const stallItems = await MenuItemService.findAllByStall(stall_id);
+      if (!stallItems.success) {
+        return errorResponse(ErrorCodes.DATABASE_ERROR, stallItems.payload.message);
+      } else if (stallItems.payload.data === null) {
+        return successResponse(SuccessCodes.OK, []); 
+      }
       const result = [];
       for (const item of stallItems.payload.data) {
         const orderItems = await BaseService.query(
@@ -67,7 +71,6 @@ export const OrderItemService = {
         [
           payload.order_id,
           payload.item_id,
-          payload.stall_id,
           payload.quantity,
           payload.unit_price,
           payload.line_subtotal,
