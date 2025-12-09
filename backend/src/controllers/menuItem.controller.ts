@@ -5,7 +5,6 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { validateCreateMenuItem, validateUpdateMenuItem } from '../validations/menuItem.validation';
 
 export const MenuItemController = {
   async getAll(req: Request, res: Response) {
@@ -25,7 +24,6 @@ export const MenuItemController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as MenuItemPayload;
-      validateCreateMenuItem(payload);
       const data = await MenuItemService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
@@ -43,7 +41,6 @@ export const MenuItemController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateMenuItemPayload;
-      validateUpdateMenuItem(payload);
       const data = await MenuItemService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
