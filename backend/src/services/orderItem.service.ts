@@ -11,7 +11,6 @@ import { OrderService } from './order.service';
 const ITEM_COLUMNS = new Set([
   'order_id',
   'item_id',
-  'stall_id',
   'quantity',
   'unit_price',
   'line_subtotal',
