@@ -14,8 +14,6 @@ export const OrderItemController = {
     return res.status(result.payload.status).json(result);
   },
 
-  // Stall ID is not in the Order_Item table,
-  // but we need this to get all order items for a specific stall
   async getByStall(req: Request, res: Response) {
     const stallId = Number(req.params.stall_id);
     const data = await OrderItemService.findByStall(stallId);
