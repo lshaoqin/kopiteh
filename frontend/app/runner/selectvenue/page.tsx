@@ -4,21 +4,27 @@ import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/backbutton"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Venue } from "../../../../types/venue";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
-  const [venues, setVenues] = useState([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_URL}/venues`);
+        const res = await fetch(`${API_URL}/venue`);
         if (!res.ok) throw new Error("Failed to fetch venues");
-        const data = await res.json();
-        setVenues(data);
+
+        const json = await res.json();
+        if (!json.success) {
+          setVenues([]);
+          return;
+        }
+        setVenues(json.payload.data ?? []);
       } catch (err) {
         console.error(err);
       }
@@ -45,10 +51,10 @@ export default function Home() {
 
         <ul>
           {!loading && venues.length > 0 && venues.map((venue: any) => (
-            <li key={venue.id}>
+            <li key={venue.venue_id}>
               <Button
                 className="bg-primary1 h-11 rounded-md"
-                onClick={() => router.push(`/runner/${venue.id}/selectstall`)}
+                onClick={() => router.push(`/runner/${venue.venue_id}/selectstall`)}
               >
                 {venue.name}
               </Button>

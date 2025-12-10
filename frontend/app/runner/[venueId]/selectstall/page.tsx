@@ -2,12 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/backbutton"
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
+  const params = useParams();
+  const venueId = params.venueId;
 
   const [stalls, setStalls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_URL}/stalls`);
+        const res = await fetch(`${API_URL}/stalls/venue/${venueId}`);
         if (!res.ok) throw new Error("Failed to fetch stalls");
         const data = await res.json();
         setStalls(data);
@@ -24,9 +26,8 @@ export default function Home() {
       }
       setLoading(false);
     };
-
     load();
-  }, [API_URL]);
+  }, [API_URL, venueId]);
 
 
   return (

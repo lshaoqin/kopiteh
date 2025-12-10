@@ -8,23 +8,20 @@ import { SuccessCodes } from '../types/success';
 
 export const VenueController = {
   async getAll(req: Request, res: Response) {
-    const data = await VenueService.findAll();
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await VenueService.findAll();
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.findById(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await VenueService.findById(id);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as VenuePayload;
-      const data = await VenueService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await VenueService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -40,8 +37,7 @@ export const VenueController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateVenuePayload;
-      const data = await VenueService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await VenueService.update(id, payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -55,8 +51,7 @@ export const VenueController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await VenueService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await VenueService.delete(id);
     if (!result.success) {
       return res.status(result.payload.status).json(result);
     }
