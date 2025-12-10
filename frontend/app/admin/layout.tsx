@@ -26,7 +26,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     if (isAuthRoute || isAdminRoot || isMainRoot) {
-      router.replace("/admin/main/home");
+      setTimeout(() => {
+        router.replace("/admin/main/home");
+      }, 1000); // 1.5 seconds delay
       return;
     }
 
