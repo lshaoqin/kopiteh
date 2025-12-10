@@ -5,10 +5,6 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import {
-  validateCreateMenuItemModifierSection,
-  validateUpdateMenuItemModifierSection,
-} from '../validations/menuItemModifierSection.validation';
 
 export const MenuItemModifierSectionController = {
   async getAll(req: Request, res: Response) {
@@ -28,7 +24,6 @@ export const MenuItemModifierSectionController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as MenuItemModifierSectionPayload;
-      validateCreateMenuItemModifierSection(payload);
       const data = await MenuItemModifierSectionService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
@@ -46,7 +41,6 @@ export const MenuItemModifierSectionController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as Partial<MenuItemModifierSectionPayload>;
-      validateUpdateMenuItemModifierSection(payload);
       const data = await MenuItemModifierSectionService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);

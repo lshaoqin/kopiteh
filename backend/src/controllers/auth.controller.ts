@@ -5,8 +5,6 @@ import {
   CreateAccountPayload,
   LoginPayload,
   ForgotPasswordPayload,
-  VerifyResetCodePayload,
-  ResetPasswordPayload,
   RefreshTokenPayload,
   LogoutPayload,
 } from "../types/payloads";
@@ -69,54 +67,11 @@ export const AuthController = {
     try {
       const payload: ForgotPasswordPayload = {
         email: req.body.email,
+        name: req.body.name,
+        newPassword: req.body.newPassword
       };
 
       const result = await AuthService.forgotPassword(payload);
-      return res.status(result.payload.status).json(result);
-    } catch (err) {
-      if (err instanceof BadRequestError) {
-        const r = errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
-        );
-        return res.status(r.payload.status).json(r);
-      }
-      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
-      return res.status(r.payload.status).json(r);
-    }
-  },
-
-  async verifyResetCode(req: Request, res: Response) {
-    try {
-      const payload: VerifyResetCodePayload = {
-        email: req.body.email,
-        code: req.body.code,
-      };
-
-      const result = await AuthService.verifyResetCode(payload);
-      return res.status(result.payload.status).json(result);
-    } catch (err) {
-      if (err instanceof BadRequestError) {
-        const r = errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
-        );
-        return res.status(r.payload.status).json(r);
-      }
-      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
-      return res.status(r.payload.status).json(r);
-    }
-  },
-
-  async resetPassword(req: Request, res: Response) {
-    try {
-      const payload: ResetPasswordPayload = {
-        email: req.body.email,
-        code: req.body.code,
-        newPassword: req.body.newPassword,
-      };
-
-      const result = await AuthService.resetPassword(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
