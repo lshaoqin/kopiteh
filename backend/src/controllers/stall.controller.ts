@@ -5,7 +5,6 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { validateCreateStall, validateUpdateStall } from '../validations/stall.validation';
 
 export const StallController = {
   async getAll(req: Request, res: Response) {
@@ -25,7 +24,6 @@ export const StallController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as StallPayload;
-      validateCreateStall(payload);
       const data = await StallService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
@@ -43,7 +41,6 @@ export const StallController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateStallPayload;
-      validateUpdateStall(payload);
       const data = await StallService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
