@@ -1,4 +1,4 @@
-import { runValidation, validateRequired } from "./base.validation";
+import { runValidation, validateRequired } from './base.validation';
 import { BadRequestError } from "../controllers/errors";
 
 // If you already declared these in ../types/payloads, import from there instead.

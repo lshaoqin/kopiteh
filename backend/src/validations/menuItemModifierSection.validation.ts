@@ -1,4 +1,4 @@
-import { validateRequired, optionalTextField, runValidation } from "./base.validation";
+import { validateRequired, optionalTextField, runValidation } from './base.validation';
 import type { MenuItemModifierSectionPayload } from "../types/payloads";
 import { BadRequestError } from "../controllers/errors";
 

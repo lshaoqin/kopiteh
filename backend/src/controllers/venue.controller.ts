@@ -5,7 +5,6 @@ import { BadRequestError } from './errors';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { validateCreateVenue, validateUpdateVenue } from '../validations/venue.validation';
 
 export const VenueController = {
   async getAll(req: Request, res: Response) {
@@ -24,7 +23,6 @@ export const VenueController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as VenuePayload;
-      validateCreateVenue(payload);
       const data = await VenueService.create(payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
@@ -42,7 +40,6 @@ export const VenueController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateVenuePayload;
-      validateUpdateVenue(payload);
       const data = await VenueService.update(id, payload);
       const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
