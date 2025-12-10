@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button"
-import { BackButton } from "@/components/backbutton"
+import { BackButton } from "@/components/ui/backbutton"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -32,7 +32,7 @@ export default function Home() {
 
   return (
     <main className="p-2">
-      <BackButton href="/runner" />
+      <BackButton href="/runner/selectvenue" />
 
       <div>
         <h1 className="text-3xl font-bold">

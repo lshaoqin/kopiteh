@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button"
-import { BackButton } from "@/components/backbutton"
+import { BackButton } from "@/components/ui/backbutton"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Venue } from "../../../../types/venue";

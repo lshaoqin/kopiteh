@@ -9,7 +9,7 @@ export function BackButton({ href = "/" }) {
     <Button
       variant="ghost"
       className="px-0 text-base font-normal hover:bg-transparent gap-2 text-black"
-      onClick={() => router.back()}
+      onClick={() => router.push(href)}
     >
       <ArrowLeft className="size-5 text-green-600" />
       Back
