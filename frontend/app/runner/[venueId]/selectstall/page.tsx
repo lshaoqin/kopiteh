@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/ui/backbutton"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Stall } from "../../../../../types/stall";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -11,7 +11,7 @@ export default function Home() {
   const params = useParams();
   const venueId = params.venueId;
 
-  const [stalls, setStalls] = useState([]);
+  const [stalls, setStalls] = useState<Stall[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,15 +49,29 @@ export default function Home() {
 
         {loading && <p>Loading...</p>}
 
-        <ul>
+        <ul className="mt-4 space-y-3">
           {!loading && stalls.length > 0 && stalls.map((stall: any) => (
             <li key={stall.stall_id}>
-              <Button
-                className="bg-primary1 h-11 rounded-md"
-                onClick={() => router.push(`/runner/${stall.stall_id}/selectstall`)}
-              >
-                {stall.name}
-              </Button>
+              <div 
+              className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
+              onClick={() => router.push(`/runner/${stall.stall_id}/selectstall`)}>
+                {/* Shop image */}
+                <img
+                  src={stall.image_url}
+                  alt={stall.name}
+                  className="w-16 h-16 rounded-md object-cover flex-shrink-0"
+                />
+
+                {/* Text content */}
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[15px] text-black leading-tight">
+                    {stall.name}
+                  </span>
+                  <span className="text-sm text-gray-500 leading-tight">
+                    {stall.unit_number}
+                  </span>
+                </div>
+              </div>
             </li>
           ))}
 

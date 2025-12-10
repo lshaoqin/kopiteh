@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/ui/backbutton"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -49,15 +48,29 @@ export default function Home() {
 
         {loading && <p>Loading...</p>}
 
-        <ul>
+        <ul className="mt-4 space-y-3">
           {!loading && venues.length > 0 && venues.map((venue: any) => (
             <li key={venue.venue_id}>
-              <Button
-                className="bg-primary1 h-11 rounded-md"
-                onClick={() => router.push(`/runner/${venue.venue_id}/selectstall`)}
-              >
-                {venue.name}
-              </Button>
+              <div 
+              className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
+              onClick={() => router.push(`/runner/${venue.venue_id}/selectstall`)}>
+                {/* Shop image */}
+                <img
+                  src={venue.image_url}
+                  alt={venue.name}
+                  className="w-16 h-16 rounded-md object-cover flex-shrink-0"
+                />
+
+                {/* Text content */}
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[15px] text-black leading-tight">
+                    {venue.name}
+                  </span>
+                  <span className="text-sm text-gray-500 leading-tight">
+                    {venue.unit_number}
+                  </span>
+                </div>
+              </div>
             </li>
           ))}
 
