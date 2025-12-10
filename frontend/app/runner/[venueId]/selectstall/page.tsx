@@ -19,8 +19,13 @@ export default function Home() {
       try {
         const res = await fetch(`${API_URL}/stalls/venue/${venueId}`);
         if (!res.ok) throw new Error("Failed to fetch stalls");
-        const data = await res.json();
-        setStalls(data);
+
+        const json = await res.json();
+        if (!json.success) {
+          setStalls([]);
+          return;
+        }
+        setStalls(json.payload.data ?? []);
       } catch (err) {
         console.error(err);
       }
@@ -46,10 +51,10 @@ export default function Home() {
 
         <ul>
           {!loading && stalls.length > 0 && stalls.map((stall: any) => (
-            <li key={stall.id}>
+            <li key={stall.stall_id}>
               <Button
                 className="bg-primary1 h-11 rounded-md"
-                onClick={() => router.push(`/runner/${stall.id}/selectstall`)}
+                onClick={() => router.push(`/runner/${stall.stall_id}/selectstall`)}
               >
                 {stall.name}
               </Button>
