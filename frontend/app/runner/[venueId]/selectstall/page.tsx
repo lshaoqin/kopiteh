@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button"
+import { BackButton } from "@/components/backbutton"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -30,11 +31,15 @@ export default function Home() {
 
   return (
     <main className="p-2">
-      <Button onClick={() => router.push('/runner')}>Back</Button>
+      <BackButton href="/runner" />
 
       <div>
-        <h1>Hey Runner</h1>
-        <h2>Select your stall</h2>
+        <h1 className="text-3xl font-bold">
+          Hey <span className="text-green-600">Runner</span>
+        </h1>
+        <h2 className="text-xl font-semibold mt-2">
+          Select your stall
+        </h2>
 
         {loading && <p>Loading...</p>}
 
