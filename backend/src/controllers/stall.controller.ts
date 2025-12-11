@@ -10,6 +10,7 @@ export const StallController = {
   async getAll(req: Request, res: Response) {
     const venueId = Number(req.params.venue_id);
     const result = await StallService.findAllByVenue(venueId);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 

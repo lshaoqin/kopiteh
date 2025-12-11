@@ -9,12 +9,14 @@ import { SuccessCodes } from '../types/success';
 export const VenueController = {
   async getAll(req: Request, res: Response) {
     const result = await VenueService.findAll();
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
     const result = await VenueService.findById(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
@@ -38,6 +40,7 @@ export const VenueController = {
       const id = Number(req.params.id);
       const payload = req.body as UpdateVenuePayload;
       const result = await VenueService.update(id, payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -52,6 +55,7 @@ export const VenueController = {
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
     const result = await VenueService.delete(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     if (!result.success) {
       return res.status(result.payload.status).json(result);
     }
