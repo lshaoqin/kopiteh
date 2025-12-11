@@ -57,7 +57,7 @@ export default function Home() {
               onClick={() => router.push(`/runner/${stall.stall_id}/selectstall`)}>
                 {/* Shop image */}
                 <img
-                  src={stall.image_url}
+                  src={stall.stall_image}
                   alt={stall.name}
                   className="w-16 h-16 rounded-md object-cover flex-shrink-0"
                 />
