@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { WebSocketService } from './services/websocket.service';
 import routes from './routes/index';
-import { errorHandler } from './middleware/error.handler';
+import errorHandler from './middleware/error.handler';
 
 dotenv.config();
 
@@ -29,6 +29,7 @@ app.get('/', (_req, res) => {
   res.send('Express + Postgres backend is running 🚀');
 });
 
+/* 
 // quick db check route (optional)
 app.get('/_db_health', async (_req, res) => {
   try {
@@ -38,6 +39,7 @@ app.get('/_db_health', async (_req, res) => {
     res.status(500).json({ ok: false, error: String(err) });
   }
 });
+*/
 
 // start server
 if (process.env.NODE_ENV !== 'test') {

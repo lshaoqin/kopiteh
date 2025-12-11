@@ -1,12 +1,13 @@
-import type { Server as SocketIOServer, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 
 let io: SocketIOServer;
-const userSockets = new Map<number, string[]>(); // userId -> socketIds
+const userSockets = new Map<number, string[]>();
 
 export const WebSocketService = {
   init(httpServer: HTTPServer) {
-    io = new (require('socket.io').Server)(httpServer, {
+    io = new Server(httpServer, {
       cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000' },
     });
 
@@ -34,8 +35,15 @@ export const WebSocketService = {
   },
 
   notifyOrderStatusChange(userId: number, orderId: number, status: string) {
-    if (!io) return;
-    io.to(`user_${userId}`).emit('order_status_updated', { orderId, status });
+    try {
+      if (!io) {
+        console.warn('Socket.IO not initialized');
+        return;
+      }
+      io.to(`user_${userId}`).emit('order_status_updated', { orderId, status });
+    } catch (err) {
+      console.error('WebSocket emit error:', err);
+    }
   },
 
   getIO() {
