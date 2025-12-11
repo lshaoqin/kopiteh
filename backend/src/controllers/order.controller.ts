@@ -10,30 +10,30 @@ import { SuccessCodes } from '../types/success';
 export const OrderController = {
   async getByUser(req: Request, res: Response) {
     const userId = Number(req.params.user_id);
-    const data = await OrderService.findByUser(userId);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await OrderService.findByUser(userId);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getByStall(req: Request, res: Response) {
     const orderId = Number(req.params.order_id);
-    const data = await OrderService.findByStall(orderId);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await OrderService.findByStall(orderId);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await OrderService.findById(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await OrderService.findById(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as OrderPayload;
-      const data = await OrderService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await OrderService.create(payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -51,8 +51,8 @@ export const OrderController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateOrderPayload;
-      const data = await OrderService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await OrderService.update(id, payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -67,8 +67,8 @@ export const OrderController = {
   async updateStatus(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const data = await OrderService.updateStatus(id);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await OrderService.updateStatus(id);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -105,8 +105,8 @@ export const OrderController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await OrderService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await OrderService.delete(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 };
