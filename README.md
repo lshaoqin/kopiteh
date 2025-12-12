@@ -16,6 +16,12 @@ cd backend
 npm i
 npm run seed
 ```
+OR
+```bash
+cd backend
+docker compose exec backend npm run migrate
+docker compose exec backend npm run seed
+```
 The result should be visible at localhost:4000/stalls
 
 Next, run the development server:
