@@ -1,57 +1,26 @@
 'use client'
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { useAuthStore } from "@/stores/auth.store"
-import { User } from "../../../types/auth"
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [loading, setLoading] = useState<boolean>(true)
-  const user: User = useAuthStore.getState().user
   const router = useRouter();
 
-  const handleLogout = async () => {
-  try {
-    const refreshToken = useAuthStore.getState().refreshToken;
-    const logoutStore = useAuthStore.getState().logout;
-
-    if (!refreshToken) {
-      logoutStore();
-      router.push("/login");
-      return;
-    }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-      }),
-    });
-
-    await res.json();
-
-    logoutStore();
-
-    // Redirect to login
-    router.push("/login");
-  } catch (err) {
-    console.error("Logout failed:", err);
-
-    // Still clear local state to avoid being stuck
-    useAuthStore.getState().logout();
-    router.push("/login");
-  }
-};
-
   return (
-    <main className="p-2">
-      <div>
-        <h1>Hi runner {user.name}</h1>
-        <Button onClick={handleLogout}>
-          Logout
-        </Button>
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="w-[400px] h-[300px] items-center flex flex-col justify-center border-1 rounded-md shadow-lg">
+        <div className="my-2 flex justify-center items-center flex-col w-full">
+          <h1 className="font-semibold text-2xl">The Volunteer Switchboard</h1>
+          <h2 className="font-semibold text-2xl">Kopi, Teh or Moi</h2>
+          <div className="flex flex-col space-y-5 my-5">
+            <Button className="bg-primary1 h-11 rounded-md">
+              Companion Volunteer
+            </Button>
+            <Button className="bg-primary1 h-11 rounded-md" onClick={() => router.push('/runner/selectvenue')}>
+              Runner
+            </Button>
+          </div>
+        </div>
       </div>
     </main>
   )
