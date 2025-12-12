@@ -54,6 +54,24 @@ export default function Home() {
           </h1>
           <BackButton href={`/runner/${venueId}/selectstall`} />
         </div>
+
+        {loading && <p>Loading...</p>}
+
+        {/* Status Filter Row */}
+        <div className="flex items-center gap-2 mt-4">
+          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-xl font-medium">
+            +
+          </button>
+          <button className="px-4 py-1 rounded-lg bg-green-600 text-white text-sm font-medium shadow-sm">
+            Incoming
+          </button>
+          <button className="px-4 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">
+            Preparing
+          </button>
+          <button className="px-4 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">
+            Served
+          </button>
+        </div>
       </div>
     </main>
   )
