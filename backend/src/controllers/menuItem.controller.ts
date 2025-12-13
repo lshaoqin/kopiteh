@@ -5,29 +5,27 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { validateCreateMenuItem, validateUpdateMenuItem } from '../validations/menuItem.validation';
 
 export const MenuItemController = {
   async getAll(req: Request, res: Response) {
     const stallId = Number(req.params.stall_id);
-    const data = await MenuItemService.findAllByStall(stallId);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemService.findAllByStall(stallId);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await MenuItemService.findById(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemService.findById(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as MenuItemPayload;
-      validateCreateMenuItem(payload);
-      const data = await MenuItemService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await MenuItemService.create(payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -43,9 +41,8 @@ export const MenuItemController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateMenuItemPayload;
-      validateUpdateMenuItem(payload);
-      const data = await MenuItemService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await MenuItemService.update(id, payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -59,8 +56,8 @@ export const MenuItemController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await MenuItemService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemService.delete(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 };
