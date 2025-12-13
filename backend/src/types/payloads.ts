@@ -1,3 +1,5 @@
+import { OrderStatusCodes, OrderItemStatusCodes } from './orderStatus';
+
 export interface VenuePayload {
   name: string;
   address?: string;
@@ -53,22 +55,31 @@ export interface TablePayload {
 
 export interface OrderPayload {
   table_id: number;
-  status?: string;
-  total_price?: number;
+  user_id: number;
+  status: OrderStatusCodes;
+  total_price: number;
+  created_at: string;
   remarks?: string;
 }
+
+export interface UpdateOrderPayload extends Partial<OrderPayload> {}
 
 export interface OrderItemPayload {
   order_id: number;
   item_id: number;
-  stall_id: number;
+  status: OrderItemStatusCodes;
   quantity: number;
-  price: number;
+  unit_price: number;
+  line_subtotal: number;
 }
+
+export interface UpdateOrderItemPayload extends Partial<OrderItemPayload> {}
 
 export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;
+  price_modifier: number;
+  option_name: string;
 }
 
 export interface CreateAccountPayload {

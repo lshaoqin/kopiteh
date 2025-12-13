@@ -5,32 +5,27 @@ import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import {
-  validateCreateMenuItemModifierSection,
-  validateUpdateMenuItemModifierSection,
-} from '../validations/menuItemModifierSection.validation';
 
 export const MenuItemModifierSectionController = {
   async getAll(req: Request, res: Response) {
     const itemId = Number(req.params.item_id);
-    const data = await MenuItemModifierSectionService.findAllByItem(itemId);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemModifierSectionService.findAllByItem(itemId);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await MenuItemModifierSectionService.findById(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemModifierSectionService.findById(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as MenuItemModifierSectionPayload;
-      validateCreateMenuItemModifierSection(payload);
-      const data = await MenuItemModifierSectionService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await MenuItemModifierSectionService.create(payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -46,9 +41,8 @@ export const MenuItemModifierSectionController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as Partial<MenuItemModifierSectionPayload>;
-      validateUpdateMenuItemModifierSection(payload);
-      const data = await MenuItemModifierSectionService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await MenuItemModifierSectionService.update(id, payload);
+      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -62,8 +56,8 @@ export const MenuItemModifierSectionController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await MenuItemModifierSectionService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await MenuItemModifierSectionService.delete(id);
+    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 };
