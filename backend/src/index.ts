@@ -1,26 +1,37 @@
-import dotenv from 'dotenv';
-import express, { type Request, type Response } from 'express';
+import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
-import db from './config/database';
-import routes from './routes';
+import dotenv from 'dotenv';
+import { WebSocketService } from './services/websocket.service';
+import routes from './routes/index';
+import errorHandler from './middleware/error.handler';
 
 dotenv.config();
-const app = express();
-const port = process.env.PORT || 4000;
 
+const app = express();
+const httpServer = createServer(app);
+
+// middleware
 app.use(cors());
 app.use(express.json());
 
+// websocket
+WebSocketService.init(httpServer);
+
+// routes
+app.use('/api', routes);
+
+// error handler
+app.use(errorHandler);
+
 // health
-app.get('/', (_req: Request, res: Response) => {
+app.get('/', (_req, res) => {
   res.send('Express + Postgres backend is running 🚀');
 });
 
-// mount api routes
-app.use('/api', routes);
-
+/* 
 // quick db check route (optional)
-app.get('/_db_health', async (_req: Request, res: Response) => {
+app.get('/_db_health', async (_req, res) => {
   try {
     await db.query('SELECT 1');
     res.json({ ok: true });
@@ -28,7 +39,12 @@ app.get('/_db_health', async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false, error: String(err) });
   }
 });
+*/
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+// start server
+if (process.env.NODE_ENV !== 'test') {
+  const port = Number(process.env.PORT || 3000);
+  httpServer.listen(port, () => console.log(`Listening on ${port}`));
+}
+
+export default app;

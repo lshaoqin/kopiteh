@@ -4,6 +4,7 @@ import {
   createStallValidation,
   updateStallValidation,
   stallIdParamValidation,
+  venueIdParamValidation,
   runValidation,
 } from '../middleware/stall.validation';
 import { authenticateToken } from '../middleware/auth.middleware';
@@ -11,7 +12,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/stalls/venue/:venue_id', stallIdParamValidation, StallController.getAll);
+router.get('/stalls/venue/:venue_id', venueIdParamValidation, StallController.getAll);
 router.get('/stalls/:id', stallIdParamValidation, runValidation, StallController.getById);
 
 // Protected writes
