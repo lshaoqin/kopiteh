@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { Switch } from "@/components/ui/switch";
 import { Pencil } from "lucide-react";
 
