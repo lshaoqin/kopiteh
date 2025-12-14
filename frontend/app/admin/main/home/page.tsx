@@ -86,7 +86,7 @@ export default function Home() {
         )}
 
         {!loading && !error && venues.length > 0 && (
-          <ul className="mt-4 grid grid-cols-3">
+          <ul className="mt-4 grid grid-cols-3 gap-8">
             {venues.map((v) => (
               <li key={v.venue_id}>
                 <Link href={`/admin/main/venues/${v.venue_id}/stalls`}>
