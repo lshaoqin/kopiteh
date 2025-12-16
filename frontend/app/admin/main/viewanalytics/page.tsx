@@ -52,7 +52,7 @@ export default function Home() {
   return (
     <main className="p-2">
       <div>
-        <h1>Hi view analytics {user.name}</h1>
+        <h1>Hi {user.name}</h1>
         <Button onClick={handleLogout}>
           Logout
         </Button>
