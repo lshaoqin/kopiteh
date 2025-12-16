@@ -38,6 +38,7 @@ export default function Stalls() {
         setStalls(prev =>
             prev.map(s => (s.stall_id === stallId ? { ...s, is_open: next } : s))
         );
+        //call backend api to update is_open
     };
     return (
         <main className="min-h-screen px-6 py-10 flex">
