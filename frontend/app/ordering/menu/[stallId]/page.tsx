@@ -7,94 +7,14 @@ import { ArrowLeft, Search, Plus, Image as ImageIcon } from "lucide-react";
 // import { api } from "@/lib/api"; // Commented out for now
 import { MenuItem, Stall } from "../../../../../types";
 import { useCartStore } from "@/stores/cart.store";
-
-// --- MOCK DATA START ---
-const MOCK_STALL: Stall = {
-  stall_id: "1",
-  venue_id: "1",
-  name: "Tian Tian Chicken Rice",
-  description: "Singapore's most famous chicken rice.",
-  image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80",
-  is_open: true,
-  waiting_time: 15
-};
-
-const MOCK_MENU_ITEMS: MenuItem[] = [
-  // Popular Items
-  {
-    item_id: "101",
-    stall_id: "1",
-    name: "Steamed Chicken Rice",
-    description: "Signature tender chicken with fragrant rice.",
-    price: 5.50,
-    image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=300&q=80",
-    is_available: true
-  },
-  {
-    item_id: "102",
-    stall_id: "1",
-    name: "Roasted Chicken Rice",
-    description: "Crispy skin roasted chicken.",
-    price: 5.50,
-    image_url: "https://plus.unsplash.com/premium_photo-1664472637341-3ec829d1f4df?auto=format&fit=crop&w=300&q=80",
-    is_available: true
-  },
-  {
-    item_id: "103",
-    stall_id: "1",
-    name: "Lemon Chicken Cutlet",
-    description: "Fried chicken cutlet with tangy lemon sauce.",
-    price: 6.50,
-    image_url: null, // Test no image
-    is_available: true
-  },
-  // Main Items
-  {
-    item_id: "104",
-    stall_id: "1",
-    name: "Oyster Sauce Kai Lan",
-    description: "Fresh vegetables with oyster sauce.",
-    price: 4.00,
-    image_url: null,
-    is_available: true
-  },
-  {
-    item_id: "105",
-    stall_id: "1",
-    name: "Braised Egg",
-    description: "Soy sauce braised hard boiled egg.",
-    price: 1.00,
-    image_url: null,
-    is_available: true
-  },
-  // Drinks
-  {
-    item_id: "106",
-    stall_id: "1",
-    name: "Kopi O",
-    description: "Black coffee with sugar.",
-    price: 1.20,
-    image_url: null,
-    is_available: true
-  },
-  {
-    item_id: "107",
-    stall_id: "1",
-    name: "Teh C",
-    description: "Tea with evaporated milk.",
-    price: 1.40,
-    image_url: null,
-    is_available: true
-  }
-];
-// --- MOCK DATA END ---
+import { MOCK_STALLS, MOCK_MENU_ITEMS } from "@/lib/mock-data";
 
 export default function MenuListPage() {
   const params = useParams();
   const stallId = Number(params.stallId); // We can use this later to fetch specific data
 
   // Data State - Initialized directly with MOCK data
-  const [stall] = useState<Stall | null>(MOCK_STALL);
+  const [stall] = useState<Stall | null>(MOCK_STALLS[0]);
   const [menuItems] = useState<MenuItem[]>(MOCK_MENU_ITEMS);
   const [loading] = useState(false); // No loading needed for mock data
   

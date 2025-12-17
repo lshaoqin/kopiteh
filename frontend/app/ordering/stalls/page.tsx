@@ -6,49 +6,9 @@ import { useState } from "react"; // Add useEffect to imports if uncommenting AP
 import { cn } from "@/lib/utils";
 // import { api } from "@/lib/api"; // 1. API Import
 import { Stall } from "../../../../types";
+import { MOCK_STALLS } from "@/lib/mock-data"; 
 
 const categories = ["All", "Chinese", "Western", "Malay", "Indian", "Thai", "Italian"];
-
-// --- MOCK DATA START ---
-const MOCK_STALLS: Stall[] = [
-  {
-    stall_id: "1",
-    venue_id: "1",
-    name: "Tian Tian Chicken Rice",
-    description: "Singapore's most famous chicken rice.",
-    image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80",
-    is_open: true,
-    waiting_time: 15
-  },
-  {
-    stall_id: "2",
-    venue_id: "1",
-    name: "Uncle Bob Western",
-    description: "Old school chicken chop and fish & chips.",
-    image_url: "https://images.unsplash.com/photo-1625938145744-e38051539994?auto=format&fit=crop&w=500&q=80",
-    is_open: true,
-    waiting_time: 10
-  },
-  {
-    stall_id: "3",
-    venue_id: "1",
-    name: "Ah Seng Hokkien Mee",
-    description: "Wok hei goodness with fresh prawns.",
-    image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=500&q=80",
-    is_open: false, // Closed example
-    waiting_time: 0
-  },
-  {
-    stall_id: "4",
-    venue_id: "1",
-    name: "Roti Prata House",
-    description: "Crispy prata and spicy curry.",
-    image_url: null, // No image example
-    is_open: true,
-    waiting_time: 5
-  }
-];
-// --- MOCK DATA END ---
 
 export default function StallSelectionPage() {
   // Initialize with MOCK_STALLS directly
