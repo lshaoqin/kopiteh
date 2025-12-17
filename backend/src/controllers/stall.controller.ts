@@ -56,20 +56,20 @@ export const StallController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const payload = req.body as UpdateStallPayload;
-      const data = await StallService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
-      return res.status(result.payload.status).json(result);
-    } catch (err) {
-      if (err instanceof BadRequestError) {
-        const result = errorResponse(
+      if (Number.isNaN(id)) {
+        const r = errorResponse(
           ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
+          "Invalid id parameter"
         );
-        return res.status(result.payload.status).json(result);
+        return res.status(r.payload.status).json(r);
       }
-      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+
+      const result = await StallService.update(id, req.body);
+
       return res.status(result.payload.status).json(result);
+    } catch (_err) {
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(r.payload.status).json(r);
     }
   },
 
