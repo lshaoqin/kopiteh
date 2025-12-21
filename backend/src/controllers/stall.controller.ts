@@ -37,8 +37,7 @@ export const StallController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as StallPayload;
-      const data = await StallService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await StallService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -57,8 +56,7 @@ export const StallController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateStallPayload;
-      const data = await StallService.update(id, payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await StallService.update(id, payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -75,8 +73,7 @@ export const StallController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await StallService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await StallService.delete(id);
     return res.status(result.payload.status).json(result);
   },
 };

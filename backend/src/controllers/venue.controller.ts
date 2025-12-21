@@ -23,8 +23,7 @@ export const VenueController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as VenuePayload;
-      const data = await VenueService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await VenueService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
