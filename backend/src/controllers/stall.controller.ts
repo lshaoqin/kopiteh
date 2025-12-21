@@ -14,10 +14,24 @@ export const StallController = {
     return res.status(result.payload.status).json(result);
   },
 
+  // GET /stalls/:id
   async getById(req: Request, res: Response) {
-    const id = Number(req.params.id);
-    const result = await StallService.findById(id);
-    return res.status(result.payload.status).json(result);
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        const r = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          "Invalid id parameter"
+        );
+        return res.status(r.payload.status).json(r);
+      }
+
+      const result = await StallService.findById(id);
+      return res.status(result.payload.status).json(result);
+    } catch (_err) {
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(r.payload.status).json(r);
+    }
   },
 
   async create(req: Request, res: Response) {
@@ -27,7 +41,10 @@ export const StallController = {
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
         return res.status(result.payload.status).json(result);
       }
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
@@ -43,7 +60,10 @@ export const StallController = {
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
         return res.status(result.payload.status).json(result);
       }
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);

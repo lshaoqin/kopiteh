@@ -29,6 +29,12 @@ const requireAtLeastOneStallField = body().custom((_, { req }) => {
   return true;
 });
 
+export const venueIdParamValidation = [
+  param("venue_id")
+    .exists().withMessage("venue_id is required")
+    .isInt({ min: 1 }).withMessage("venue_id must be a positive integer"),
+];
+
 export const stallIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be a positive integer'),
 ];
