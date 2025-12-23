@@ -3,7 +3,7 @@
 import { BackButton } from "@/components/ui/backbutton"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Stall } from "../../../../../types/stall";
+import { Stall } from "../../../../../../../types/stall";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -54,7 +54,7 @@ export default function Home() {
             <li key={stall.stall_id}>
               <div 
               className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
-              onClick={() => router.push(`/runner/${stall.stall_id}/selectstall`)}>
+              onClick={() => router.push(`/runner/venue/${venueId}/stall/${stall.stall_id}/orders`)}>
                 {/* Shop image */}
                 <img
                   src={stall.stall_image}
