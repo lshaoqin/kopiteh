@@ -3,18 +3,24 @@
 import { BackButton } from "@/components/ui/backbutton"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { OrderItem } from "../../../../../../../../types/order";
+import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const params = useParams();
-  const venueId = params.stallId;
+  const venueId = params.venueId;
   const stallId = params.stallId;
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<any>(null);
+  const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
   const [loading, setLoading] = useState(true);
+
+  const filteredOrderItems = orderItems.filter(
+    (item) => item.status === selectedStatus
+  );
+  
 
   useEffect(() => {
     const load = async () => {
@@ -52,7 +58,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold">
             {stall?.name}
           </h1>
-          <BackButton href={`/runner/${venueId}/selectstall`} />
+          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
         </div>
 
         {loading && <p>Loading...</p>}
@@ -62,16 +68,66 @@ export default function Home() {
           <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-xl font-medium">
             +
           </button>
-          <button className="px-4 py-1 rounded-lg bg-green-600 text-white text-sm font-medium shadow-sm">
+          <button 
+          onClick={() => setSelectedStatus("INCOMING")}
+            className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
+              selectedStatus === "INCOMING"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
             Incoming
           </button>
-          <button className="px-4 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">
+          <button 
+          onClick={() => setSelectedStatus("PREPARING")}
+            className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
+              selectedStatus === "PREPARING"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
             Preparing
           </button>
-          <button className="px-4 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">
+          <button 
+          onClick={() => setSelectedStatus("SERVED")}
+            className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
+              selectedStatus === "SERVED"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
             Served
           </button>
         </div>
+        <div className="mt-4 space-y-2">
+          {filteredOrderItems.length === 0 && !loading && (
+            <p className="text-sm text-gray-500">
+              No order item {selectedStatus.toLowerCase()}
+            </p>
+          )}
+
+          {filteredOrderItems.map((item) => (
+            <div
+              key={`${item.order_id}-${item.item_id}`}
+              className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
+            >
+              <div>
+                <p className="font-medium">Order #{item.order_id}</p>
+                <p className="text-sm text-gray-600">
+                  Item ID: {item.item_id}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <p className="font-medium">x{item.quantity}</p>
+                <p className="text-sm text-gray-600">
+                  ${item.line_subtotal.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </main>
   )

@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <main className="p-2">
-      <BackButton href="/runner" />
+      <BackButton href="/" />
 
       <div>
         <h1 className="text-3xl font-bold">
