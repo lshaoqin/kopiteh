@@ -9,25 +9,29 @@ export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
+  
+
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch(`${API_URL}/venue`);
-        if (!res.ok) throw new Error("Failed to fetch venues");
-
         const json = await res.json();
-        if (!json.success) {
-          setVenues([]);
-          return;
+        if (!res.ok || !json.success) {
+          throw new Error(json?.message || "Failed to fetch venues");
         }
+
         setVenues(json.payload.data ?? []);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        const message = err instanceof Error ? err.message : "Unexpected error occurred";
+        setError(message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     load();
@@ -46,36 +50,45 @@ export default function Home() {
           Select your venue
         </h2>
 
-        {loading && <p>Loading...</p>}
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">Error: {error}</p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {venues.length > 0 ? (
+              venues.map((venue) => (
+                <li key={venue.venue_id}>
+                  <div
+                    className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
+                    onClick={() =>
+                      router.push(
+                        `/runner/venue/${venue.venue_id}/stall/selectstall`
+                      )
+                    }
+                  >
+                    <img
+                      src={venue.image_url}
+                      alt={venue.name}
+                      className="w-16 h-16 rounded-md object-cover flex-shrink-0"
+                    />
 
-        <ul className="mt-4 space-y-3">
-          {!loading && venues.length > 0 && venues.map((venue: any) => (
-            <li key={venue.venue_id}>
-              <div 
-              className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
-              onClick={() => router.push(`/runner/venue/${venue.venue_id}/stall/selectstall`)}>
-                {/* Shop image */}
-                <img
-                  src={venue.image_url}
-                  alt={venue.name}
-                  className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-                />
-
-                {/* Text content */}
-                <div className="flex flex-col">
-                  <span className="font-semibold text-[15px] text-black leading-tight">
-                    {venue.name}
-                  </span>
-                  <span className="text-sm text-gray-500 leading-tight">
-                    {venue.unit_number}
-                  </span>
-                </div>
-              </div>
-            </li>
-          ))}
-
-          {!loading && venues.length === 0 && <li>No venues found</li>}
-        </ul>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-[15px] text-black leading-tight">
+                        {venue.name}
+                      </span>
+                      <span className="text-sm text-gray-500 leading-tight">
+                        {venue.address}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li>No venues found</li>
+            )}
+          </ul>
+        )}
       </div>
     </main>
   )
