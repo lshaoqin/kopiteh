@@ -16,6 +16,7 @@ export default function Home() {
   const [stall, setStall] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
@@ -27,25 +28,26 @@ export default function Home() {
       try {
         // Fetch stall details
         const stallRes = await fetch(`${API_URL}/stalls/${stallId}`);
-        if (!stallRes.ok) throw new Error("Failed to fetch stall");
         const stallJson = await stallRes.json();
-        if (!stallJson.success) throw new Error("Failed to fetch stall");
-        setStall(stallJson.payload.data);
+        if (!stallRes.ok || !stallJson.success) {
+          throw new Error(stallJson?.message || "Failed to fetch stall");
+        }
+        setStall(stallJson.payload.data ?? []);
 
         // Fetch order items for the stall
         const orderItemsRes = await fetch(`${API_URL}/orderitems/stall/${stallId}`);
-        if (!orderItemsRes.ok) throw new Error("Failed to fetch order items");
-
         const orderItemsJson = await orderItemsRes.json();
-        if (!orderItemsJson.success) {
-          setOrderItems([]);
-          return;
+        if (!orderItemsRes.ok || !orderItemsJson.success) {
+          throw new Error("Failed to fetch order items");
         }
         setOrderItems(orderItemsJson.payload.data ?? []);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        const message = err instanceof Error ? err.message : "Unexpected error occurred";
+        setError(message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
   }, [API_URL, stallId]);
@@ -60,8 +62,6 @@ export default function Home() {
           </h1>
           <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
         </div>
-
-        {loading && <p>Loading...</p>}
 
         {/* Status Filter Row */}
         <div className="flex items-center gap-2 mt-4">
@@ -99,36 +99,41 @@ export default function Home() {
             Served
           </button>
         </div>
-        <div className="mt-4 space-y-2">
-          {filteredOrderItems.length === 0 && !loading && (
-            <p className="text-sm text-gray-500">
-              No order item {selectedStatus.toLowerCase()}
-            </p>
-          )}
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">Error: {error}</p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {filteredOrderItems.length === 0 && !loading && (
+              <p className="text-sm text-gray-500">
+                No order item {selectedStatus.toLowerCase()}
+              </p>
+            )}
 
-          {filteredOrderItems.map((item) => (
-            <div
-              key={`${item.order_id}-${item.item_id}`}
-              className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
-            >
-              <div>
-                <p className="font-medium">Order #{item.order_id}</p>
-                <p className="text-sm text-gray-600">
-                  Item ID: {item.item_id}
-                </p>
-              </div>
+            {filteredOrderItems.map((item) => (
+              <div
+                key={`${item.order_id}-${item.item_id}`}
+                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
+              >
+                <div>
+                  <p className="font-medium">Order #{item.order_id}</p>
+                  <p className="text-sm text-gray-600">
+                    Item ID: {item.item_id}
+                  </p>
+                </div>
 
-              <div className="text-right">
-                <p className="font-medium">x{item.quantity}</p>
-                <p className="text-sm text-gray-600">
-                  ${item.line_subtotal.toFixed(2)}
-                </p>
+                <div className="text-right">
+                  <p className="font-medium">x{item.quantity}</p>
+                  <p className="text-sm text-gray-600">
+                    ${item.line_subtotal.toFixed(2)}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
         </div>
-
-      </div>
     </main>
   )
 }
