@@ -13,24 +13,27 @@ export default function Home() {
 
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch(`${API_URL}/stalls/venue/${venueId}`);
-        if (!res.ok) throw new Error("Failed to fetch stalls");
-
         const json = await res.json();
-        if (!json.success) {
-          setStalls([]);
-          return;
+        if (!res.ok || !json.success) {
+          throw new Error(json?.message || "Failed to fetch stalls");
         }
+
         setStalls(json.payload.data ?? []);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        const message = err instanceof Error ? err.message : "Unexpected error occurred";
+        setError(message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     load();
   }, [API_URL, venueId]);
 
@@ -47,36 +50,42 @@ export default function Home() {
           Select your stall
         </h2>
 
-        {loading && <p>Loading...</p>}
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">Error: {error}</p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {stalls.length > 0 ? (
+              stalls.map((stall) => (
+                <li key={stall.stall_id}>
+                  <div 
+                  className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
+                  onClick={() => router.push(`/runner/venue/${venueId}/stall/${stall.stall_id}/orders`)}>
+                    {/* Shop image */}
+                    <img
+                      src={stall.stall_image}
+                      alt={stall.name}
+                      className="w-16 h-16 rounded-md object-cover flex-shrink-0"
+                    />
 
-        <ul className="mt-4 space-y-3">
-          {!loading && stalls.length > 0 && stalls.map((stall: any) => (
-            <li key={stall.stall_id}>
-              <div 
-              className="flex items-center gap-3 rounded-xl bg-white shadow-sm px-3 py-3 active:scale-[0.98] transition"
-              onClick={() => router.push(`/runner/venue/${venueId}/stall/${stall.stall_id}/orders`)}>
-                {/* Shop image */}
-                <img
-                  src={stall.stall_image}
-                  alt={stall.name}
-                  className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-                />
-
-                {/* Text content */}
-                <div className="flex flex-col">
-                  <span className="font-semibold text-[15px] text-black leading-tight">
-                    {stall.name}
-                  </span>
-                  <span className="text-sm text-gray-500 leading-tight">
-                    {stall.unit_number}
-                  </span>
-                </div>
-              </div>
-            </li>
-          ))}
-
-          {!loading && stalls.length === 0 && <li>No stalls found</li>}
-        </ul>
+                    {/* Text content */}
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-[15px] text-black leading-tight">
+                        {stall.name}
+                      </span>
+                      <span className="text-sm text-gray-500 leading-tight">
+                        {stall.description}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li>No stalls found</li>
+            )}
+          </ul>
+        )}
       </div>
     </main>
   )
