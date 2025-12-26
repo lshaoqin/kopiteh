@@ -1,10 +1,10 @@
-import type { Request, Response } from 'express';
-import type { StallPayload, UpdateStallPayload } from '../types/payloads';
-import { StallService } from '../services/stall.service';
-import { BadRequestError } from './errors';
-import { errorResponse, successResponse } from '../types/responses';
-import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
+import type { Request, Response } from "express";
+import type { StallPayload, UpdateStallPayload } from "../types/payloads";
+import { StallService } from "../services/stall.service";
+import { BadRequestError } from "./errors";
+import { errorResponse, successResponse } from "../types/responses";
+import { ErrorCodes } from "../types/errors";
+import { SuccessCodes } from "../types/success";
 
 export const StallController = {
   async getAll(req: Request, res: Response) {
@@ -37,8 +37,7 @@ export const StallController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as StallPayload;
-      const data = await StallService.create(payload);
-      const result = successResponse(SuccessCodes.OK, data);
+      const result = await StallService.create(payload);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -56,15 +55,9 @@ export const StallController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
-        const r = errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          "Invalid id parameter"
-        );
-        return res.status(r.payload.status).json(r);
-      }
+      const payload = req.body as UpdateStallPayload;
 
-      const result = await StallService.update(id, req.body);
+      const result = await StallService.update(id, payload);
 
       return res.status(result.payload.status).json(result);
     } catch (_err) {
@@ -75,8 +68,7 @@ export const StallController = {
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const data = await StallService.delete(id);
-    const result = successResponse(SuccessCodes.OK, data);
+    const result = await StallService.delete(id);
     return res.status(result.payload.status).json(result);
   },
 };

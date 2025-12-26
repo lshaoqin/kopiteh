@@ -19,7 +19,7 @@ export default function Home() {
               <Link href="/admin">Admin</Link>
             </Button>
             <Button className="bg-primary1 h-11 rounded-md">
-              <Link href="/runner">Runner</Link>
+              <Link href="/runner/venue/selectvenue">Runner</Link>
             </Button>
             <Button className="bg-primary1 h-11 rounded-md">
               <Link href="/ordering">Ordering</Link>
