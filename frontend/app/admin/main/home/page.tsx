@@ -78,7 +78,7 @@ export default function Home() {
       <div className="flex-1 w-full ">
         <h1 className="font-bold text-2xl">Venues</h1>
         {loading && <div className="flex-1 grid place-items-center">
-          <p className="text-primary1">No venues yet…</p>
+          <p className="text-primary1">Loading…</p>
         </div>}
 
         {!loading && !error && venues.length === 0 && (

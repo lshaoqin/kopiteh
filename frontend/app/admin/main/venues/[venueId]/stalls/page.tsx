@@ -45,7 +45,7 @@ export default function Stalls() {
             <div className="flex-1 w-full ">
                 <h1 className="font-bold text-2xl">Stalls</h1>
                 {loading && <div className="flex-1 grid place-items-center">
-                    <p className="text-primary1">No stalls yet…</p>
+                    <p className="text-primary1">Loading…</p>
                 </div>}
 
                 {!loading && !error && stalls.length === 0 && (
