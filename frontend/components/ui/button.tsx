@@ -24,7 +24,9 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         signin: "bg-primary1 hover:bg-grey-primary/70 text-white py-3 rounded-xl",
-        logout: "justify-start text-xl w-full py-4 text-white h-auto hover:opacity-80 font-bold"
+        logout: "justify-start text-xl w-full py-4 text-white h-auto hover:opacity-80 font-bold",
+        add: "rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300",
+        back: "px-0 text-base font-normal gap-2 text-black hover:bg-transparent hover:text-green-600 hover:underline"
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
@@ -68,9 +70,7 @@ export function BackButton({ href = "/" }) {
 
   return (
     <Button
-      variant="ghost"
-      className="px-0 text-base font-normal gap-2 text-black 
-      hover:bg-transparent hover:text-green-600 hover:underline"
+      variant="back"
       onClick={() => router.push(href)}
     >
       <ArrowLeft className="size-5 text-green-600" />
@@ -84,8 +84,7 @@ export function AddButton({ href = "/" }) {
 
   return (
     <Button 
-      variant="default"
-      className="rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300"
+      variant="add"
       onClick={() => router.push(href)}
     >
       <Plus className="size-5 text-green-600" />
