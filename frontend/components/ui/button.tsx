@@ -1,7 +1,11 @@
+"use client";
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import { ArrowLeft, Plus } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 // Define button variants with CVA
 const buttonVariants = cva(
@@ -58,6 +62,38 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     )
   }
 )
+
+export function BackButton({ href = "/" }) {
+  const router = useRouter();
+
+  return (
+    <Button
+      variant="ghost"
+      className="px-0 text-base font-normal gap-2 text-black 
+      hover:bg-transparent hover:text-green-600 hover:underline"
+      onClick={() => router.push(href)}
+    >
+      <ArrowLeft className="size-5 text-green-600" />
+      Back
+    </Button>
+  )
+}
+
+export function AddButton({ href = "/" }) {
+  const router = useRouter();
+
+  return (
+    <Button 
+      variant="default"
+      className="rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300"
+      onClick={() => router.push(href)}
+    >
+      <Plus className="size-5 text-green-600" />
+    </Button>
+  )
+}
+
+
 
 Button.displayName = "Button"
 

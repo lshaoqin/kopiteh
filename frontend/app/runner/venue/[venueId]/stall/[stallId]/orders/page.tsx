@@ -1,6 +1,6 @@
 "use client";
 
-import { BackButton } from "@/components/ui/backbutton"
+import { BackButton, AddButton } from "@/components/ui/button"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
@@ -65,9 +65,7 @@ export default function Home() {
 
         {/* Status Filter Row */}
         <div className="flex items-center gap-2 mt-4">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-xl font-medium">
-            +
-          </button>
+          <AddButton href={`/runner/venue/${venueId}/stall/${stallId}/orders/new`} />
           <button 
           onClick={() => setSelectedStatus("INCOMING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
@@ -80,10 +78,10 @@ export default function Home() {
           </button>
           <button 
           onClick={() => setSelectedStatus("PREPARING")}
-            className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
+            className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm gap-10 ${
               selectedStatus === "PREPARING"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 text-gray-700"
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             Preparing

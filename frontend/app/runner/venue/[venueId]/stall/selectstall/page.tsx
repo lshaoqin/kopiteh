@@ -1,6 +1,6 @@
 "use client";
 
-import { BackButton } from "@/components/ui/backbutton"
+import { BackButton } from "@/components/ui/button"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Stall } from "../../../../../../../types/stall";
