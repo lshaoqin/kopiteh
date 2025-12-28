@@ -5,7 +5,7 @@ import { Pencil } from "lucide-react";
 type CardProps = {
   name: string;
   img?: string;
-  variant?: "venue" | "stall";
+  variant?: "default" | "venue" | "stall";
 
   // stall-only
   isActive?: boolean;
@@ -20,10 +20,11 @@ function CardHolder({
     isActive,
     onActiveChange, 
     onEdit}: CardProps) {
-    const showActions = variant === "stall";
+    const showActions = variant === "default";
+    
     return (
-        <div className="w-80 h-80 flex flex-col rounded-xl bg-white shadow-md shadow-black/25">
-            <div className="flex-1 bg-amber-300 rounded-t-xl">
+        <div className="h-50 flex flex-col rounded-xl bg-white shadow-md shadow-black/25">
+            <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
                 {img ? (
                     <img src={img} alt={name} className="h-full w-full object-cover" />
                 ) : (
