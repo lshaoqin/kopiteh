@@ -1,10 +1,15 @@
 import type { ID, Decimal } from "./common";
 
 export type OrderStatus =
-  | "incoming"
-  | "preparing"
-  | "served"
-  | "cancelled"; // adjust to your actual status list
+  | "PENDING"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type OrderItemStatus =
+  | "INCOMING"
+  | "PREPARING"
+  | "SERVED"
+  | "CANCELLED";
 
 export interface Order {
   order_id: ID;
@@ -20,6 +25,7 @@ export interface OrderItem {
   order_item_id: ID;
   order_id: ID;
   item_id: ID;
+  status: OrderItemStatus;
   quantity: number;
   unit_price: Decimal;
   line_subtotal: Decimal;

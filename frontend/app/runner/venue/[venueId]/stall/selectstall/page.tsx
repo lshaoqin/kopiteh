@@ -1,6 +1,6 @@
 "use client";
 
-import { BackButton } from "@/components/ui/backbutton"
+import { BackButton } from "@/components/ui/button"
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Stall } from "../../../../../../../types/stall";
@@ -40,7 +40,7 @@ export default function Home() {
 
   return (
     <main className="p-2">
-      <BackButton href="/runner/selectvenue" />
+      <BackButton href="/runner/venue/selectvenue" />
 
       <div>
         <h1 className="text-3xl font-bold">
