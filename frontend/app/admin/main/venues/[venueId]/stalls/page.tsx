@@ -24,7 +24,6 @@ export default function Stalls() {
                     throw new Error(data?.payload?.message ?? "Failed to fetch venues");
                 }
                 setStalls(data.payload?.data ?? []);
-                console.log(data.payload?.data);
             } catch (err: any) {
                 setError(err.message ?? "There is an error in our server, please try again later.");
                 setStalls([]);

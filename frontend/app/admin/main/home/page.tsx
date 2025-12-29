@@ -67,7 +67,6 @@ export default function Home() {
 
       router.push("/admin/auth/login");
     } catch (err) {
-      console.error("Logout failed:", err);
       useAuthStore.getState().logout();
       router.push("/login");
     }
