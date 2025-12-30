@@ -163,64 +163,6 @@ export default function Stalls() {
                     onClose={() => setShowCreate(!showCreate)}
                     onSubmit={handleCreate}
                 />
-                // <div
-                //     className="fixed inset-0 bg-black/40 flex items-center justify-center"
-                //     onClick={() => setShowCreate(false)}
-                // >
-                //     <div
-                //         className="bg-white w-96 rounded-xl p-6 shadow-lg"
-                //         onClick={(e) => e.stopPropagation()}
-                //     >
-                //         <div className="relative flex items-center py-2">
-                //             <Button onClick={() => setShowCreate(false)} variant="backcreatestall" size="bare">
-                //                 <ArrowLeft className="text-primary1" />
-                //             </Button>
-                //             <h2 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-primary1">
-                //                 New Stall
-                //             </h2>
-                //         </div>
-                //         <div className="mt-4 space-y-3 mx-7">
-                //             <div className="space-y-2">
-                //                 <h2 className="text-black font-bold">
-                //                     Stall Name
-                //                 </h2>
-                //                 <FormField
-                //                     className="flex flex-col space-y-1"
-                //                     classNameOut={`
-                //                 p-2 bg-white rounded-lg transition-all duration-200 ease-out
-                //                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                //                 `}
-                //                     classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-                //                     variant="text"
-                //                     label=""
-                //                     inputProps={{ value: newStallName, placeholder: "Stall name", onChange: (e) => { setNewStallName(e.target.value); setError(null); } }} />
-
-                //             </div>
-                //             <div className="space-y-2">
-                //                 <h2 className="text-black font-bold">
-                //                     Stall Thumbnail
-                //                 </h2>
-
-                //                 <FormField
-                //                     className="flex flex-col space-y-1"
-                //                     classNameOut={`
-                //                 p-2 bg-white rounded-lg transition-all duration-200 ease-out
-                //                 ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                //                 `}
-                //                     classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-                //                     variant="text"
-                //                     label=""
-                //                     inputProps={{ value: newImageUrl, placeholder: "Image URL", onChange: (e) => { setNewImageUrl(e.target.value); setError(null); } }} />
-                //             </div>
-                //             <div className="mt-10 w-full flex justify-center">
-                //                 <Button className="py-2 rounded-2xl font-bold bg-gray-400" onClick={handleCreate}>
-                //                     Create
-                //                 </Button>
-                //             </div>
-                //         </div>
-                //     </div>
-                // </div>
-
             )}
         </main>
     )
