@@ -73,7 +73,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen px-6 py-10 flex">
+    <main className="min-h-screen px-6 py-10 flex w-full">
       <div className="flex-1 w-full ">
         <h1 className="font-bold text-2xl">Venues</h1>
         {loading && <div className="flex-1 grid place-items-center">
@@ -85,7 +85,7 @@ export default function Home() {
         )}
 
         {!loading && !error && venues.length > 0 && (
-          <ul className="mt-4 grid grid-cols-3 gap-8">
+          <ul className="mt-4 grid grid-cols-3">
             {venues.map((v) => (
               <li key={v.venue_id}>
                 <Link href={`/admin/main/managevenues/venues/${v.venue_id}/stalls`}>
