@@ -107,10 +107,10 @@ export default function StallSelectionPage() {
             >
               {/* Card Image */}
               <div className="w-full aspect-square border-2 border-slate-500 rounded-xl flex items-center justify-center bg-slate-50 mb-2 overflow-hidden relative transition-colors group-hover:bg-slate-100">
-                {stall.image_url ? (
+                {stall.stall_image ? (
                    /* eslint-disable-next-line @next/next/no-img-element */
                    <img 
-                    src={stall.image_url} 
+                    src={stall.stall_image} 
                     alt={stall.name} 
                     className="w-full h-full object-cover" 
                     onError={(e) => {
@@ -121,7 +121,7 @@ export default function StallSelectionPage() {
                 ) : null}
                 
                 {/* Fallback Icon */}
-                <div className={cn("absolute inset-0 flex items-center justify-center", stall.image_url ? "hidden" : "flex")}>
+                <div className={cn("absolute inset-0 flex items-center justify-center", stall.stall_image ? "hidden" : "flex")}>
                     <ImageIcon className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
                 </div>
               </div>
