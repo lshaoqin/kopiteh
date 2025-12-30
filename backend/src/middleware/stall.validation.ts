@@ -41,12 +41,19 @@ export const stallIdParamValidation = [
 
 export const createStallValidation = [
   enforceKnownStallFields,
-  body('venue_id').exists({ checkFalsy: true }).isInt({ gt: 0 }).withMessage('venue_id must be a positive integer'),
-  body('name').exists({ checkFalsy: true }).isString().trim().isLength({ max: 255 }),
+  body('venue_id')
+    .exists({ checkFalsy: true })
+    .isInt({ gt: 0 })
+    .withMessage('venue_id must be a positive integer'),
+
+  body('name')
+    .exists({ checkFalsy: true })
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
+
   optionalTextField('description', 1000),
   optionalTextField('stall_image', 2048),
-  optionalBoolean('is_open'),
-  optionalNonNegativeInt('waiting_time'),
 ];
 
 export const updateStallValidation = [

@@ -37,18 +37,13 @@ export const StallController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as StallPayload;
+
       const result = await StallService.create(payload);
+
       return res.status(result.payload.status).json(result);
-    } catch (err) {
-      if (err instanceof BadRequestError) {
-        const result = errorResponse(
-          ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
-        );
-        return res.status(result.payload.status).json(result);
-      }
-      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
-      return res.status(result.payload.status).json(result);
+    } catch (_err) {
+      const r = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(r.payload.status).json(r);
     }
   },
 

@@ -48,20 +48,34 @@ export const StallService = {
   },
 
   async create(payload: StallPayload): Promise<ServiceResult<any>> {
-    try {
-      const result = await BaseService.query(
-        "INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
-        [
-          payload.venue_id,
-          payload.name,
-          payload.description ?? null,
-          payload.stall_image ?? null,
-          payload.is_open ?? true,
-          payload.waiting_time ?? 0,
-        ]
+    // allow only valid columns
+    const entries = Object.entries(payload).filter(([key]) =>
+      STALL_COLUMNS.has(key)
+    );
+
+    if (entries.length === 0) {
+      return errorResponse(
+        ErrorCodes.VALIDATION_ERROR,
+        "No valid fields to create"
       );
+    }
+
+    const columns = entries.map(([field]) => field).join(", ");
+    const placeholders = entries.map((_, i) => `$${i + 1}`).join(", ");
+    const values = entries.map(([, value]) => value ?? null);
+
+    try {
+      const query = `
+      INSERT INTO stall (${columns})
+      VALUES (${placeholders})
+      RETURNING *
+    `;
+
+      const result = await BaseService.query(query, values);
+
       return successResponse(SuccessCodes.CREATED, result.rows[0]);
     } catch (error) {
+      console.error("[StallService.create] DB error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
