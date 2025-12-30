@@ -77,7 +77,7 @@ function AdminSideBar() {
                 <div className="w-full">
                     <ul className="mt-6 space-y-6 ">
                         {menuItems.map((item) => {
-                            const isActive = pathname === item.href;
+                            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                             return (
                                 <div key={item.name} className={cn("w-full", isActive ? "bg-white rounded-r-[32px] shadow-sm" : "bg-transparent")}>
                                     <li key={item.name} className="w-[263px] h-[70px] ml-[32px] mr-[57px]">
