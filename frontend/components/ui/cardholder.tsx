@@ -25,7 +25,7 @@ function CardHolder({
         <div className="w-80 h-80 flex flex-col rounded-xl bg-white shadow-md shadow-black/25">
             <div className="flex-1 bg-amber-300 rounded-t-xl">
                 {img ? (
-                    <img src={img} alt={name} className="h-full w-full object-cover" />
+                    <img src={img} alt={name} className="h-full w-full object-cover rounded-t-xl" />
                 ) : (
                     <div className="h-full w-full grid place-items-center">
                         <span className="text-sm opacity-70">No image</span>
