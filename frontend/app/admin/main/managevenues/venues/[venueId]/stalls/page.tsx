@@ -1,6 +1,6 @@
 'use client'
 
-import type { Stall } from "../../../../../../../types/stall"
+import type { Stall } from "../../../../../../../../types/stall"
 import { useState, useEffect } from "react"
 import { useAuthStore } from "@/stores/auth.store"
 import { CardHolder } from "@/components/ui/cardholder"

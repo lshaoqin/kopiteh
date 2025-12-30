@@ -28,8 +28,8 @@ function AdminSideBar() {
             icon: <ChartNoAxesCombined className="w-6 h-6" />,
         },
         {
-            name: "Manage Stalls",
-            href: "/admin/main/managestalls",
+            name: "Manage Venues",
+            href: "/admin/main/managevenues",
             icon: <SettingsIcon className="w-6 h-6" />,
         },
     ];
