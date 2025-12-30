@@ -73,26 +73,37 @@ export const StallService = {
     const entries = Object.entries(payload).filter(([key]) =>
       STALL_COLUMNS.has(key)
     );
-    if (entries.length === 0)
+
+    if (entries.length === 0) {
       return errorResponse(
         ErrorCodes.VALIDATION_ERROR,
         "No valid fields to update"
       );
+    }
 
     const setClause = entries
       .map(([field], i) => `${field} = $${i + 1}`)
       .join(", ");
+
     const values = entries.map(([, value]) => value ?? null);
 
     try {
-      const query = `UPDATE stall SET ${setClause} WHERE stall_id = $${
-        entries.length + 1
-      } RETURNING *`;
+      const query = `
+      UPDATE stall
+      SET ${setClause}
+      WHERE stall_id = $${entries.length + 1}
+      RETURNING *
+    `;
+
       const result = await BaseService.query(query, [...values, id]);
-      if (!result.rows[0])
+
+      if (!result.rows[0]) {
         return errorResponse(ErrorCodes.NOT_FOUND, "Stall not found");
+      }
+
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
+      console.error("[StallService.update] DB error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },

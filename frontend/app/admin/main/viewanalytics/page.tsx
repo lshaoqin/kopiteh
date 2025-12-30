@@ -41,8 +41,6 @@ export default function Home() {
     // Redirect to login
     router.push("/admin/auth/login");
   } catch (err) {
-    console.error("Logout failed:", err);
-
     // Still clear local state to avoid being stuck
     useAuthStore.getState().logout();
     router.push("/login");

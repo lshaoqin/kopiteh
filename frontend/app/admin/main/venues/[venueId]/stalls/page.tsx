@@ -11,7 +11,7 @@ export default function Stalls() {
     const [stalls, setStalls] = useState<Stall[]>([]);
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const { user, isHydrated, logout } = useAuthStore();
+    const { user, isHydrated, logout, accessToken } = useAuthStore();
     const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     useEffect(() => {
@@ -34,12 +34,35 @@ export default function Stalls() {
         if (venueId) loadStall();
     }, [API_URL, venueId]);
 
-    const handleToggle = (stallId: string, next: boolean) => {
-        setStalls(prev =>
-            prev.map(s => (s.stall_id === stallId ? { ...s, is_open: next } : s))
+    const handleToggle = async (stallId: string, next: boolean) => {
+        const prev = stalls;
+        setStalls(curr =>
+            curr.map(s => (s.stall_id === stallId ? { ...s, is_open: next } : s))
         );
-        //call backend api to update is_open
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL;
+            const token = useAuthStore.getState().accessToken;
+
+            const res = await fetch(`${API_URL}/stalls/update/${stallId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ is_open: next }),
+            });
+
+            const data = await res.json();
+            if (!res.ok || data.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to update stall");
+            }
+
+        } catch (err) {
+            setStalls(prev);
+        }
     };
+
     return (
         <main className="min-h-screen px-6 py-10 flex">
             <div className="flex-1 w-full ">
@@ -56,7 +79,7 @@ export default function Stalls() {
                     <ul className="mt-4 grid grid-cols-3 gap-8">
                         {stalls.map((s) => (
                             <li key={s.stall_id}>
-                                <CardHolder name={s.name} img={s.image_url} variant="stall" isActive={s.is_open} onActiveChange={(next) => handleToggle(s.stall_id, next)} />
+                                <CardHolder name={s.name} img={s.stall_image} variant="stall" isActive={s.is_open} onActiveChange={(next) => handleToggle(s.stall_id, next)} />
                             </li>
                         ))}
                     </ul>
