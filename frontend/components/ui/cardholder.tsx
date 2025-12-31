@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Switch } from "@/components/ui/switch";
 import { Pencil } from "lucide-react";
+import { Button } from "./button";
 
 type CardProps = {
   name: string;
@@ -40,14 +41,15 @@ function CardHolder({
                     <div className="flex items-center">
                         <Switch checked={isActive} onCheckedChange={(v) => onActiveChange?.(v)} />
 
-                        <button
-                            type="button"
+                        <Button
+                            size="bare"
                             onClick={onEdit}
                             className="p-2 rounded-md hover:bg-gray-100"
                             aria-label="Edit stall"
+                            variant="editstall"
                         >
                             <Pencil className="h-5 w-5" />
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>
