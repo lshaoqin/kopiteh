@@ -13,7 +13,7 @@ export default function AdminAuthLayout({
       <AdminSideBar />
 
       {/* Right side: individual auth pages */}
-      <div className="flex-1 flex bg-white">
+      <div className="ml-[352px] flex-1 flex bg-white">
         {children}
       </div>
     </div>
