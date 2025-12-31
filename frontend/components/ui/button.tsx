@@ -26,7 +26,9 @@ const buttonVariants = cva(
         signin: "bg-primary1 hover:bg-grey-primary/70 text-white py-3 rounded-xl",
         logout: "justify-start text-xl w-full py-4 text-white h-auto hover:opacity-80 font-bold",
         add: "rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300",
-        back: "px-0 text-base font-normal gap-2 text-black hover:bg-transparent hover:text-green-600 hover:underline"
+        back: "px-0 text-base font-normal gap-2 text-black hover:bg-transparent hover:text-green-600 hover:underline",
+        addstall: "rounded-2xl p-2 text-white bg-primary1 font-semibold",
+        backcreatestall: "gap-0 bg-transparent hover:bg-transparent"
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
@@ -35,6 +37,7 @@ const buttonVariants = cva(
         icon: "size-9",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
+        bare: "p-0 h-auto w-auto"
       },
     },
     defaultVariants: {
