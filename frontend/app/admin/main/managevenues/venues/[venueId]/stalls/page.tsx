@@ -15,9 +15,13 @@ export default function Stalls() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const { user, isHydrated, logout, accessToken } = useAuthStore();
-    const [showCreate, setShowCreate] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
+    const [updateError, setUpdateError] = useState<string | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const [editingStall, setEditingStall] = useState<Stall>(null)
     const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     useEffect(() => {
@@ -30,6 +34,7 @@ export default function Stalls() {
                     throw new Error(data?.payload?.message ?? "Failed to fetch venues");
                 }
                 setStalls(data.payload?.data ?? []);
+                console.log(data.payload?.data)
             } catch (err: any) {
                 setError(err.message ?? "There is an error in our server, please try again later.");
                 setStalls([]);
@@ -87,13 +92,11 @@ export default function Stalls() {
 
             setCreating(true);
 
-            const token = useAuthStore.getState().accessToken;
-
             const res = await fetch(`${API_URL}/stalls/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     venue_id: Number(venueId),
@@ -111,11 +114,71 @@ export default function Stalls() {
             const created = data.payload?.data;
 
             setStalls((curr) => [...curr, created]);
-            setShowCreate(false);
+            setShowCreateModal(false);
         } catch (err: any) {
             setCreateError(err?.message ?? "Failed to create stall");
         } finally {
             setCreating(false);
+        }
+    };
+
+    const handleUpdate = async ({
+        name,
+        imageUrl,
+    }: {
+        name: string;
+        imageUrl: string;
+    }) => {
+        try {
+            setUpdateError(null);
+
+            if (!editingStall) {
+                setUpdateError("No stall selected to update.");
+                return;
+            }
+
+            const trimmedName = name.trim();
+            if (!trimmedName) {
+                setUpdateError("Stall name is required.");
+                return;
+            }
+
+            setUpdating(true);
+
+            const stallId = editingStall.stall_id;
+
+            const res = await fetch(`${API_URL}/stalls/update/${stallId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    name: trimmedName,
+                    stall_image: imageUrl.trim() ? imageUrl.trim() : null,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to update stall");
+            }
+
+            const updated = data.payload?.data;
+
+            setStalls((curr) =>
+                curr.map((stall) =>
+                    stall.stall_id === stallId ? { ...stall, ...updated } : stall
+                )
+            );
+
+            setShowUpdateModal(false);
+            setEditingStall(null);
+        } catch (err: any) {
+            setUpdateError(err?.message ?? "Failed to update stall");
+        } finally {
+            setUpdating(false);
         }
     };
 
@@ -126,7 +189,7 @@ export default function Stalls() {
             <div className="flex-1 w-full">
                 <div className="flex justify-between">
                     <h1 className="font-bold text-2xl">Stalls</h1>
-                    <Button variant="addstall" onClick={() => setShowCreate(true)}>
+                    <Button variant="addstall" onClick={() => setShowCreateModal(true)}>
                         <CirclePlus />
                         Add
                     </Button>
@@ -144,23 +207,49 @@ export default function Stalls() {
                     <ul className="mt-4 grid grid-cols-3 gap-y-10">
                         {stalls.map((s) => (
                             <li key={s.stall_id}>
-                                <CardHolder name={s.name} img={s.stall_image} variant="stall" isActive={s.is_open} onActiveChange={(next) => handleToggle(s.stall_id, next)} />
+                                <CardHolder
+                                    name={s.name}
+                                    img={s.stall_image}
+                                    variant="stall"
+                                    isActive={s.is_open}
+                                    onActiveChange={(next) => handleToggle(s.stall_id, next)}
+                                    onEdit={() => {
+                                        setEditingStall(s);
+                                        setShowUpdateModal(true);
+                                    }}
+                                />
                             </li>
                         ))}
                     </ul>
                 )}
             </div>
-            {showCreate && (
-                <AdminStallModal 
-                    open={showCreate}
+            {showCreateModal && (
+                <AdminStallModal
+                    open={showCreateModal}
                     title="New Stall"
-                    labelName="Stall name"
-                    labelImage="Paste Image URL"
+                    labelName="Stall Name"
+                    labelImage="Paste Stall Thumbnail"
                     submitText="Create"
-                    onClose={() => setShowCreate(false)}
+                    onClose={() => setShowCreateModal(false)}
                     onSubmit={handleCreate}
                 />
-        
+            )}
+            {showUpdateModal && (
+                <AdminStallModal
+                    open={showUpdateModal}
+                    title="Edit Stall"
+                    labelName="Stall Name"
+                    labelImage="Paste Image URL"
+                    submitText="Update"
+                    deleteText="Delete"
+                    onClose={() => {
+                        setShowUpdateModal(false);
+                        setEditingStall(null);
+                    }}
+                    initialName={editingStall.name}
+                    initialImageUrl={editingStall.stall_image ?? ""}
+                    onSubmit={handleUpdate}
+                />
             )}
         </main>
     )

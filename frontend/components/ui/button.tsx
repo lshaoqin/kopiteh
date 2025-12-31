@@ -28,7 +28,10 @@ const buttonVariants = cva(
         add: "rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300",
         back: "px-0 text-base font-normal gap-2 text-black hover:bg-transparent hover:text-green-600 hover:underline",
         addstall: "rounded-2xl p-2 text-white bg-primary1 font-semibold",
-        backcreatestall: "gap-0 bg-transparent hover:bg-transparent"
+        backcreatestall: "gap-0 bg-transparent hover:bg-transparent",
+        editstall: "gap-0 bg-transparent hover:bg-transparent",
+        deletestall: "py-2 rounded-2xl font-bold bg-delete text-white hover:bg-delete/70",
+        updatestall: "py-2 rounded-2xl font-bold bg-primary1 text-white hover:bg-primary1/70"
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
