@@ -7,9 +7,7 @@ import { CardHolder } from "@/components/ui/cardholder"
 import { Button, BackButton } from "@/components/ui/button"
 import { useParams } from "next/navigation";
 import { CirclePlus, ArrowLeft } from "lucide-react"
-import { FormField } from "@/components/ui/formfield"
-import { ImageUploadBox } from "@/components/ui/imageuploadbox"
-import { SimpleModal } from "@/components/ui/modal"
+import { AdminStallModal } from "@/components/ui/admin/adminstallmodal"
 
 export default function Stalls() {
     const { venueId } = useParams<{ venueId: string }>();
@@ -18,10 +16,8 @@ export default function Stalls() {
     const [error, setError] = useState<string | null>(null)
     const { user, isHydrated, logout, accessToken } = useAuthStore();
     const [showCreate, setShowCreate] = useState(false);
-    const [newStallName, setNewStallName] = useState("")
     const [createError, setCreateError] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
-    const [newImageUrl, setNewImageUrl] = useState("")
     const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     useEffect(() => {
@@ -113,9 +109,8 @@ export default function Stalls() {
             }
 
             const created = data.payload?.data;
-            console.log("CREATED STALL:", created);
 
-            setStalls((curr) => [created, ...curr]);
+            setStalls((curr) => [...curr, created]);
             setShowCreate(false);
         } catch (err: any) {
             setCreateError(err?.message ?? "Failed to create stall");
@@ -156,13 +151,16 @@ export default function Stalls() {
                 )}
             </div>
             {showCreate && (
-                <SimpleModal open={showCreate}
-                    primaryTitle="New Stall"
-                    secondaryTitle="Stall name"
-                    tertiaryTitle="Upload Image"
-                    onClose={() => setShowCreate(!showCreate)}
+                <AdminStallModal 
+                    open={showCreate}
+                    title="New Stall"
+                    labelName="Stall name"
+                    labelImage="Paste Image URL"
+                    submitText="Create"
+                    onClose={() => setShowCreate(false)}
                     onSubmit={handleCreate}
                 />
+        
             )}
         </main>
     )
