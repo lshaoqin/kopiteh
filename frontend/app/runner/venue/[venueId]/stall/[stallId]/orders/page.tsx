@@ -35,7 +35,7 @@ export default function Home() {
         setStall(stallJson.payload.data ?? []);
 
         // Fetch order items for the stall
-        const orderItemsRes = await fetch(`${API_URL}/orderitems/stall/${stallId}`);
+        const orderItemsRes = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
         const orderItemsJson = await orderItemsRes.json();
         if (!orderItemsRes.ok || !orderItemsJson.success) {
           throw new Error("Failed to fetch order items");
