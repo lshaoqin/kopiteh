@@ -1,6 +1,7 @@
 "use client";
 
-import { BackButton, AddButton } from "@/components/ui/button"
+import { BackButton, AddButton } from "@/components/ui/button";
+import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
@@ -15,6 +16,7 @@ export default function Home() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+  const [showAddOrder, setShowAddOrder] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,7 +67,7 @@ export default function Home() {
 
         {/* Status Filter Row */}
         <div className="flex items-center gap-2 mt-4">
-          <AddButton href={`/runner/venue/${venueId}/stall/${stallId}/orders/new`} />
+          <AddButton onClick={() => setShowAddOrder(true)} />
           <button 
           onClick={() => setSelectedStatus("INCOMING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
@@ -131,6 +133,15 @@ export default function Home() {
             ))}
           </div>
         )}
+        </div>
+        <div>
+        <AddOrderPanel
+          open={showAddOrder}
+          onClose={() => setShowAddOrder(false)}
+          onSubmit={(data) => {
+            console.log(data);
+          }}
+        />
         </div>
     </main>
   )
