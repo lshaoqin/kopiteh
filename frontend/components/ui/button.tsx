@@ -28,7 +28,9 @@ const buttonVariants = cva(
         add: "rounded-lg p-2 shadow-sm bg-gray-200 gap-2 hover:bg-gray-300",
         back: "px-0 text-base font-normal gap-2 text-black hover:bg-transparent hover:text-green-600 hover:underline",
         addstall: "rounded-2xl p-2 text-white bg-primary1 font-semibold",
-        backcreatestall: "gap-0 bg-transparent hover:bg-transparent"
+        backcreatestall: "gap-0 bg-transparent hover:bg-transparent",
+        confirm: "w-full bg-slate-600 text-white font-medium rounded-xl text-lg hover:bg-slate-700 active:scale-[0.98] transition-all shadow-md",
+        circle: "bg-white hover:bg-slate-100 border border-slate-200 rounded-full shadow-sm text-slate-700",
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
@@ -37,7 +39,8 @@ const buttonVariants = cva(
         icon: "size-9",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
-        bare: "p-0 h-auto w-auto"
+        bare: "p-0 h-auto w-auto",
+        xl: "h-auto py-4 px-6",
       },
     },
     defaultVariants: {
