@@ -1,5 +1,3 @@
-// use this in the future instead of mock data
-
 import { Stall, MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -38,7 +36,7 @@ export const api = {
       venue_id: String(item.venue_id),
       name: item.name,
       description: item.description,
-      image_url: item.stall_image, 
+      stall_image: item.stall_image, 
       is_open: item.is_open,
       waiting_time: item.waiting_time
     }));

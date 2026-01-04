@@ -2,71 +2,88 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/stores/cart.store";
+import { Button } from "@/components/ui/button"; 
+import { BackButton } from "@/components/ui/BackButton";
 
 export default function TableSelectionPage() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const { tableNumber, setTableNumber } = useCartStore();
+  const tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  const tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; 
-
-  const handleSelect = (table: number) => {
-    setSelectedTable(table);
+  const handleSelectOption = (table: number) => {
+    setTableNumber(table);
     setIsOpen(false);
-    
-    // Simulate selection and redirect to Stalls
-    setTimeout(() => {
-        router.push("/ordering/stalls");
-    }, 200);
+  };
+
+  const handleConfirm = () => {
+    if (!tableNumber) return;
+    router.push("/ordering/stalls");
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans text-slate-600">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-600 px-6 pt-6 pb-10">
       
       {/* Header */}
-      <header className="flex items-center p-6 pb-2 relative">
-        {/* Back button goes to Role Selection (/ordering) */}
-        <Link href="/ordering" className="p-2 -ml-2 rounded-full hover:bg-slate-100 absolute left-4">
-          <ArrowLeft className="w-6 h-6 text-slate-600" />
-        </Link>
-        <h1 className="w-full text-center text-lg font-medium text-slate-600">
-          Enter Details
-        </h1>
+      <header className="flex items-center pb-6">
+        <BackButton href="/" />
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-8 -mt-20">
+      {/* Title */}
+      <div className="mb-12 mt-2">
+        <h1 className="text-3xl font-bold text-slate-700 leading-tight">
+            Hi, <br />
+            Select Table Number
+        </h1>
+      </div>
+
+      <main className="flex-1 flex flex-col">
         
-        <div className="relative w-full max-w-xs">
+        {/* Select Dropdown */}
+        <div className="relative w-full max-w-sm mx-auto">
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "w-full flex items-center justify-between px-4 py-4 text-left text-lg border-2 border-slate-500 rounded-lg bg-white transition-all",
+              "w-full flex items-center justify-between px-5 py-4 text-left text-lg bg-white border border-slate-400 rounded-lg shadow-sm transition-all outline-none focus:ring-2 focus:ring-slate-200",
               isOpen ? "rounded-b-none border-b-0" : "rounded-lg"
             )}
           >
-            <span className={selectedTable ? "text-slate-800" : "text-slate-400"}>
-              {selectedTable ? `Table ${selectedTable}` : "Select Table"}
+            <span className={tableNumber ? "text-slate-700" : "text-slate-300"}>
+              {tableNumber ? tableNumber : "Select Table"}
             </span>
-            <ChevronDown className={cn("w-6 h-6 text-slate-500 transition-transform duration-200", isOpen && "rotate-180")} />
+            <ChevronDown 
+                className={cn("w-5 h-5 text-slate-500 transition-transform duration-200", isOpen && "rotate-180")} 
+            />
           </button>
 
           {isOpen && (
-            <div className="absolute top-full left-0 w-full bg-white border-2 border-t-0 border-slate-500 rounded-b-lg overflow-hidden max-h-60 overflow-y-auto z-50 shadow-xl">
+            <div className="absolute top-full left-0 w-full bg-white border border-t-0 border-slate-400 rounded-b-lg overflow-hidden max-h-60 overflow-y-auto z-50 shadow-lg">
               {tables.map((table) => (
                 <button
                   key={table}
-                  onClick={() => handleSelect(table)}
-                  className="w-full text-left px-4 py-3 text-lg hover:bg-slate-100 border-b border-slate-100 last:border-none text-slate-600"
+                  onClick={() => handleSelectOption(table)}
+                  className="w-full text-left px-5 py-3 text-lg text-slate-600 hover:bg-slate-50 border-b border-slate-100 last:border-none transition-colors"
                 >
                   {table}
                 </button>
               ))}
             </div>
           )}
+        </div>
+
+        <div className="flex-1" />
+        <div className="mt-8">
+            <Button 
+                variant="confirm" 
+                size="xl"
+                onClick={handleConfirm} 
+                disabled={!tableNumber}
+            >
+                Confirm
+            </Button>
         </div>
 
       </main>
