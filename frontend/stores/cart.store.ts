@@ -9,13 +9,14 @@ export interface CartItem {
   menuItem: MenuItem;
   modifiers: MenuItemModifier[];
   quantity: number;
-  notes: string;
+  notes: string; // present in db schema?
   subtotal: number;
 }
 
 interface CartState {
   items: CartItem[];
   isHydrated: boolean;
+  tableNumber: number | null;
 
   // Actions
   addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, notes?: string) => void;
@@ -23,6 +24,7 @@ interface CartState {
   updateQuantity: (uniqueId: string, delta: number) => void;
   updateItem: (uniqueId: string, updates: Partial<Omit<CartItem, 'uniqueId'>>) => void;
   clearCart: () => void;
+  setTableNumber: (table: number) => void;
   
   // Getters
   totalPrice: () => number;
@@ -36,6 +38,8 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isHydrated: false,
+      tableNumber: null,
+      setTableNumber: (table) => set({ tableNumber: table }),
 
       addItem: (menuItem, modifiers, quantity, notes = "") => {
         // 1. Generate Unique ID to distinguish variations
