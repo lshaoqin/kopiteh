@@ -24,7 +24,7 @@ function ItemCustomizationContent() {
 
   const [quantity, setQuantity] = useState(1);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
-  const [notes, setNotes] = useState("");
+  const [remarks, setRemarks] = useState("");
 
   const { addItem, updateItem, removeItem, items: cartItems } = useCartStore();
 
@@ -48,7 +48,7 @@ function ItemCustomizationContent() {
       const existingCartItem = cartItems.find(i => i.uniqueId === cartIdToEdit);
       if (existingCartItem) {
         setQuantity(existingCartItem.quantity);
-        setNotes(existingCartItem.notes);
+        setRemarks(existingCartItem.remarks);
         
         const newSelections: Record<string, string[]> = {};
         existingCartItem.modifiers.forEach(mod => {
@@ -96,9 +96,9 @@ function ItemCustomizationContent() {
     ).filter((m): m is MenuItemModifier => !!m);
 
     if (cartIdToEdit) {
-        updateItem(cartIdToEdit, { modifiers: selectedModifiers, quantity, notes });
+        updateItem(cartIdToEdit, { modifiers: selectedModifiers, quantity, remarks });
     } else {
-        addItem(item, selectedModifiers, quantity, notes);
+        addItem(item, selectedModifiers, quantity, remarks);
     }
     router.back();
   };
@@ -190,8 +190,8 @@ function ItemCustomizationContent() {
             <div className="px-6 py-6">
                 <h3 className="font-bold text-lg text-slate-700 mb-3">Request</h3>
                 <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
                     placeholder="Customization is subject to the stall's discretion"
                     className="w-full border border-slate-300 rounded-lg p-3 h-32 resize-none focus:outline-none focus:border-slate-500 text-slate-600 text-sm"
                 />

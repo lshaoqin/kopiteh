@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Image as ImageIcon } from "lucide-react";
+import { Search, Image as ImageIcon } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { MenuItem, Stall } from "../../../../../types";
 import { useCartStore } from "@/stores/cart.store";
 import { BackButton } from "@/components/ui/BackButton"; 
+import { PopularMenuCard, StandardMenuCard } from "@/components/ui/MenuCard";
 
 export default function MenuListPage() {
   const params = useParams();
@@ -43,138 +44,113 @@ export default function MenuListPage() {
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = useCartStore((state) => state.totalPrice());
 
-  const popularItems = menuItems.slice(0, 3);
-  const mainItems = menuItems.slice(3); 
+  // Splitting data to match the UI sections
+  const popularItems = menuItems.slice(0, 4); // First 4 items, criteria to be updated
+  const drinksItems = menuItems.filter(i => // Filtering drinks since currently there is no way to tell if a menu item is a food or a drink
+    i.name.toLowerCase().includes('kopi') || 
+    i.name.toLowerCase().includes('teh') || 
+    i.name.toLowerCase().includes('milo') ||
+    i.name.toLowerCase().includes('drink')
+  );
+  // Main Category is everything else
+  const mainItems = menuItems.filter(i => !drinksItems.includes(i));
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white">
         <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mb-4" />
-        <p className="text-slate-400">Loading Menu...</p>
       </div>
     );
   }
 
-  if (error || !stall) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
-        <p className="text-red-500 mb-4">{error || "Stall not found"}</p>
-        <Link href="/ordering/stalls" className="text-slate-600 underline">
-          Return to Stalls
-        </Link>
-      </div>
-    );
-  }
+  if (error || !stall) return <div>Error loading stall</div>;
 
   return (
-    // MAIN CONTAINER
     <div className="min-h-screen bg-white font-sans text-slate-600 pb-32 w-full flex flex-col">
       
-      {/* Header - Sticky */}
-      <div className="bg-white sticky top-0 z-20 shadow-sm border-b border-slate-100">
-         {/* Inner container limits width on huge screens */}
-         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <BackButton href="/ordering/stalls" />
-            
-            <div className="flex flex-col items-center">
-                <h1 className="text-xl font-bold text-slate-800">{stall.name}</h1>
-            </div>
+      <div className="bg-white min-h-screen shadow-sm">
 
-            <button className="p-2 -mr-2 rounded-full hover:bg-slate-50 transition-colors">
-                <Search className="w-6 h-6 text-slate-700" />
-            </button>
-         </div>
-      </div>
+        {/* HEADER SECTION */}
+        <div className="bg-slate-50 pb-6 pt-6 px-6 rounded-b-[2rem]">
+           {/* Top Row */}
+           <div className="flex items-center justify-between mb-4">
+              <BackButton href="/ordering/stalls" />
+              
+              <h1 className="text-lg md:text-xl font-bold text-slate-700">{stall.name}</h1>
 
-      {/* Content Area */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-8 space-y-10">
-        
-        {/* Popular Section */}
-        {popularItems.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold text-slate-800 mb-5">Popular</h2>
-            {/* Horizontal Scroll on Mobile, Grid on Desktop if there are many */}
-            <div className="flex gap-5 overflow-x-auto pb-4 no-scrollbar">
-              {popularItems.map((item) => (
-                <Link 
-                  key={item.item_id} 
-                  href={`/ordering/menu/${stallId}/item/${item.item_id}`}
-                  className="flex-shrink-0 w-40 flex flex-col group cursor-pointer"
-                >
-                    <div className="w-40 h-40 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden mb-3 relative transition-all group-hover:shadow-md group-hover:border-slate-300">
-                        {item.image_url ? (
-                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        ) : (
-                            <ImageIcon className="w-10 h-10 text-slate-300" />
-                        )}
-                        
-                        <div className="absolute bottom-3 right-3 bg-white rounded-full p-1.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                             <Plus className="w-4 h-4 text-slate-800" />
-                        </div>
-                    </div>
-                    <div className="px-1">
-                        <p className="text-sm font-bold text-slate-700 truncate">{item.name}</p>
-                        <p className="text-xs text-slate-500 mt-1">${Number(item.price).toFixed(2)}</p>
-                    </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+              <button className="p-2 -mr-2 rounded-full hover:bg-slate-200 transition-colors">
+                  <Search className="w-6 h-6 text-slate-700" />
+              </button>
+           </div>
 
-        {/* Menu List */}
-        <section>
-          <h2 className="text-xl font-bold text-slate-800 mb-5">Menu Items</h2>
+           {/* Centered Stall Image */}
+           <div className="flex justify-center">
+              {stall.stall_image ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={stall.stall_image} alt="stall" className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-sm" />
+              ) : (
+                  <div className="flex flex-col items-center text-slate-400">
+                       <ImageIcon className="w-10 h-10 mb-1" strokeWidth={1.5} />
+                  </div>
+              )}
+           </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 px-6 pt-8 space-y-10">
           
-          {mainItems.length === 0 && popularItems.length === 0 && (
-              <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                  No items available yet.
+          {/* 1. POPULAR SECTION */}
+          {popularItems.length > 0 && (
+            <section>
+              <h2 className="text-lg md:text-xl font-bold text-slate-700 mb-4">Popular</h2>
+              {/* Increased gap for desktop */}
+              <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 no-scrollbar">
+                {popularItems.map((item, index) => (
+                  <PopularMenuCard 
+                      key={item.item_id}
+                      item={item}
+                      href={`/ordering/menu/${stallId}/item/${item.item_id}`}
+                      rank={index + 1}
+                  />
+                ))}
               </div>
+            </section>
           )}
 
-          {/* 
-              RESPONSIVE GRID:
-              - Mobile: 1 column (Stack)
-              - Tablet: 2 columns
-              - Desktop: 3 columns
-          */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {mainItems.map((item) => (
-              <Link 
-                  key={item.item_id}
-                  href={`/ordering/menu/${stallId}/item/${item.item_id}`}
-                  className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all active:scale-[0.99] group h-28"
-              >
-                  <div className="flex items-center gap-5 flex-1 overflow-hidden h-full">
-                      {/* Item Image */}
-                      <div className="w-20 h-20 bg-slate-50 rounded-xl flex-shrink-0 flex items-center justify-center border border-slate-100 overflow-hidden">
-                          {item.image_url ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                              <ImageIcon className="w-8 h-8 text-slate-300" />
-                          )}
-                      </div>
-                      
-                      {/* Item Info */}
-                      <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
-                          <h3 className="font-bold text-slate-700 truncate text-base">{item.name}</h3>
-                          <p className="text-xs text-slate-400 line-clamp-1 mt-1">{item.description || "Delicious local favorite"}</p>
-                          <p className="text-sm font-semibold text-slate-800 mt-2">${Number(item.price).toFixed(2)}</p>
-                      </div>
+          {/* 2. DRINKS SECTION */}
+          {drinksItems.length > 0 && (
+              <section>
+                  <h2 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Drinks</h2>
+                  <div className="flex flex-col">
+                      {drinksItems.map((item) => (
+                          <StandardMenuCard 
+                              key={item.item_id}
+                              item={item}
+                              href={`/ordering/menu/${stallId}/item/${item.item_id}`}
+                          />
+                      ))}
                   </div>
+              </section>
+          )}
 
-                  {/* Add Icon */}
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 ml-2 shrink-0 group-hover:bg-slate-100 group-hover:text-slate-900 transition-colors">
-                      <Plus className="w-5 h-5" />
-                  </div>
-              </Link>
-              ))}
-          </div>
-        </section>
+          {/* 3. CATEGORY SECTION */}
+          <section>
+              <h2 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Category</h2>
+              <div className="flex flex-col">
+                  {mainItems.map((item) => (
+                      <StandardMenuCard 
+                          key={item.item_id}
+                          item={item}
+                          href={`/ordering/menu/${stallId}/item/${item.item_id}`}
+                      />
+                  ))}
+              </div>
+          </section>
+
+        </div>
       </div>
 
-      {/* Floating Cart Button - Centered Fixed */}
+      {/* Floating Cart Button (Centered relative to window) */}
       {totalItems > 0 && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-30">
             <Link href="/ordering/cart">
