@@ -9,6 +9,7 @@ import { Stall } from "../../../../types";
 import { StallGridCard } from "@/components/ui/StallGridCard";
 import { FilterButton } from "@/components/ui/FilterButton";
 import { BackButton } from "@/components/ui/BackButton";
+import { SearchBar } from "@/components/ui/SearchBar";
 
 export default function StallSelectionPage() {
   const [stalls, setStalls] = useState<Stall[]>([]); 
@@ -62,14 +63,11 @@ export default function StallSelectionPage() {
           </div>
           
           {/* Search Bar */}
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input 
-              type="text" 
+          <div className="max-w-2xl">
+            <SearchBar 
               placeholder="Craving Something?" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-slate-300 rounded-xl py-3 pl-10 pr-4 text-slate-700 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 placeholder:text-slate-400 bg-white shadow-sm transition-all"
             />
           </div>
 

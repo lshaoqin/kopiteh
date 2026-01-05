@@ -9,7 +9,7 @@ export interface CartItem {
   menuItem: MenuItem;
   modifiers: MenuItemModifier[];
   quantity: number;
-  notes: string; // present in db schema?
+  remarks: string;
   subtotal: number;
 }
 
@@ -19,7 +19,7 @@ interface CartState {
   tableNumber: number | null;
 
   // Actions
-  addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, notes?: string) => void;
+  addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, remarks?: string) => void;
   removeItem: (uniqueId: string) => void;
   updateQuantity: (uniqueId: string, delta: number) => void;
   updateItem: (uniqueId: string, updates: Partial<Omit<CartItem, 'uniqueId'>>) => void;
@@ -41,11 +41,11 @@ export const useCartStore = create<CartState>()(
       tableNumber: null,
       setTableNumber: (table) => set({ tableNumber: table }),
 
-      addItem: (menuItem, modifiers, quantity, notes = "") => {
+      addItem: (menuItem, modifiers, quantity, remarks = "") => {
         // 1. Generate Unique ID to distinguish variations
         // e.g. "Item1-ModA-ModB" vs "Item1-ModA"
         const sortedModIds = modifiers.map((m) => m.option_id).sort().join("-");
-        const uniqueId = `${menuItem.item_id}-${sortedModIds}-${notes.trim()}`;
+        const uniqueId = `${menuItem.item_id}-${sortedModIds}-${remarks.trim()}`;
 
         // 2. Calculate Unit Price
         const basePrice = Number(menuItem.price);
@@ -79,7 +79,7 @@ export const useCartStore = create<CartState>()(
                 menuItem,
                 modifiers,
                 quantity,
-                notes,
+                remarks,
                 subtotal: quantity * unitPrice,
               },
             ],
