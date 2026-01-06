@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS menu_item_modifier_section (
   item_id        INTEGER NOT NULL REFERENCES menu_item(item_id) ON DELETE CASCADE,
   name           VARCHAR NOT NULL,
   min_selections INTEGER NOT NULL DEFAULT 0 CHECK (min_selections >= 0),
-  max_selections INTEGER NOT NULL DEFAULT 0 CHECK (max_selections >= 0)
+  max_selections INTEGER NOT NULL DEFAULT 1 CHECK (max_selections >= 0)
 );
 ALTER TABLE menu_item_modifier_section
   ADD CONSTRAINT chk_modifier_section_min_le_max CHECK (max_selections >= min_selections);
@@ -74,6 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_modifier_section_item_id ON menu_item_modifier_se
 -- modifiers/options for an item
 CREATE TABLE IF NOT EXISTS menu_item_modifier (
   option_id      SERIAL PRIMARY KEY,
+  section_id     INTEGER NOT NULL REFERENCES menu_item_modifier_section(section_id) ON DELETE CASCADE,
   item_id        INTEGER NOT NULL REFERENCES menu_item(item_id) ON DELETE CASCADE,
   name           VARCHAR NOT NULL,
   price_modifier DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price_modifier >= 0),
