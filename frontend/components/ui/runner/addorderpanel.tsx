@@ -39,6 +39,16 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
       volunteerName,
     });
     onClose();
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setItemName("");
+    setQuantity("");
+    setUnitPrice("");
+    setNotes("");
+    setTable("");
+    setVolunteerName("");
   };
 
   return (
@@ -46,7 +56,13 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
       <div className="w-full h-4/5 flex flex-col justify-between mt-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Add Item</h2>
-            <button onClick={onClose} className="p-2 rounded-md hover:bg-gray-100">
+            <button 
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
+            className="p-2 rounded-md hover:bg-gray-100"
+            >
               <X className="h-5 w-5" />
             </button>
         </div>
