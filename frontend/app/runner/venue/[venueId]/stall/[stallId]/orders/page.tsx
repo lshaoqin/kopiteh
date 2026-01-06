@@ -23,7 +23,70 @@ export default function Home() {
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
   );
+
+  const createOrder = async (data: {
+    quantity: string;
+    unitPrice: string;
+    notes?: string;
+    table: string;
+  }) => {
+    const res = await fetch(`${API_URL}/order`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        table_id: data.table,
+        user_id: 1, // TEMP: some default user id for all runners
+        status: "INCOMING",
+        total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
+        created_at: new Date().toISOString(),
+        remarks: data.notes,
+      }),
+    });
+    const json = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json?.message || "Failed to create order");
+    }
+
+    return json.payload.data;
+  };
+
+  const createOrderItem = async (
+    orderId: number,
+    data: {
+      itemName: string;
+      quantity: string;
+      unitPrice: string;
+    }
+  ) => {
+    // TEMP: until item selection exists
+    const itemId = 1;
   
+    const res = await fetch(`${API_URL}/orderItem`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        item_id: itemId,
+        stall_id: stallId,
+        quantity: parseInt(data.quantity),
+        unit_price: parseFloat(data.unitPrice),
+        line_subtotal: parseInt(data.quantity) * parseFloat(data.unitPrice),
+      }),
+    });
+    
+    const json = await res.json();
+  
+    if (!res.ok || !json.success) {
+      throw new Error(json?.message || "Failed to create order item");
+    }
+  
+    return json.payload.data;
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -138,8 +201,16 @@ export default function Home() {
         <AddOrderPanel
           open={showAddOrder}
           onClose={() => setShowAddOrder(false)}
-          onSubmit={(data) => {
-            console.log(data);
+          onSubmit={async (data) => {
+            try {
+              const order = await createOrder(data);
+
+              await createOrderItem(order.id, data);
+        
+            } catch (err) {
+              console.error(err);
+              alert("Failed to create order");
+            }
           }}
         />
         </div>
