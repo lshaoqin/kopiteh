@@ -95,7 +95,7 @@ CREATE INDEX IF NOT EXISTS idx_table_venue_id ON "table" (venue_id);
 CREATE TABLE IF NOT EXISTS "order" (
   order_id    SERIAL PRIMARY KEY,
   table_id    INTEGER NOT NULL REFERENCES "table"(table_id) ON DELETE RESTRICT,
-  user_id     INTEGER NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT,
+  user_id     INTEGER REFERENCES users(user_id) ON DELETE RESTRICT,
   status      VARCHAR NOT NULL DEFAULT 'pending',
   total_price DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_price >= 0),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
