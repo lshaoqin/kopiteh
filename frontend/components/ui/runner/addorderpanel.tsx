@@ -90,8 +90,8 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-white box-border p-5">
-      <div className="w-full h-4/5 flex flex-col justify-between mt-10">
+    <div className="fixed inset-0 bg-white box-border p-5 overflow-y-auto">
+      <div className="w-full h-full flex flex-col justify-between">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Add Item</h2>
             <button 
@@ -104,58 +104,71 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
               <X className="h-5 w-5" />
             </button>
         </div>
-
-        <TextInput
-          classNameOut={"w-full py-2"}
-          classNameIn={"w-full border rounded-lg px-3 py-2"}
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-          placeholder="Item Name"
-        />
-
-        <div className="flex justify-between">
+        <div className="w-full py-2">
+          <p className="text-sm font-medium">Item Name*</p>
           <TextInput
-            classNameOut={"w-10/21 py-2"}
-            classNameIn={"w-full border rounded-lg px-3 py-2"}
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Quantity"
-          />
-          <TextInput
-            classNameOut={"w-10/21 py-2"}
-            classNameIn={"w-full border rounded-lg px-3 py-2"}
-            value={unitPrice}
-            onChange={(e) => setUnitPrice(e.target.value)}
-            placeholder="Price per unit ($)"
+            classNameOut={"w-full py-2"}
+            classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
           />
         </div>
 
-        <TextInput
-          classNameOut={"w-full py-2"}
-          classNameIn={"w-full border rounded-lg px-3 py-2"}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Additional Notes"
-        />
+        <div className="flex justify-between">
+          <div className="w-10/21 py-2">
+            <p className="text-sm font-medium">Quantity*</p>
+            <TextInput
+              classNameOut={"w-full py-2"}
+              classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+            />
+          </div>
+          <div className="w-10/21 py-2">
+            <p className="text-sm font-medium">Unit Price ($)*</p>
+            <TextInput
+              classNameOut={"w-full py-2"}
+              classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div>
+        <p className="text-sm font-medium">Additional Notes</p>
+          <TextInput
+              classNameOut={"w-full py-2"}
+              classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
+        
 
         <div className="pt-2">
           <h3 className="text-lg font-bold mb-1">Volunteer Information</h3>
           <p className="text-base mb-1">Provide the Information of the volunteer who has requested this new order</p>
           <div className="flex justify-between">
-            <TextInput
-              classNameOut={"w-10/21 py-2"}
-              classNameIn={"w-full border rounded-lg px-3 py-2"}
-              value={table}
-              onChange={(e) => setTable(e.target.value)}
-              placeholder="Table Number"
-            />
-            <TextInput
-              classNameOut={"w-10/21 py-2"}
-              classNameIn={"w-full border rounded-lg px-3 py-2"}
-              value={volunteerName}
-              onChange={(e) => setVolunteerName(e.target.value)}
-              placeholder="Volunteer Name"
-            />
+            <div className="w-10/21 py-2">
+              <p className="text-sm font-medium">Table Number*</p>
+              <TextInput
+                classNameOut={"w-full py-2"}
+                classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+                value={table}
+                onChange={(e) => setTable(e.target.value)}
+              />
+            </div>
+              
+            <div className="w-10/21 py-2">
+              <p className="text-sm font-medium">Volunteer Name</p>
+              <TextInput
+                classNameOut={"w-full py-2"}
+                classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
+                value={volunteerName}
+                onChange={(e) => setVolunteerName(e.target.value)}
+              />
+            </div>
           </div>
         </div>
         <div className="w-full py-2">
