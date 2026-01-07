@@ -99,6 +99,27 @@ const menuItems = [
   }
 ];
 
+const menuItems = [
+  {
+    stall_id: 1,
+    item_image: 'https://chrisseenplace.com/wp-content/uploads/2023/02/Taiwanese-beef-noodle-soup-04-731x1024.jpg',
+    name: 'Beef Noodle Soup',
+    description: 'A hearty bowl of beef noodle soup with tender beef slices and flavorful broth.',
+    price: 6.50,
+    prep_time: 10,
+    is_available: true,
+  },
+  {
+    stall_id: 1,
+    name: 'Beef Tendon Soup',
+    item_image: 'https://www.internalartsinternational.com/wp-content/uploads/2018/01/half-meat-half-tendon.jpg',
+    description: 'Delicious beef tendon served in a rich broth with noodles.',
+    price: 7.00,
+    prep_time: 12,
+    is_available: true,
+  },
+];
+
 async function seed() {
   try {
     // 1. Venues
@@ -125,6 +146,7 @@ async function seed() {
       console.log('Stall table seeded.');
     }
 
+<<<<<<< Updated upstream
     // 3. Menu Items
     const existingItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
     if ((existingItems.rowCount ?? 0) === 0) {
@@ -166,6 +188,22 @@ async function seed() {
         console.log('Menu items already exist. Skipping.');
     }
 
+=======
+    const existingMenuItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
+    if ((existingMenuItems.rowCount ?? 0) === 0) {
+      for (const item of menuItems) {
+        await pool.query(
+          `
+          INSERT INTO menu_item (stall_id, item_image, name, description, price, prep_time, is_available)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `,
+          [item.stall_id, item.item_image, item.name, item.description, item.price, item.prep_time, item.is_available],
+        );
+      }
+    } else {
+      console.log('Menu item table already populated. Skipping menu item seed.');
+    }
+>>>>>>> Stashed changes
   } catch (error) {
     console.error('Error:', error);
   } finally {
