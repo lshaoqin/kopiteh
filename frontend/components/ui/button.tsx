@@ -85,19 +85,32 @@ export function BackButton({ href = "/" }) {
   )
 }
 
-export function AddButton({ href = "/" }) {
+type AddButtonProps = {
+  href?: string;
+  onClick?: () => void;
+};
+
+export function AddButton({ href, onClick }: AddButtonProps) {
   const router = useRouter();
 
+  const handleClick = () => {
+    if (href) {
+      router.push(href);
+      return;
+    }
+    onClick?.();
+  };
+
   return (
-    <Button 
+    <Button
       variant="add"
-      onClick={() => router.push(href)}
+      onClick={handleClick}
+      type="button"
     >
       <Plus className="size-5 text-green-600" />
     </Button>
-  )
+  );
 }
-
 
 
 Button.displayName = "Button"
