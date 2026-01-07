@@ -19,17 +19,54 @@ type AddOrderPanelProps = {
 };
 
 function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [table, setTable] = useState("");
   const [volunteerName, setVolunteerName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!open) return null;
 
+  //input validations
+  const isValidQuantity = (value: string) => {
+    return /^\d+$/.test(value) && Number(value) > 0;
+  };
+  const isValidPrice = (value: string) => {
+    return /^\d+(\.\d{1,2})?$/.test(value);
+  };
+  const isValidTable = (value: string) => {
+    return /^\d+$/.test(value);
+  };
+
+  const validateForm = (): string | null => {
+    const rules: Array<{ valid: boolean; message: string }> = [
+      { valid: itemName.trim() !== "", message: "Item name required" },
+      { valid: quantity.trim() !== "", message: "Quantity required" },
+      { valid: unitPrice.trim() !== "", message: "Unit price required" },
+      { valid: table.trim() !== "", message: "Table number required" },
+  
+      { valid: isValidQuantity(quantity), message: "Quantity must be a number" },
+      {
+        valid: isValidPrice(unitPrice),
+        message: "Unit price must be a valid decimal (max 2 dp)",
+      },
+      { valid: isValidTable(table), message: "Table number must be a number" },
+    ];
+  
+    const failedRule = rules.find((rule) => !rule.valid);
+    return failedRule ? failedRule.message : null;
+  };
+
   const handleSubmit = () => {
+    const error = validateForm();
+
+    if (error) {
+      setErrorMessage(error);
+      return;
+    }
+
     onSubmit?.({
       itemName,
       quantity,
@@ -49,6 +86,7 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
     setNotes("");
     setTable("");
     setVolunteerName("");
+    setErrorMessage("");
   };
 
   return (
@@ -128,6 +166,9 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
           >
             Add Order
           </Button>
+        </div>
+        <div className="text-red-500 text-sm text-center font-bold">
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
       </div>
     </div>

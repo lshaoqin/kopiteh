@@ -37,7 +37,6 @@ export default function Home() {
       },
       body: JSON.stringify({
         table_id: data.table,
-        user_id: 1, // TEMP: some default user id for all runners
         status: "INCOMING",
         total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
         created_at: new Date().toISOString(),
@@ -61,7 +60,7 @@ export default function Home() {
       unitPrice: string;
     }
   ) => {
-    // TEMP: until item selection exists
+    // TEMP: hardcoded itemId until menu item selection is implemented
     const itemId = 1;
   
     const res = await fetch(`${API_URL}/orderItem`, {
@@ -202,6 +201,8 @@ export default function Home() {
           open={showAddOrder}
           onClose={() => setShowAddOrder(false)}
           onSubmit={async (data) => {
+            console.log("AddOrderPanel data:", data);
+
             try {
               const order = await createOrder(data);
 
