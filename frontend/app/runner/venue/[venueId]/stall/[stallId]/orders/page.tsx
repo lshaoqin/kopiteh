@@ -37,7 +37,7 @@ export default function Home() {
       },
       body: JSON.stringify({
         table_id: data.table,
-        status: "INCOMING",
+        status: "PENDING",
         total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
         created_at: new Date().toISOString(),
         remarks: data.notes,
@@ -71,7 +71,7 @@ export default function Home() {
       body: JSON.stringify({
         order_id: orderId,
         item_id: itemId,
-        stall_id: stallId,
+        status: "INCOMING",
         quantity: parseInt(data.quantity),
         unit_price: parseFloat(data.unitPrice),
         line_subtotal: parseInt(data.quantity) * parseFloat(data.unitPrice),
