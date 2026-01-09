@@ -62,7 +62,7 @@ function AdminSideBar() {
         }
     };
     return (
-        <div className="h-screen w-[352px] bg-primary1 rounded-r-xl">
+        <div className="fixed top-0 left-0 h-screen w-[352px] bg-primary1 rounded-r-xl">
             <div className="flex justify-between flex-col h-full py-5">
                 <div className="w-full flex justify-center flex-col">
                     <h1 className="text-white font-extrabold text-5xl text-center">VSB</h1>
