@@ -1,6 +1,4 @@
-// use this in the future instead of mock data
-
-import { Stall, MenuItem } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -16,49 +14,97 @@ async function fetchClient<T>(endpoint: string, options?: RequestInit): Promise<
 
   const json = await res.json();
 
-  if (!res.ok) {
-    throw new Error(json.payload?.message || "An error occurred");
+  // 1. Check for success flag 
+  // If status is not 2xx OR json.success is false, throw error
+  if (!res.ok || json.success === false) {
+    const errorMessage = json.payload?.message || json.payload?.details || "An error occurred";
+    throw new Error(errorMessage);
   }
 
-  // Unwrap Layer 1
-  return json.payload.data; 
+  // 2. Unwrap Layer 
+  // Return the actual data directly so individual functions do not have to unwrap again.
+  return json.payload.data as T;
 }
 
 export const api = {
+  // --- STALLS ---
   getStallsByVenue: async (venueId: number): Promise<Stall[]> => {
-    // 1. Fetch the data. Because of the backend structure, 'wrapper' is NOT the array yet.
-    // It is the ServiceResult object: { success: true, payload: { data: [...] } }
-    const wrapper = await fetchClient<any>(`/stalls/venue/${venueId}`);
+    const rawData = await fetchClient<any[]>(`/stalls/venue/${venueId}`);
     
-    // 2. Unwrap Layer 2 to get the actual array
-    // Check if 'wrapper.payload.data' exists, otherwise default to empty array
-    const stallList = wrapper.payload?.data || [];
-
-    if (!Array.isArray(stallList)) {
-        console.error("Unexpected API response structure:", stallList);
-        return [];
-    }
-
-    // 3. Map the array
-    return stallList.map((item: any) => ({
+    return rawData.map((item) => ({
       stall_id: String(item.stall_id),
       venue_id: String(item.venue_id),
       name: item.name,
       description: item.description,
-      image_url: item.stall_image, // Mapping DB column to Frontend type
+      stall_image: item.stall_image, 
       is_open: item.is_open,
       waiting_time: item.waiting_time
     }));
   },
 
-  getMenuByStall: async (stallId: number): Promise<MenuItem[]> => {
-    // Assuming backend returns { payload: { data: [...] } }
-    const wrapper = await fetchClient<any>(`/items/stalls/${stallId}`);
-    return wrapper.payload?.data || [];
+  getStallById: async (stallId: number): Promise<Stall> => {
+    const item = await fetchClient<any>(`/stalls/${stallId}`);
+    return {
+      stall_id: String(item.stall_id),
+      venue_id: String(item.venue_id),
+      name: item.name,
+      description: item.description,
+      stall_image: item.stall_image,
+      is_open: item.is_open,
+      waiting_time: item.waiting_time
+    };
   },
-  
-  getStallById: async (stallId: number): Promise<any> => {
-    const wrapper = await fetchClient<any>(`/stalls/${stallId}`);
-    return wrapper.payload?.data || null;
+
+  // --- MENU ---
+  getMenuByStall: async (stallId: number): Promise<MenuItem[]> => {
+    const rawData = await fetchClient<any[]>(`/items/stalls/${stallId}`);
+    return rawData.map((item) => ({
+        item_id: String(item.item_id),
+        stall_id: String(item.stall_id),
+        name: item.name,
+        description: item.description,
+        price: Number(item.price),
+        image_url: item.item_image, 
+        is_available: item.is_available,
+        prep_time: item.prep_time
+    }));
+  },
+
+  getItemById: async (itemId: number): Promise<MenuItem> => {
+    const item = await fetchClient<any>(`/items/${itemId}`);
+    return {
+        item_id: String(item.item_id),
+        stall_id: String(item.stall_id),
+        name: item.name,
+        description: item.description,
+        price: Number(item.price),
+        image_url: item.item_image,
+        is_available: item.is_available,
+        prep_time: item.prep_time
+    };
+  },
+
+  // --- MODIFIERS ---
+  getSectionsByItem: async (itemId: number): Promise<MenuItemModifierSection[]> => {
+    const rawData = await fetchClient<any[]>(`/sections/items/${itemId}`);
+    return rawData.map((s) => ({
+        section_id: String(s.section_id),
+        item_id: String(s.item_id),
+        name: s.name,
+        min_selections: s.min_selections,
+        max_selections: s.max_selections
+    }));
+  },
+
+  getModifiersByItem: async (itemId: number): Promise<MenuItemModifier[]> => {
+    const rawData = await fetchClient<any[]>(`/modifiers/items/${itemId}`);
+    
+    return rawData.map((m) => ({
+        option_id: String(m.option_id),
+        section_id: String(m.item_id), 
+        name: m.name,
+        price_modifier: Number(m.price_modifier),
+        is_available: m.is_available
+    }));
   }
 };

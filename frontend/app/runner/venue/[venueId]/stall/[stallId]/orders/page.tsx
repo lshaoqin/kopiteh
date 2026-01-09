@@ -1,6 +1,7 @@
 "use client";
 
-import { BackButton, AddButton } from "@/components/ui/button"
+import { BackButton, AddButton } from "@/components/ui/button";
+import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
@@ -15,13 +16,76 @@ export default function Home() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+  const [showAddOrder, setShowAddOrder] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
   );
+
+  const createOrder = async (data: {
+    quantity: string;
+    unitPrice: string;
+    notes?: string;
+    table: string;
+  }) => {
+    const res = await fetch(`${API_URL}/order`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        table_id: data.table,
+        status: "PENDING",
+        total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
+        created_at: new Date().toISOString(),
+        remarks: data.notes,
+      }),
+    });
+    const json = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json?.message || "Failed to create order");
+    }
+
+    return json.payload.data;
+  };
+
+  const createOrderItem = async (
+    orderId: number,
+    data: {
+      itemName: string;
+      quantity: string;
+      unitPrice: string;
+    }
+  ) => {
+    // TEMP: hardcoded itemId until menu item selection is implemented
+    const itemId = 1;
   
+    const res = await fetch(`${API_URL}/orderItem`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        item_id: itemId,
+        status: "INCOMING",
+        quantity: parseInt(data.quantity),
+        unit_price: parseFloat(data.unitPrice),
+        line_subtotal: parseInt(data.quantity) * parseFloat(data.unitPrice),
+      }),
+    });
+    
+    const json = await res.json();
+  
+    if (!res.ok || !json.success) {
+      throw new Error(json?.message || "Failed to create order item");
+    }
+  
+    return json.payload.data;
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -35,7 +99,7 @@ export default function Home() {
         setStall(stallJson.payload.data ?? []);
 
         // Fetch order items for the stall
-        const orderItemsRes = await fetch(`${API_URL}/orderitems/stall/${stallId}`);
+        const orderItemsRes = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
         const orderItemsJson = await orderItemsRes.json();
         if (!orderItemsRes.ok || !orderItemsJson.success) {
           throw new Error("Failed to fetch order items");
@@ -65,7 +129,7 @@ export default function Home() {
 
         {/* Status Filter Row */}
         <div className="flex items-center gap-2 mt-4">
-          <AddButton href={`/runner/venue/${venueId}/stall/${stallId}/orders/new`} />
+          <AddButton onClick={() => setShowAddOrder(true)} />
           <button 
           onClick={() => setSelectedStatus("INCOMING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
@@ -131,6 +195,25 @@ export default function Home() {
             ))}
           </div>
         )}
+        </div>
+        <div>
+        <AddOrderPanel
+          open={showAddOrder}
+          onClose={() => setShowAddOrder(false)}
+          onSubmit={async (data) => {
+            console.log("AddOrderPanel data:", data);
+
+            try {
+              const order = await createOrder(data);
+
+              await createOrderItem(order.id, data);
+        
+            } catch (err) {
+              console.error(err);
+              alert("Failed to create order");
+            }
+          }}
+        />
         </div>
     </main>
   )

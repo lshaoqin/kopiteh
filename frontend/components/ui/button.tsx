@@ -32,6 +32,8 @@ const buttonVariants = cva(
         editstall: "gap-0 bg-transparent hover:bg-transparent",
         deletestall: "py-2 rounded-2xl font-bold bg-delete text-white hover:bg-delete/70",
         updatestall: "py-2 rounded-2xl font-bold bg-primary1 text-white hover:bg-primary1/70"
+        confirm: "w-full bg-slate-600 text-white font-medium rounded-xl text-lg hover:bg-slate-700 active:scale-[0.98] transition-all shadow-md",
+        circle: "bg-white hover:bg-slate-100 border border-slate-200 rounded-full shadow-sm text-slate-700",
       },
       size: {
         default: "px-4 has-[>svg]:px-3",
@@ -40,7 +42,8 @@ const buttonVariants = cva(
         icon: "size-9",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
-        bare: "p-0 h-auto w-auto"
+        bare: "p-0 h-auto w-auto",
+        xl: "h-auto py-4 px-6",
       },
     },
     defaultVariants: {
@@ -85,19 +88,32 @@ export function BackButton({ href = "/" }) {
   )
 }
 
-export function AddButton({ href = "/" }) {
+type AddButtonProps = {
+  href?: string;
+  onClick?: () => void;
+};
+
+export function AddButton({ href, onClick }: AddButtonProps) {
   const router = useRouter();
 
+  const handleClick = () => {
+    if (href) {
+      router.push(href);
+      return;
+    }
+    onClick?.();
+  };
+
   return (
-    <Button 
+    <Button
       variant="add"
-      onClick={() => router.push(href)}
+      onClick={handleClick}
+      type="button"
     >
       <Plus className="size-5 text-green-600" />
     </Button>
-  )
+  );
 }
-
 
 
 Button.displayName = "Button"
