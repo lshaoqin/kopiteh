@@ -42,6 +42,7 @@ export interface MenuItemModifierSectionPayload {
 
 export interface MenuItemModifierPayload {
   item_id: number;
+  section_id: number;
   name: string;
   price_modifier?: number;
   is_available?: boolean;
