@@ -4,10 +4,11 @@ import type { Stall } from "../../../../../../../../types/stall"
 import { useState, useEffect } from "react"
 import { useAuthStore } from "@/stores/auth.store"
 import { CardHolder } from "@/components/ui/cardholder"
-import { Button, BackButton } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { useParams } from "next/navigation";
-import { CirclePlus, ArrowLeft } from "lucide-react"
+import { CirclePlus } from "lucide-react"
 import { AdminStallModal } from "@/components/ui/admin/adminstallmodal"
+import Link from "next/link"
 
 export default function Stalls() {
     const { venueId } = useParams<{ venueId: string }>();
@@ -34,7 +35,6 @@ export default function Stalls() {
                     throw new Error(data?.payload?.message ?? "Failed to fetch venues");
                 }
                 setStalls(data.payload?.data ?? []);
-                console.log(data.payload?.data)
             } catch (err: any) {
                 setError(err.message ?? "There is an error in our server, please try again later.");
                 setStalls([]);
@@ -207,17 +207,19 @@ export default function Stalls() {
                     <ul className="mt-4 grid grid-cols-3 gap-10">
                         {stalls.map((s) => (
                             <li key={s.stall_id}>
-                                <CardHolder
-                                    name={s.name}
-                                    img={s.stall_image}
-                                    variant="default"
-                                    isActive={s.is_open}
-                                    onActiveChange={(next) => handleToggle(s.stall_id, next)}
-                                    onEdit={() => {
-                                        setEditingStall(s);
-                                        setShowUpdateModal(true);
-                                    }}
-                                />
+                                <Link href={`/admin/main/managevenues/venues/${venueId}/stalls/${s.stall_id}/items`}>
+                                    <CardHolder
+                                        name={s.name}
+                                        img={s.stall_image}
+                                        variant="default"
+                                        isActive={s.is_open}
+                                        onActiveChange={(next) => handleToggle(s.stall_id, next)}
+                                        onEdit={() => {
+                                            setEditingStall(s);
+                                            setShowUpdateModal(true);
+                                        }}
+                                    />
+                                </Link>
                             </li>
                         ))}
                     </ul>
