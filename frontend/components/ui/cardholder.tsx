@@ -4,27 +4,27 @@ import { Pencil } from "lucide-react";
 import { Button } from "./button";
 
 type CardProps = {
-  name: string;
-  img?: string;
-  variant?: "default" | "venue" | "stall";
+    name: string;
+    img?: string;
+    variant?: "default" | "venue" | "stall";
 
-  // stall-only
-  isActive?: boolean;
-  onActiveChange?: (v: boolean) => void;
-  onEdit?: () => void;
+    // stall-only
+    isActive?: boolean;
+    onActiveChange?: (v: boolean) => void;
+    onEdit?: () => void;
 };
 
-function CardHolder({ 
-    name, 
-    img, 
-    variant, 
+function CardHolder({
+    name,
+    img,
+    variant,
     isActive,
-    onActiveChange, 
-    onEdit}: CardProps) {
+    onActiveChange,
+    onEdit }: CardProps) {
     const showActions = variant === "default";
-    
+
     return (
-        <div className="h-50 flex flex-col rounded-xl bg-white shadow-md shadow-black/25">
+        <div className={`flex flex-col rounded-xl bg-white shadow-md shadow-black/25 ${showActions ? "h-80" : "h-50"}`}>
             <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
                 {img ? (
                     <img src={img} alt={name} className="h-full w-full object-cover rounded-t-xl" />

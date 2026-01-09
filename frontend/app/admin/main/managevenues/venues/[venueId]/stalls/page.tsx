@@ -204,13 +204,13 @@ export default function Stalls() {
                 )}
 
                 {!loading && !error && stalls.length > 0 && (
-                    <ul className="mt-4 grid grid-cols-3 gap-y-10">
+                    <ul className="mt-4 grid grid-cols-3 gap-10">
                         {stalls.map((s) => (
                             <li key={s.stall_id}>
                                 <CardHolder
                                     name={s.name}
                                     img={s.stall_image}
-                                    variant="stall"
+                                    variant="default"
                                     isActive={s.is_open}
                                     onActiveChange={(next) => handleToggle(s.stall_id, next)}
                                     onEdit={() => {
