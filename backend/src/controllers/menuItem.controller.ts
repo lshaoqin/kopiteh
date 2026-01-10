@@ -9,7 +9,10 @@ export const MenuItemController = {
   // GET /items/stalls/:stall_id
   async getAll(req: Request, res: Response) {
     const stallId = Number(req.params.stall_id);
-    const result = await MenuItemService.findAllByStall(stallId);
+    const categoryIdRaw = req.query.category_id as string | undefined;
+    const categoryId = categoryIdRaw ? Number(categoryIdRaw) : undefined;
+
+    const result = await MenuItemService.findAllByStall(stallId, categoryId);
     return res.status(result.payload.status).json(result);
   },
 
@@ -29,7 +32,10 @@ export const MenuItemController = {
     } catch (err) {
       // validation middleware throws BadRequestError, but keep this for safety
       if (err instanceof BadRequestError) {
-        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
         return res.status(result.payload.status).json(result);
       }
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
@@ -46,7 +52,10 @@ export const MenuItemController = {
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
-        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        const result = errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          String(err.details)
+        );
         return res.status(result.payload.status).json(result);
       }
       const result = errorResponse(ErrorCodes.INTERNAL_ERROR);

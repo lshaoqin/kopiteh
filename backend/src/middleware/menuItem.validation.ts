@@ -22,10 +22,7 @@ const optionalTextField = (field: string, maxLength = 255) =>
     .withMessage(`${field} must be at most ${maxLength} characters long`);
 
 const optionalBoolean = (field: string) =>
-  body(field)
-    .optional()
-    .isBoolean()
-    .withMessage(`${field} must be a boolean`);
+  body(field).optional().isBoolean().withMessage(`${field} must be a boolean`);
 
 const optionalNonNegativeInt = (field: string) =>
   body(field)
@@ -39,14 +36,21 @@ const optionalNonNegativeFloat = (field: string) =>
     .isFloat({ min: 0 })
     .withMessage(`${field} must be a non-negative number`);
 
+const optionalPositiveIntNullable = (field: string) =>
+  body(field)
+    .optional({ nullable: true })
+    .isInt({ gt: 0 })
+    .withMessage(`${field} must be a positive integer`);
 /**
  * Enforce only known fields
  */
 const enforceKnownMenuItemFields = body().custom((_, { req }) => {
   const unknown = Object.keys(req.body).filter(
-    (key) => !MENU_ITEM_FIELDS.includes(key as (typeof MENU_ITEM_FIELDS)[number])
+    (key) =>
+      !MENU_ITEM_FIELDS.includes(key as (typeof MENU_ITEM_FIELDS)[number])
   );
-  if (unknown.length > 0) throw new Error(`Unexpected field(s): ${unknown.join(", ")}`);
+  if (unknown.length > 0)
+    throw new Error(`Unexpected field(s): ${unknown.join(", ")}`);
   return true;
 });
 
@@ -54,8 +58,11 @@ const enforceKnownMenuItemFields = body().custom((_, { req }) => {
  * Require at least one updatable field for update
  */
 const requireAtLeastOneMenuItemField = body().custom((_, { req }) => {
-  const hasKnownField = MENU_ITEM_FIELDS.some((field) => req.body[field] !== undefined);
-  if (!hasKnownField) throw new Error("At least one updatable field is required");
+  const hasKnownField = MENU_ITEM_FIELDS.some(
+    (field) => req.body[field] !== undefined
+  );
+  if (!hasKnownField)
+    throw new Error("At least one updatable field is required");
   return true;
 });
 
@@ -104,10 +111,16 @@ export const createMenuItemValidation = [
     .isFloat({ min: 0 })
     .withMessage("price must be a non-negative number"),
 
+  body("category_id")
+    .optional({ nullable: true })
+    .isInt({ gt: 0 })
+    .withMessage("category_id must be a positive integer"),
+
   optionalTextField("item_image", 2048),
   optionalTextField("description", 1000),
   optionalNonNegativeInt("prep_time"),
   optionalBoolean("is_available"),
+  optionalPositiveIntNullable("category_id"),
 ];
 
 /**
@@ -118,7 +131,13 @@ export const updateMenuItemValidation = [
   menuItemIdParamValidation,
   requireAtLeastOneMenuItemField,
 
-  body("stall_id").optional().isInt({ gt: 0 }).withMessage("stall_id must be a positive integer"),
+  body("stall_id")
+    .optional()
+    .isInt({ gt: 0 })
+    .withMessage("stall_id must be a positive integer"),
+  
+  optionalPositiveIntNullable("category_id"),
+
   optionalTextField("name"),
   optionalTextField("description", 1000),
   optionalTextField("item_image", 2048),
@@ -127,7 +146,11 @@ export const updateMenuItemValidation = [
   optionalBoolean("is_available"),
 ];
 
-export const runValidation = (req: Request, _res: Response, next: NextFunction) => {
+export const runValidation = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new BadRequestError("Validation failed", { errors: errors.array() });

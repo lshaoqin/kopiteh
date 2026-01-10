@@ -23,6 +23,7 @@ export interface UpdateStallPayload extends Partial<StallPayload> {}
 
 export interface MenuItemPayload {
   stall_id: number;
+  category_id?: number | null;
   item_image?: string;
   name: string;
   description?: string;

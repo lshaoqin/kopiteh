@@ -28,6 +28,7 @@ async function rollback() {
       DROP TABLE IF EXISTS stall CASCADE;
       DROP TABLE IF EXISTS venue CASCADE;
       DROP TABLE IF EXISTS "user" CASCADE;
+      DROP TABLE IF EXISTS "menu_item_category" CASCADE;
     `);
 
     console.log("ALL TABLES DROPPED");
