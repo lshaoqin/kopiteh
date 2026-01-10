@@ -31,7 +31,7 @@ const buttonVariants = cva(
         backcreatestall: "gap-0 bg-transparent hover:bg-transparent",
         editstall: "gap-0 bg-transparent hover:bg-transparent",
         deletestall: "py-2 rounded-2xl font-bold bg-delete text-white hover:bg-delete/70",
-        updatestall: "py-2 rounded-2xl font-bold bg-primary1 text-white hover:bg-primary1/70"
+        updatestall: "py-2 rounded-2xl font-bold bg-primary1 text-white hover:bg-primary1/70",
         confirm: "w-full bg-slate-600 text-white font-medium rounded-xl text-lg hover:bg-slate-700 active:scale-[0.98] transition-all shadow-md",
         circle: "bg-white hover:bg-slate-100 border border-slate-200 rounded-full shadow-sm text-slate-700",
       },

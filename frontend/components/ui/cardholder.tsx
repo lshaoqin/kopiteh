@@ -7,55 +7,74 @@ type CardProps = {
   name: string;
   img?: string;
   variant?: "default" | "venue" | "stall";
-
-  // stall-only
   isActive?: boolean;
   onActiveChange?: (v: boolean) => void;
   onEdit?: () => void;
 };
 
-function CardHolder({ 
-    name, 
-    img, 
-    variant, 
-    isActive,
-    onActiveChange, 
-    onEdit}: CardProps) {
-    const showActions = variant === "default";
-    
-    return (
-        <div className="h-50 flex flex-col rounded-xl bg-white shadow-md shadow-black/25">
-            <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
-                {img ? (
-                    <img src={img} alt={name} className="h-full w-full object-cover rounded-t-xl" />
-                ) : (
-                    <div className="h-full w-full grid place-items-center">
-                        <span className="text-sm opacity-70">No image</span>
-                    </div>
-                )}
-            </div>
-            <div className="h-17 bg-whiterounded-b-xl flex items-center px-5">
-                <div className="text-lg font-bold w-full">
-                    {name}
-                </div>
-                {showActions && (
-                    <div className="flex items-center">
-                        <Switch checked={isActive} onCheckedChange={(v) => onActiveChange?.(v)} />
+function CardHolder({
+  name,
+  img,
+  variant,
+  isActive,
+  onActiveChange,
+  onEdit,
+}: CardProps) {
+  const showActions = variant === "default";
 
-                        <Button
-                            size="bare"
-                            onClick={onEdit}
-                            className="p-2 rounded-md hover:bg-gray-100"
-                            aria-label="Edit stall"
-                            variant="editstall"
-                        >
-                            <Pencil className="h-5 w-5" />
-                        </Button>
-                    </div>
-                )}
-            </div>
-        </div>
-    )
+  // Prevent link navigation for interactive elements
+  const stopPropagation = (e: React.MouseEvent | React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  return (
+    <div
+      className={`flex flex-col rounded-xl bg-white shadow-md shadow-black/25 ${
+        showActions ? "h-80" : "h-50"
+      }`}
+    >
+      <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
+        {img ? (
+          <img src={img} alt={name} className="h-full w-full object-cover rounded-t-xl" />
+        ) : (
+          <div className="h-full w-full grid place-items-center">
+            <span className="text-sm opacity-70">No image</span>
+          </div>
+        )}
+      </div>
+      <div className="h-17 bg-white rounded-b-xl flex items-center px-5">
+        <div className="text-lg font-bold w-full">{name}</div>
+        {showActions && (
+          <div
+            className="flex items-center gap-2"
+            onClick={stopPropagation}
+            onPointerDown={stopPropagation}
+          >
+            <Switch
+              checked={isActive}
+              onCheckedChange={(v) => {
+                onActiveChange?.(v);
+              }}
+            />
+            <Button
+              size="bare"
+              type="button"
+              onClick={(e) => {
+                stopPropagation(e);
+                onEdit?.();
+              }}
+              className="p-2 rounded-md hover:bg-gray-100"
+              aria-label="Edit stall"
+              variant="editstall"
+            >
+              <Pencil className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
-export { CardHolder }
+export { CardHolder };
