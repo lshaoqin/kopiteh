@@ -21,6 +21,14 @@ export interface StallPayload {
 
 export interface UpdateStallPayload extends Partial<StallPayload> {}
 
+export interface MenuItemCategoryPayload {
+  stall_id: number;
+  name: string;
+  sort_order?: number;
+}
+
+export interface UpdateMenuItemCategoryPayload extends Partial<MenuItemCategoryPayload> {}
+
 export interface MenuItemPayload {
   stall_id: number;
   category_id?: number | null;
