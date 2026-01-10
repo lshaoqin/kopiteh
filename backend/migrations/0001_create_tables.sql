@@ -59,6 +59,19 @@ CREATE TABLE IF NOT EXISTS menu_item (
 );
 CREATE INDEX IF NOT EXISTS idx_menu_item_stall_id ON menu_item (stall_id);
 
+CREATE TABLE IF NOT EXISTS menu_item_category (
+  category_id SERIAL PRIMARY KEY,
+  stall_id    INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
+  name        VARCHAR NOT NULL,
+  sort_order  INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_category_stall_id ON menu_item_category (stall_id);
+
+ALTER TABLE menu_item
+  ADD COLUMN category_id INTEGER REFERENCES menu_item_category(category_id) ON DELETE SET NULL;
+
+CREATE INDEX idx_menu_item_category_id ON menu_item (category_id);
+
 -- modifier sections (belongs to a menu_item)
 CREATE TABLE IF NOT EXISTS menu_item_modifier_section (
   section_id     SERIAL PRIMARY KEY,
