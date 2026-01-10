@@ -78,7 +78,6 @@ export const MenuItemService = {
     const values = entries.map(([, v]) => v ?? null);
 
     try {
-      // ✅ FIXED: single $ (not $$)
       const query = `UPDATE menu_item SET ${setClause} WHERE item_id = $${entries.length + 1} RETURNING *`;
       const result = await BaseService.query(query, [...values, id]);
 
