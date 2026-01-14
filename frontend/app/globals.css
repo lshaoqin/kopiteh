@@ -59,6 +59,7 @@
   --color-grey4:  #E0E0E0;
   --color-white:  #FFFFFF;
   --color-grey-primary: #545F71;
+  --color-grey-secondary: #EEF1F4;
 }
 
 @layer base {
