@@ -7,7 +7,7 @@ export const MOCK_STALLS: Stall[] = [
     venue_id: "1",
     name: "Tian Tian Chicken Rice",
     description: "Singapore's most famous chicken rice.",
-    image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80",
+    stall_image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80",
     is_open: true,
     waiting_time: 15
   },
@@ -16,7 +16,7 @@ export const MOCK_STALLS: Stall[] = [
     venue_id: "1",
     name: "Uncle Bob Western",
     description: "Old school chicken chop and fish & chips.",
-    image_url: "https://images.unsplash.com/photo-1625938145744-e38051539994?auto=format&fit=crop&w=500&q=80",
+    stall_image: "https://images.unsplash.com/photo-1625938145744-e38051539994?auto=format&fit=crop&w=500&q=80",
     is_open: true,
     waiting_time: 10
   },
@@ -25,7 +25,7 @@ export const MOCK_STALLS: Stall[] = [
     venue_id: "1",
     name: "Ah Seng Hokkien Mee",
     description: "Wok hei goodness with fresh prawns.",
-    image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=500&q=80",
+    stall_image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=500&q=80",
     is_open: false, 
     waiting_time: 0
   },
@@ -34,7 +34,7 @@ export const MOCK_STALLS: Stall[] = [
     venue_id: "1",
     name: "Roti Prata House",
     description: "Crispy prata and spicy curry.",
-    image_url: null, 
+    stall_image: null, 
     is_open: true,
     waiting_time: 5
   }
@@ -84,3 +84,82 @@ export const MOCK_SECTIONS: MenuItemModifierSection[] = [
   { section_id: "s_kopi", item_id: "106", name: "Choice of Kopi", min_selections: 1, max_selections: 1 },
   { section_id: "s_sugar", item_id: "106", name: "Sugar Level", min_selections: 0, max_selections: 1 },
 ];
+
+// use this until Sri finishes fixing schema
+export const MOCK_KOPI_DATA = {
+  item: {
+    item_id: "999",
+    stall_id: "2",
+    name: "Kopi",
+    description: "Coffee with condensed milk",
+    price: 1.40,
+    image_url: "https://thehoneycombers.com/singapore/uploads/2017/04/Kopi-O-local-coffee-in-Singapore.jpg",
+    prep_time: 2,
+    is_available: true
+  } as MenuItem,
+
+  sections: [
+    { 
+        section_id: "sec_1", 
+        item_id: "999", // Sections still link to Item
+        name: "Choice", 
+        min_selections: 1, 
+        max_selections: 1 
+    },
+    { 
+        section_id: "sec_2", 
+        item_id: "999", 
+        name: "Request", 
+        min_selections: 0, 
+        max_selections: 5 
+    }
+  ] as MenuItemModifierSection[],
+
+  modifiers: [
+    // CHOICE SECTION (Linked via section_id)
+    { 
+        option_id: "mod_1", 
+        section_id: "sec_1", // Matches "Choice"
+        name: "Kopi", 
+        price_modifier: 0, 
+        is_available: true 
+    },
+    { 
+        option_id: "mod_2", 
+        section_id: "sec_1", 
+        name: "Kopi C", 
+        price_modifier: 0.20, 
+        is_available: true 
+    },
+    { 
+        option_id: "mod_3", 
+        section_id: "sec_1", 
+        name: "Kopi O Kosong", 
+        price_modifier: 0, 
+        is_available: true 
+    },
+    
+    // REQUEST SECTION (Linked via section_id)
+    { 
+        option_id: "mod_4", 
+        section_id: "sec_2", // Matches "Request"
+        name: "Less sugar", 
+        price_modifier: 0, 
+        is_available: true 
+    },
+    { 
+        option_id: "mod_5", 
+        section_id: "sec_2", 
+        name: "No Condensed Milk", 
+        price_modifier: 0, 
+        is_available: true 
+    },
+    { 
+        option_id: "mod_6", 
+        section_id: "sec_2", 
+        name: "Dairy-free Milk", 
+        price_modifier: 1.00, 
+        is_available: true 
+    },
+  ] as MenuItemModifier[]
+};

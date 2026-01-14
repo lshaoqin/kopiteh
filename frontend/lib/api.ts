@@ -101,7 +101,8 @@ export const api = {
     
     return rawData.map((m) => ({
         option_id: String(m.option_id),
-        section_id: String(m.item_id), 
+        section_id: String(m.section_id), 
+        item_id: String(m.item_id), 
         name: m.name,
         price_modifier: Number(m.price_modifier),
         is_available: m.is_available

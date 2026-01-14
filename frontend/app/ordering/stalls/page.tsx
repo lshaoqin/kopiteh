@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"; 
 import { Search, Filter } from "lucide-react";
 import { api } from "@/lib/api"; 
-import { Stall } from "../../../../types";
+import { Stall } from "@/../types";
 
 // Components
 import { StallGridCard } from "@/components/ui/StallGridCard";
