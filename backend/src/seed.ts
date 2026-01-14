@@ -33,11 +33,20 @@ const stalls = [
   },
 ];
 
+const menuCategories = [
+  { stall_id: 1, name: "Noodles", sort_order: 1 },
+  { stall_id: 1, name: "Soup", sort_order: 2 },
+
+  { stall_id: 2, name: "Coffee", sort_order: 1 },
+  { stall_id: 2, name: "Specials", sort_order: 2 },
+];
+
 const menuItems = [
   // --- STALL 1 ITEMS ---
   {
     stall_id: 1,
     name: "Signature Dry Beef Noodles",
+    category: "Noodles",
     description:
       "Dry noodles tossed in savory dark sauce, topped with beef slices and balls.",
     price: 6.5,
@@ -68,6 +77,7 @@ const menuItems = [
   {
     stall_id: 1,
     name: "Sliced Beef Soup",
+    category: "Soup",
     description: "Comforting herbal beef broth with tender slices.",
     price: 7.0,
     item_image: "",
@@ -86,6 +96,7 @@ const menuItems = [
     stall_id: 2,
     name: "Kopi O",
     description: "Traditional black coffee with sugar.",
+    category: "Specials",
     price: 1.4,
     item_image: "",
     prep_time: 2,
@@ -107,6 +118,7 @@ const menuItems = [
   {
     stall_id: 2,
     name: "Milo Dinosaur",
+    category: "Coffee",
     description: "Iced Milo topped with a mountain of Milo powder.",
     price: 3.5,
     item_image: "",
@@ -124,7 +136,8 @@ async function seed() {
     if ((existingVenues.rowCount ?? 0) === 0) {
       for (const venue of venues) {
         await pool.query(
-          `INSERT INTO venue (name, address, description, image_url, opening_hours) VALUES ($1, $2, $3, $4, $5)`,
+          `INSERT INTO venue (name, address, description, image_url, opening_hours)
+           VALUES ($1, $2, $3, $4, $5)`,
           [
             venue.name,
             venue.address,
@@ -135,6 +148,8 @@ async function seed() {
         );
       }
       console.log("Venue table seeded.");
+    } else {
+      console.log("Venue table already has data. Skipping.");
     }
 
     // 2. Stalls
@@ -142,37 +157,93 @@ async function seed() {
     if ((existingStalls.rowCount ?? 0) === 0) {
       for (const stall of stalls) {
         await pool.query(
-          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6)`,
+          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             stall.venue_id,
             stall.name,
-            stall.description,
-            stall.stall_image,
-            stall.is_open,
-            stall.waiting_time,
+            stall.description ?? null,
+            stall.stall_image ?? null,
+            stall.is_open ?? true,
+            stall.waiting_time ?? 0,
           ]
         );
       }
       console.log("Stall table seeded.");
+    } else {
+      console.log("Stall table already has data. Skipping.");
     }
 
-    // 3. Menu Items
-    // 3. Menu Items
+    // 3. Categories
+    const existingCategories = await pool.query(
+      "SELECT 1 FROM menu_item_category LIMIT 1"
+    );
+
+    // category lookup: `${stall_id}::${category_name}` -> category_id
+    const categoryIdByKey = new Map<string, number>();
+
+    if ((existingCategories.rowCount ?? 0) === 0) {
+      console.log("Seeding categories...");
+
+      for (const c of menuCategories) {
+        const res = await pool.query(
+          `INSERT INTO menu_item_category (stall_id, name, sort_order)
+           VALUES ($1, $2, $3)
+           RETURNING category_id`,
+          [c.stall_id, c.name, c.sort_order ?? 0]
+        );
+
+        const key = `${c.stall_id}::${c.name}`;
+        categoryIdByKey.set(key, res.rows[0].category_id);
+      }
+
+      console.log("Categories seeded.");
+    } else {
+      console.log("Categories already exist. Loading category ids...");
+
+      const res = await pool.query(
+        "SELECT category_id, stall_id, name FROM menu_item_category"
+      );
+      for (const row of res.rows) {
+        const key = `${row.stall_id}::${row.name}`;
+        categoryIdByKey.set(key, row.category_id);
+      }
+    }
+
+    // 4. Menu Items + sections + modifiers
     const existingItems = await pool.query("SELECT 1 FROM menu_item LIMIT 1");
     if ((existingItems.rowCount ?? 0) === 0) {
       console.log("Seeding menu items...");
 
       for (const item of menuItems) {
-        // Insert Item
+        const categoryName = (item as any).category as string | undefined;
+
+        if (!categoryName) {
+          throw new Error(
+            `Menu item "${item.name}" is missing "category". Add category: "<Category Name>".`
+          );
+        }
+
+        const catKey = `${item.stall_id}::${categoryName}`;
+        const categoryId = categoryIdByKey.get(catKey);
+
+        if (!categoryId) {
+          throw new Error(
+            `Menu item "${item.name}" references category "${categoryName}" but it wasn't seeded for stall_id=${item.stall_id}.`
+          );
+        }
+
+        // Insert Item (includes category_id)
         const itemRes = await pool.query(
-          `INSERT INTO menu_item (stall_id, name, description, price, item_image, prep_time, is_available)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING item_id`,
+          `INSERT INTO menu_item (stall_id, category_id, name, description, price, item_image, prep_time, is_available)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           RETURNING item_id`,
           [
             item.stall_id,
+            categoryId,
             item.name,
             item.description ?? null,
-            item.price,
+            item.price ?? 0,
             item.item_image ?? null,
             item.prep_time ?? 0,
             true,
@@ -188,8 +259,8 @@ async function seed() {
           for (const section of item.sections) {
             const secRes = await pool.query(
               `INSERT INTO menu_item_modifier_section (item_id, name, min_selections, max_selections)
-           VALUES ($1, $2, $3, $4)
-           RETURNING section_id`,
+               VALUES ($1, $2, $3, $4)
+               RETURNING section_id`,
               [itemId, section.name, section.min ?? 0, section.max ?? 1]
             );
 
@@ -203,7 +274,7 @@ async function seed() {
             const sectionName = (mod as any).section as string | undefined;
             if (!sectionName) {
               throw new Error(
-                `Modifier "${mod.name}" for item "${item.name}" is missing "section". Add section: "<Section Name>".`
+                `Modifier "${mod.name}" for item "${item.name}" is missing "section".`
               );
             }
 
@@ -216,7 +287,7 @@ async function seed() {
 
             await pool.query(
               `INSERT INTO menu_item_modifier (section_id, item_id, name, price_modifier, is_available)
-           VALUES ($1, $2, $3, $4, $5)`,
+               VALUES ($1, $2, $3, $4, $5)`,
               [sectionId, itemId, mod.name, (mod as any).price ?? 0, true]
             );
           }
@@ -233,5 +304,4 @@ async function seed() {
     await pool.end();
   }
 }
-
 seed();
