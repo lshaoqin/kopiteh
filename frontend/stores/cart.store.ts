@@ -1,15 +1,14 @@
-// use this in the future instead of mock data
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MenuItem, MenuItemModifier } from "../../types";
 
 export interface CartItem {
-  uniqueId: string; // Composite key: item_id + modifier_ids + notes
+  uniqueId: string; // Composite key: item_id + modifier_ids + remarks
   menuItem: MenuItem;
+  stallName: string; 
   modifiers: MenuItemModifier[];
   quantity: number;
-  remarks: string;
+  remarks: string; 
   subtotal: number;
 }
 
@@ -19,7 +18,7 @@ interface CartState {
   tableNumber: number | null;
 
   // Actions
-  addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, remarks?: string) => void;
+  addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, stallName: string, remarks?: string) => void;
   removeItem: (uniqueId: string) => void;
   updateQuantity: (uniqueId: string, delta: number) => void;
   updateItem: (uniqueId: string, updates: Partial<Omit<CartItem, 'uniqueId'>>) => void;
@@ -41,9 +40,8 @@ export const useCartStore = create<CartState>()(
       tableNumber: null,
       setTableNumber: (table) => set({ tableNumber: table }),
 
-      addItem: (menuItem, modifiers, quantity, remarks = "") => {
-        // 1. Generate Unique ID to distinguish variations
-        // e.g. "Item1-ModA-ModB" vs "Item1-ModA"
+      addItem: (menuItem, modifiers, quantity, stallName, remarks = "") => {
+        // 1. Generate Unique ID
         const sortedModIds = modifiers.map((m) => m.option_id).sort().join("-");
         const uniqueId = `${menuItem.item_id}-${sortedModIds}-${remarks.trim()}`;
 
@@ -70,13 +68,13 @@ export const useCartStore = create<CartState>()(
             };
           }
 
-          // Add new item
           return {
             items: [
               ...state.items,
               {
                 uniqueId,
                 menuItem,
+                stallName, 
                 modifiers,
                 quantity,
                 remarks,
@@ -108,7 +106,7 @@ export const useCartStore = create<CartState>()(
               }
               return item;
             })
-            .filter((i) => i.quantity > 0); // Remove if 0
+            .filter((i) => i.quantity > 0); 
 
           return { items: newItems };
         }),
@@ -123,7 +121,6 @@ export const useCartStore = create<CartState>()(
         set((state) => ({
             items: state.items.map((i) => {
             if (i.uniqueId === uniqueId) {
-                // Recalculate subtotal based on new quantity/modifiers
                 const newItem = { ...i, ...updates };
                 const unitPrice = Number(newItem.menuItem.price) + 
                     newItem.modifiers.reduce((acc, m) => acc + Number(m.price_modifier), 0);
@@ -140,7 +137,7 @@ export const useCartStore = create<CartState>()(
       setHydrated: (v) => set({ isHydrated: v }),
     }),
     {
-      name: "cart-storage", // Key in localStorage
+      name: "cart-storage", 
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);
       },
