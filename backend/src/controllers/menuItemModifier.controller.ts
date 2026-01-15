@@ -1,31 +1,37 @@
-import type { Request, Response } from 'express';
-import type { MenuItemModifierPayload } from '../types/payloads';
-import { MenuItemModifierService } from '../services/menuItemModifier.service';
-import { BadRequestError } from './errors';
-import { errorResponse, successResponse } from '../types/responses';
-import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
+import type { Request, Response } from "express";
+import type { MenuItemModifierPayload } from "../types/payloads";
+import { MenuItemModifierService } from "../services/menuItemModifier.service";
+import { BadRequestError } from "./errors";
+import { errorResponse } from "../types/responses";
+import { ErrorCodes } from "../types/errors";
 
 export const MenuItemModifierController = {
-  async getAll(req: Request, res: Response) {
+  // GET /modifiers/items/:item_id
+  async getAllByItem(req: Request, res: Response) {
     const itemId = Number(req.params.item_id);
     const result = await MenuItemModifierService.findAllByItem(itemId);
-    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
+  // GET /modifiers/sections/:section_id
+  async getAllBySection(req: Request, res: Response) {
+    const sectionId = Number(req.params.section_id);
+    const result = await MenuItemModifierService.findAllBySection(sectionId);
+    return res.status(result.payload.status).json(result);
+  },
+
+  // GET /modifiers/:id
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
     const result = await MenuItemModifierService.findById(id);
-    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
+  // POST /modifiers/create
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as MenuItemModifierPayload;
       const result = await MenuItemModifierService.create(payload);
-      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -37,12 +43,12 @@ export const MenuItemModifierController = {
     }
   },
 
+  // PUT /modifiers/update/:id
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
       const payload = req.body as Partial<MenuItemModifierPayload>;
       const result = await MenuItemModifierService.update(id, payload);
-      //const result = successResponse(SuccessCodes.OK, data);
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -54,10 +60,10 @@ export const MenuItemModifierController = {
     }
   },
 
+  // DELETE /modifiers/remove/:id
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
     const result = await MenuItemModifierService.delete(id);
-    //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 };

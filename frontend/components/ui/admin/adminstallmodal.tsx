@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/formfield";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 type AdminStallModal = {
   open: boolean;
@@ -12,7 +13,11 @@ type AdminStallModal = {
   labelName: string;
   labelImage: string;
 
+  initialName?: string;
+  initialImageUrl?: string;
+
   submitText?: string;
+  deleteText?: string;
 
   onClose: () => void;
   onSubmit: (data: { name: string; imageUrl: string }) => void;
@@ -24,12 +29,23 @@ export function AdminStallModal({
   labelName,
   labelImage,
   submitText,
+  deleteText,
+  initialName,
+  initialImageUrl,
   onClose,
   onSubmit,
 }: AdminStallModal) {
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName(initialName ?? "");
+      setImageUrl(initialImageUrl ?? "");
+      setError(null);
+    }
+  }, [open, initialName, initialImageUrl]);
 
   return (
     <Modal open={open} title={title} onClose={onClose}>
@@ -72,14 +88,23 @@ export function AdminStallModal({
           }}
         />
 
-        <div className="mt-10 w-full flex justify-center">
+        <div className={`mt-10 w-full flex justify-center ${deleteText ? "space-x-5" : ""
+          }`}>
+          {deleteText ? (
+            <Button
+              variant="deletestall"
+              disabled={!name.trim()}
+              onClick={() => onSubmit({ name, imageUrl })}
+            >
+              {deleteText}
+            </Button>
+          ) : (
+            <div></div>
+          )}
           <Button
-            type="button"
-            className={`py-2 rounded-2xl font-bold ${
-              name.trim() ? "bg-gray-400 hover:bg-primary2" : "bg-gray-300 cursor-not-allowed"
-            }`}
-            onClick={() => onSubmit({ name, imageUrl })}
+            variant="updatestall"
             disabled={!name.trim()}
+            onClick={() => onSubmit({ name, imageUrl })}
           >
             {submitText}
           </Button>

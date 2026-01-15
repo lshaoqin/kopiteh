@@ -146,7 +146,6 @@ async function seed() {
       console.log('Stall table seeded.');
     }
 
-<<<<<<< Updated upstream
     // 3. Menu Items
     const existingItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
     if ((existingItems.rowCount ?? 0) === 0) {
@@ -188,22 +187,6 @@ async function seed() {
         console.log('Menu items already exist. Skipping.');
     }
 
-=======
-    const existingMenuItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
-    if ((existingMenuItems.rowCount ?? 0) === 0) {
-      for (const item of menuItems) {
-        await pool.query(
-          `
-          INSERT INTO menu_item (stall_id, item_image, name, description, price, prep_time, is_available)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          `,
-          [item.stall_id, item.item_image, item.name, item.description, item.price, item.prep_time, item.is_available],
-        );
-      }
-    } else {
-      console.log('Menu item table already populated. Skipping menu item seed.');
-    }
->>>>>>> Stashed changes
   } catch (error) {
     console.error('Error:', error);
   } finally {
