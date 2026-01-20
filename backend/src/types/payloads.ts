@@ -65,7 +65,7 @@ export interface TablePayload {
 
 export interface OrderPayload {
   table_id: number;
-  user_id: number;
+  user_id?: number;
   status: OrderStatusCodes;
   total_price: number;
   created_at: string;
@@ -76,7 +76,7 @@ export interface UpdateOrderPayload extends Partial<OrderPayload> {}
 
 export interface OrderItemPayload {
   order_id: number;
-  item_id: number;
+  item_id?: number;
   status: OrderItemStatusCodes;
   quantity: number;
   unit_price: number;

@@ -42,20 +42,35 @@ const menuItems = [
     prep_time: 5,
     // Sections: Headers for choices
     sections: [
-        { name: "Choice of Noodle", min: 1, max: 1 },
-        { name: "Spiciness Level", min: 1, max: 1 },
-        { name: "Add-ons", min: 0, max: 5 }
-    ],
-    // Modifiers: The actual choices
-    modifiers: [
-        { name: "Kway Teow", price: 0 },
-        { name: "Yellow Noodle", price: 0 },
-        { name: "Thick Bee Hoon", price: 0 },
-        { name: "Chili", price: 0 },
-        { name: "No Chili", price: 0 },
-        { name: "Extra Beef Slices", price: 2.00 },
-        { name: "Extra Beef Balls", price: 1.50 }
-    ]
+      {
+        name: "Choice of Noodle",
+        min: 1,
+        max: 1,
+        modifiers: [
+          { name: "Kway Teow", price: 0 },
+          { name: "Yellow Noodle", price: 0 },
+          { name: "Thick Bee Hoon", price: 0 },
+        ],
+      },
+      {
+        name: "Spiciness Level",
+        min: 1,
+        max: 1,
+        modifiers: [
+          { name: "Chili", price: 0 },
+          { name: "No Chili", price: 0 },
+        ],
+      },
+      {
+        name: "Add-ons",
+        min: 0,
+        max: 5,
+        modifiers: [
+          { name: "Extra Beef Slices", price: 2.0 },
+          { name: "Extra Beef Balls", price: 1.5 },
+        ],
+      },
+    ],    
   },
   {
     stall_id: 1,
@@ -64,10 +79,16 @@ const menuItems = [
     price: 7.00,
     item_image: '',
     prep_time: 5,
-    sections: [{ name: "Options", min: 0, max: 1 }],
-    modifiers: [
-        { name: "Add Rice", price: 1.00 },
-        { name: "No Spring Onions", price: 0 }
+    sections: [
+      {
+        name: "Options",
+        min: 0,
+        max: 1,
+        modifiers: [
+          { name: "Add Rice", price: 1.00 },
+          { name: "No Spring Onions", price: 0 }
+        ]
+      }
     ]
   },
 
@@ -79,12 +100,18 @@ const menuItems = [
     price: 1.40,
     item_image: '',
     prep_time: 2,
-    sections: [{ name: "Temperature", min: 1, max: 1 }],
-    modifiers: [
-        { name: "Hot", price: 0 },
-        { name: "Iced", price: 0.50 },
-        { name: "Siew Dai (Less Sugar)", price: 0 },
-        { name: "Kosong (No Sugar)", price: 0 }
+    sections: [
+      {
+        name: "Temperature",
+        min: 1,
+        max: 1,
+        modifiers: [
+          { name: "Hot", price: 0 },
+          { name: "Iced", price: 0.50 },
+          { name: "Siew Dai (Less Sugar)", price: 0 },
+          { name: "Kosong (No Sugar)", price: 0 }
+        ]
+      }
     ]
   },
   {
@@ -94,30 +121,15 @@ const menuItems = [
     price: 3.50,
     item_image: '',
     prep_time: 2,
-    sections: [],
-    modifiers: []
+    sections: []
   }
 ];
 
-const menuItems = [
-  {
-    stall_id: 1,
-    item_image: 'https://chrisseenplace.com/wp-content/uploads/2023/02/Taiwanese-beef-noodle-soup-04-731x1024.jpg',
-    name: 'Beef Noodle Soup',
-    description: 'A hearty bowl of beef noodle soup with tender beef slices and flavorful broth.',
-    price: 6.50,
-    prep_time: 10,
-    is_available: true,
-  },
-  {
-    stall_id: 1,
-    name: 'Beef Tendon Soup',
-    item_image: 'https://www.internalartsinternational.com/wp-content/uploads/2018/01/half-meat-half-tendon.jpg',
-    description: 'Delicious beef tendon served in a rich broth with noodles.',
-    price: 7.00,
-    prep_time: 12,
-    is_available: true,
-  },
+
+const tables = [
+  { venue_id: 1, table_number: 'A1', qr_code: 'https://example.com/qr/a1.png' },
+  { venue_id: 1, table_number: 'A2', qr_code: 'https://example.com/qr/a2.png' },
+  { venue_id: 1, table_number: 'A3', qr_code: 'https://example.com/qr/a3.png' },
 ];
 
 async function seed() {
@@ -160,31 +172,47 @@ async function seed() {
         );
         const itemId = itemRes.rows[0].item_id;
 
-        // Insert Sections
-        if (item.sections) {
-            for (const section of item.sections) {
-                await pool.query(
-                    `INSERT INTO menu_item_modifier_section (item_id, name, min_selections, max_selections)
-                     VALUES ($1, $2, $3, $4)`,
-                    [itemId, section.name, section.min, section.max]
-                );
-            }
-        }
+        // Insert Sections + Modifiers
+        for (const section of item.sections) {
+          const sectionRes = await pool.query(
+            `
+            INSERT INTO menu_item_modifier_section
+              (item_id, name, min_selections, max_selections)
+            VALUES ($1, $2, $3, $4)
+            RETURNING section_id
+            `,
+            [itemId, section.name, section.min, section.max]
+          );
 
-        // Insert Modifiers
-        if (item.modifiers) {
-            for (const mod of item.modifiers) {
-                await pool.query(
-                    `INSERT INTO menu_item_modifier (item_id, name, price_modifier, is_available)
-                     VALUES ($1, $2, $3, $4)`,
-                    [itemId, mod.name, mod.price, true]
-                );
-            }
+          const sectionId = sectionRes.rows[0].section_id;
+
+          for (const mod of section.modifiers) {
+            await pool.query(
+              `
+              INSERT INTO menu_item_modifier
+                (section_id, item_id, name, price_modifier, is_available)
+              VALUES ($1, $2, $3, $4, TRUE)
+              `,
+              [sectionId, itemId, mod.name, mod.price]
+            );
+          }
         }
       }
       console.log('Menu items seeded.');
     } else {
         console.log('Menu items already exist. Skipping.');
+    }
+
+    // 4. Tables
+    const existingTables = await pool.query('SELECT 1 FROM "table" LIMIT 1');
+    if ((existingTables.rowCount ?? 0) === 0) {
+      for (const table of tables) {
+        await pool.query(
+          `INSERT INTO "table" (venue_id, table_number, qr_code) VALUES ($1, $2, $3)`,
+          [table.venue_id, table.table_number, table.qr_code],
+        );
+      }
+      console.log('Venue Table table seeded.');
     }
 
   } catch (error) {
