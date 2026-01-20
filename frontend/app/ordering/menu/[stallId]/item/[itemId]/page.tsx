@@ -2,238 +2,240 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Minus, Plus } from "lucide-react";
-import { MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../../../../../../types";
+import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { MenuItem, MenuItemModifier, MenuItemModifierSection, Stall } from "../../../../../../../types";
 import { useCartStore } from "@/stores/cart.store";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { MOCK_ITEM_DETAILS, MOCK_SECTIONS, MOCK_MODIFIERS } from "@/lib/mock-data";
+import { api } from "@/lib/api"; 
+
+// Components
+import { Badge } from "@/components/ui/Badge";
+import { ModifierRow } from "@/components/ui/ordering/ModifierRow";
+import { QuantitySelector } from "@/components/ui/QuantitySelector";
+import { Button } from "@/components/ui/button"; 
 
 function ItemCustomizationContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  
-  const itemId = String(params.itemId);
   const cartIdToEdit = searchParams.get("cartId");
 
+  const itemId = Number(params.itemId);
+  const stallId = Number(params.stallId); // 1. Get Stall ID
+
+  // --- STATE ---
+  const [stall, setStall] = useState<Stall | null>(null); // 2. Stall State
   const [item, setItem] = useState<MenuItem | null>(null);
   const [sections, setSections] = useState<MenuItemModifierSection[]>([]);
   const [modifiers, setModifiers] = useState<MenuItemModifier[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
-  const [remarks, setRemarks] = useState("");
-
+  const [selectedMods, setSelectedMods] = useState<string[]>([]);
+  
   const { addItem, updateItem, removeItem, items: cartItems } = useCartStore();
 
+  // 1. Fetch Real Data
   useEffect(() => {
-    // Simulate Fetching Data
-    const loadedItem = MOCK_ITEM_DETAILS[itemId] || MOCK_ITEM_DETAILS["default"];
-    
-    // Filter sections/modifiers relevant to this item
-    const relevantSections = MOCK_SECTIONS.filter(s => s.item_id === loadedItem.item_id);
-    const relevantModifiers = MOCK_MODIFIERS.filter(m => relevantSections.some(s => s.section_id === m.section_id));
+    async function fetchData() {
+        if (!itemId || !stallId) return;
+        try {
+            setLoading(true);
+            const [itemData, sectionData, modifierData, stallData] = await Promise.all([
+                api.getItemById(itemId),
+                api.getSectionsByItem(itemId),
+                api.getModifiersByItem(itemId),
+                api.getStallById(stallId) // 3. Fetch Stall Data
+            ]);
 
-    setItem(loadedItem);
-    setSections(relevantSections);
-    setModifiers(relevantModifiers);
-    setLoading(false);
-  }, [itemId]);
+            setItem(itemData);
+            setSections(sectionData || []);
+            setModifiers(modifierData || []);
+            setStall(stallData);
+            
+            // Auto-select defaults if NOT editing
+            if (!cartIdToEdit) {
+                const defaultSelections: string[] = [];
+                (sectionData || []).forEach(sec => {
+                    if ((sec.min_selections ?? 0) > 0) {
+                        const firstMod = (modifierData || []).find(m => m.section_id === sec.section_id);
+                        if (firstMod) defaultSelections.push(firstMod.option_id);
+                    }
+                });
+                setSelectedMods(defaultSelections);
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load item");
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, [itemId, stallId, cartIdToEdit]);
 
-  // Pre-fill logic for Edit Mode
+  // 2. Pre-fill for Edit Mode
   useEffect(() => {
     if (cartIdToEdit && !loading && item) {
-      const existingCartItem = cartItems.find(i => i.uniqueId === cartIdToEdit);
-      if (existingCartItem) {
-        setQuantity(existingCartItem.quantity);
-        setRemarks(existingCartItem.remarks);
-        
-        const newSelections: Record<string, string[]> = {};
-        existingCartItem.modifiers.forEach(mod => {
-           if (!newSelections[mod.section_id]) newSelections[mod.section_id] = [];
-           newSelections[mod.section_id].push(mod.option_id);
-        });
-        setSelections(newSelections);
-      }
+        const existingCartItem = cartItems.find(i => i.uniqueId === cartIdToEdit);
+        if (existingCartItem) {
+            setQuantity(existingCartItem.quantity);
+            setSelectedMods(existingCartItem.modifiers.map(m => m.option_id));
+        }
     }
   }, [cartIdToEdit, cartItems, loading, item]);
 
-  const handleToggleOption = (sectionId: string, modId: string, maxSelections: number | null) => {
-    setSelections((prev) => {
-      const current = prev[sectionId] || [];
-      const isSelected = current.includes(modId);
-      const isRadio = maxSelections === 1;
+  // --- LOGIC ---
 
-      if (isRadio) {
-        return { ...prev, [sectionId]: [modId] };
-      } else {
-        if (isSelected) {
-          return { ...prev, [sectionId]: current.filter(id => id !== modId) };
-        } else {
-          if (maxSelections && current.length >= maxSelections) return prev;
-          return { ...prev, [sectionId]: [...current, modId] };
+  const handleToggle = (modId: string, sectionId: string, maxSelections: number) => {
+    setSelectedMods(prev => {
+        const isSelected = prev.includes(modId);
+        
+        if (maxSelections === 1) {
+            // Radio Logic
+            const others = prev.filter(id => {
+                const m = modifiers.find(mod => mod.option_id === id);
+                return m && m.section_id !== sectionId;
+            });
+            return [...others, modId];
         }
-      }
+
+        // Checkbox Logic
+        return isSelected ? prev.filter(id => id !== modId) : [...prev, modId];
     });
   };
 
   const calculateTotal = () => {
     if (!item) return 0;
     const base = Number(item.price);
-    const modsPrice = Object.values(selections).flat().reduce((acc, modId) => {
+    const modsPrice = selectedMods.reduce((acc, modId) => {
         const mod = modifiers.find(m => m.option_id === modId);
         return acc + (mod ? Number(mod.price_modifier) : 0);
     }, 0);
     return (base + modsPrice) * quantity;
   };
 
+  const isFormValid = sections.every((section) => {
+    if ((section.min_selections ?? 0) === 0) return true;
+    const count = selectedMods.filter(modId => modifiers.find(m => m.option_id === modId)?.section_id === section.section_id).length;
+    return count >= (section.min_selections ?? 0);
+  });
+
   const handleSave = () => {
     if (!item) return;
-    const selectedModifiers = Object.values(selections).flat().map(modId => 
-        modifiers.find(m => m.option_id === modId)
-    ).filter((m): m is MenuItemModifier => !!m);
+    const selectedModifierObjects = modifiers.filter(m => selectedMods.includes(m.option_id));
 
     if (cartIdToEdit) {
-        updateItem(cartIdToEdit, { modifiers: selectedModifiers, quantity, remarks });
+        updateItem(cartIdToEdit, { modifiers: selectedModifierObjects, quantity });
     } else {
-        addItem(item, selectedModifiers, quantity, remarks);
+        // 4. Pass correct stall name
+        addItem(item, selectedModifierObjects, quantity, stall?.name || "Unknown Stall", "");
     }
     router.back();
   };
 
-  const handleDelete = () => {
+  const handleRemove = () => {
     if (cartIdToEdit) {
         removeItem(cartIdToEdit);
         router.back();
     }
   };
 
-  if (loading || !item) return <div className="p-10 text-center text-slate-400">Loading...</div>;
+  if (loading) return <div className="p-10 text-center text-slate-400">Loading...</div>;
+  if (error || !item) return <div className="p-10 text-center text-red-500">Item not found</div>;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-600 pb-32">
-        {/* Header Image */}
-        <div className="relative w-full h-56 bg-slate-100">
-            <button onClick={() => router.back()} className="absolute top-4 left-4 bg-white/90 p-2 rounded-full shadow-sm z-10 backdrop-blur-sm">
-                <ArrowLeft className="w-5 h-5 text-slate-700" />
-            </button>
-            <div className="w-full h-full flex items-center justify-center text-slate-400 overflow-hidden">
-                {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                ) : (
-                    <span className="text-4xl opacity-20">No Image</span>
-                )}
+    <div className="min-h-screen bg-white font-sans text-slate-600 pb-48">
+        
+        {/* Header */}
+        <div className="bg-slate-50 pt-6 pb-6 px-6 rounded-b-[2rem] flex flex-col items-center relative mb-6">
+            <div className="absolute top-6 left-6">
+                <Button variant="circle" size="icon-lg" onClick={() => router.back()}>
+                    <ArrowLeft className="w-5 h-5" />
+                </Button>
+            </div>
+            
+            <div className="mt-2 text-slate-400">
+                 {item.image_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />
+                 ) : (
+                    <ImageIcon className="w-10 h-10" />
+                 )}
             </div>
         </div>
 
-        {/* Title Block */}
-        <div className="px-6 py-6 border-b border-slate-100">
+        {/* Title */}
+        <div className="px-6 mb-8">
             <h1 className="text-2xl font-bold text-slate-800">{item.name}</h1>
             <p className="text-slate-500 text-sm mt-1">{item.description}</p>
         </div>
 
-        {/* Dynamic Modifier Sections */}
-        <div className="flex flex-col">
-            {sections.map((section) => (
-                <div key={section.section_id} className="px-6 py-6 border-b border-slate-100">
+        {/* Modifier Sections */}
+        <div className="flex flex-col space-y-8">
+            {sections.map(section => (
+                <div key={section.section_id} className="px-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg text-slate-700">{section.name}</h3>
-                        {section.min_selections !== null && section.min_selections > 0 && (
-                            <span className="bg-slate-200 text-[10px] px-2 py-1 rounded text-slate-600 font-bold uppercase tracking-wide">REQUIRED</span>
-                        )}
+                        <h3 className="font-bold text-xl text-slate-700">{section.name}</h3>
+                        {(section.min_selections ?? 0) > 0 && <Badge>REQUIRED</Badge>}
                     </div>
                     
-                    <div className="space-y-4">
-                        {modifiers.filter(m => m.section_id === section.section_id).map((mod) => {
-                            const isSelected = (selections[section.section_id] || []).includes(mod.option_id);
-                            const isRadio = section.max_selections === 1;
-
-                            return (
-                                <div 
+                    <div className="border-t border-slate-100">
+                        {modifiers
+                            .filter(m => m.section_id === section.section_id)
+                            .map(mod => (
+                                <ModifierRow 
                                     key={mod.option_id}
-                                    onClick={() => handleToggleOption(section.section_id, mod.option_id, section.max_selections)}
-                                    className="flex items-center justify-between cursor-pointer group"
-                                >
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className="flex-1">
-                                            <span className={cn("text-base block", isSelected ? "font-semibold text-slate-800" : "text-slate-600")}>
-                                                {mod.name}
-                                            </span>
-                                            {mod.price_modifier !== 0 && (
-                                                <span className="text-slate-400 text-sm">
-                                                    {mod.price_modifier > 0 ? '+' : ''}${Number(mod.price_modifier).toFixed(2)}
-                                                </span>
-                                            )}
-                                        </div>
-                                        
-                                        {/* Visual Checkbox/Radio */}
-                                        <div className={cn(
-                                            "w-6 h-6 border-[2px] flex items-center justify-center transition-all duration-200",
-                                            isRadio ? "rounded-full" : "rounded-md", // Circle vs Square
-                                            isSelected ? "bg-slate-600 border-slate-600" : "border-slate-300 group-hover:border-slate-400"
-                                        )}>
-                                            {isSelected && (
-                                                <div className={cn("bg-white", isRadio ? "w-2.5 h-2.5 rounded-full" : "w-3 h-3 rounded-[1px]")} />
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
+                                    name={mod.name}
+                                    price={Number(mod.price_modifier)}
+                                    isSelected={selectedMods.includes(mod.option_id)}
+                                    isRadio={section.max_selections === 1}
+                                    onClick={() => handleToggle(mod.option_id, section.section_id!, section.max_selections ?? 0)}
+                                />
+                            ))
+                        }
                     </div>
                 </div>
             ))}
-
-            {/* Special Request Text Area */}
-            <div className="px-6 py-6">
-                <h3 className="font-bold text-lg text-slate-700 mb-3">Request</h3>
-                <textarea
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Customization is subject to the stall's discretion"
-                    className="w-full border border-slate-300 rounded-lg p-3 h-32 resize-none focus:outline-none focus:border-slate-500 text-slate-600 text-sm"
-                />
-            </div>
         </div>
 
-        {/* Footer */}
-        <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-6 pb-10 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center justify-center gap-8 mb-6">
-                <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 text-slate-600 transition-colors"
-                >
-                    <Minus className="w-5 h-5" />
-                </button>
-                <span className="text-2xl font-bold w-10 text-center text-slate-800">{quantity}</span>
-                <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 text-slate-600 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                </button>
+        {/* --- FOOTER --- */}
+        <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 px-6 py-6 pb-8 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            
+            {/* Quantity Selector */}
+            <div className="flex justify-center mb-6">
+                <QuantitySelector 
+                    value={quantity} 
+                    onIncrease={() => setQuantity(q => q + 1)} 
+                    onDecrease={() => setQuantity(q => Math.max(1, q - 1))} 
+                />
             </div>
 
             <div className="space-y-3">
+                {/* Main Add/Update Button */}
                 <Button 
                     onClick={handleSave} 
-                    className="w-full py-7 text-lg font-semibold bg-slate-700 hover:bg-slate-800 shadow-lg rounded-xl"
+                    disabled={!isFormValid} 
+                    variant="confirm" 
+                    size="xl" 
+                    className="w-full text-lg justify-between disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {cartIdToEdit ? "Update Order" : "Add To Order"} <span className="mx-2">•</span> ${calculateTotal().toFixed(2)}
+                    <span>{cartIdToEdit ? "Update Order" : "Add To Order"}</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
                 </Button>
 
+                {/* Remove Button (Only if editing) */}
                 {cartIdToEdit && (
-                    <Button 
-                        onClick={handleDelete} 
-                        className="w-full py-7 text-lg font-semibold bg-red-400 hover:bg-red-500 text-white shadow-sm rounded-xl"
+                    <button 
+                        onClick={handleRemove}
+                        className="w-full py-4 text-lg font-bold text-white bg-red-400 hover:bg-red-500 rounded-xl transition-colors active:scale-[0.98]"
                     >
                         Remove From Order
-                    </Button>
+                    </button>
                 )}
             </div>
         </div>
+
     </div>
   );
 }
