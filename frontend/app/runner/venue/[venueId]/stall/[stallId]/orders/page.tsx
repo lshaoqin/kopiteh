@@ -5,6 +5,7 @@ import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
+import { Stall } from "../../../../../../../../types/stall";
 import { get } from "http";
 
 export default function Home() {
@@ -13,18 +14,23 @@ export default function Home() {
   const params = useParams();
   const venueId = params.venueId;
   const stallId = params.stallId[0];
-
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [stall, setStall] = useState<any>(null);
-  const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
-  const [showAddOrder, setShowAddOrder] = useState(false);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [stall, setStall] = useState<Stall | null>(null);
+  const [defaultItem, setDefaultItem] = useState<OrderItem | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+
+  const [showAddOrder, setShowAddOrder] = useState(false);
+  
 
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
   );
 
+  // -- FETCHING STALL AND ORDER ITEMS --
   const getStall = async () => {
     try{
       const res = await fetch(`${API_URL}/stalls/${stallId}`);
@@ -54,6 +60,21 @@ export default function Home() {
     }
   };
 
+  const getDefaultItem = async () => {
+    try {
+      const res = await fetch(`${API_URL}/items/default/${stallId}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error("Failed to fetch default item");
+      }
+      setDefaultItem(json.payload.data);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  // -- CREATING ORDER AND ORDER ITEMS --
   const createOrder = async (data: {
     quantity: string;
     unitPrice: string;
@@ -75,6 +96,8 @@ export default function Home() {
     });
     const json = await res.json();
 
+    console.log("Create Order response:", json);
+
     if (!res.ok || !json.success) {
       throw new Error(json?.message || "Failed to create order");
     }
@@ -90,36 +113,39 @@ export default function Home() {
       unitPrice: string;
     }
   ) => {
+    try {
+      const res = await fetch(`${API_URL}/orderItem/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          item_id: defaultItem?.item_id,
+          status: "INCOMING",
+          quantity: parseInt(data.quantity),
+          price: parseInt(data.quantity) * parseFloat(data.unitPrice),
+        }),
+      });
+      
+      const json = await res.json();
 
-    const res = await fetch(`${API_URL}/orderItem/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        order_id: orderId,
-        status: "INCOMING",
-        quantity: parseInt(data.quantity),
-        price: parseInt(data.quantity) * parseFloat(data.unitPrice),
-      }),
-    });
+      console.log("Create Order Item response:", json);
     
-    const json = await res.json();
-
-    console.log("Create Order Item response:", json);
-  
-    if (!res.ok || !json.success) {
-      throw new Error(json?.message || "Failed to create order item");
-    } else {
-      getOrderItemsByStall();
+      if (!res.ok || !json.success) {
+        throw new Error(json?.message || "Failed to create order item");
+      } else {
+        getOrderItemsByStall();
+      }
+    } catch (error: any) {
+      setError(error.message);
     }
-  
-    return json.payload.data;
   };
 
   useEffect(() => {
     setLoading(true);
     getStall();
+    getDefaultItem();
     getOrderItemsByStall();
     setLoading(false);
   }, [API_URL, stallId]);
@@ -196,7 +222,7 @@ export default function Home() {
                 <div className="text-right">
                   <p className="font-medium">x{item.quantity}</p>
                   <p className="text-sm text-gray-600">
-                    ${item.price.toFixed(2)}
+                    ${item.price}
                   </p>
                 </div>
               </div>
@@ -218,7 +244,7 @@ export default function Home() {
         
             } catch (err) {
               console.error(err);
-              alert("Failed to create order");
+              setError(err instanceof Error ? err.message : String(err));
             }
           }}
         />

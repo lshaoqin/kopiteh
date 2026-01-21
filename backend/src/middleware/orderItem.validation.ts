@@ -20,7 +20,7 @@ export const createOrderItemValidation = [
   body('order_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('item_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('quantity').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('price').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  body('price').exists({ checkFalsy: true }).isFloat({ gt: 0 }),
 ];
 
 export const updateOrderItemValidation = [
