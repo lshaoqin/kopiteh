@@ -86,7 +86,7 @@ export const api = {
 
   // --- MODIFIERS ---
   getSectionsByItem: async (itemId: number): Promise<MenuItemModifierSection[]> => {
-    const rawData = await fetchClient<any[]>(`/sections/items/${itemId}`);
+    const rawData = await fetchClient<any[]>(`/item-sections/items/${itemId}`);
     return rawData.map((s) => ({
         section_id: String(s.section_id),
         item_id: String(s.item_id),
@@ -97,11 +97,11 @@ export const api = {
   },
 
   getModifiersByItem: async (itemId: number): Promise<MenuItemModifier[]> => {
-    const rawData = await fetchClient<any[]>(`/modifiers/items/${itemId}`);
-    
+    const rawData = await fetchClient<any[]>(`/modifiers/items/${itemId}`); 
     return rawData.map((m) => ({
         option_id: String(m.option_id),
-        section_id: String(m.item_id), 
+        section_id: String(m.section_id), 
+        item_id: String(m.item_id), 
         name: m.name,
         price_modifier: Number(m.price_modifier),
         is_available: m.is_available
