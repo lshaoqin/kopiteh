@@ -1,4 +1,4 @@
-import { Stall, MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection } from "../../types";
 import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -63,6 +63,7 @@ export const api = {
     return rawData.map((item) => ({
         item_id: String(item.item_id),
         stall_id: String(item.stall_id),
+        category_id: item.category_id ? Number(item.category_id) : null,
         name: item.name,
         description: item.description,
         price: Number(item.price),
@@ -110,6 +111,16 @@ export const api = {
     }));
   },
 
+  getCategoriesByStall: async (stallId: number): Promise<MenuCategory[]> => {
+    const rawData = await fetchClient<any[]>(`/categories/stalls/${stallId}`);
+    return rawData.map((cat) => ({
+      category_id: Number(cat.category_id),
+      stall_id: Number(cat.stall_id),
+      name: cat.name,
+      sort_order: cat.sort_order,
+    }));
+  },
+
   createOrder: async (orderData: {
     table_number: number;
     total_price: number;
@@ -132,7 +143,6 @@ export const api = {
       })),
     };
 
-    // Note: Matches backend route "/order/create" (singular 'order' based on your routes file)
     const response = await fetchClient<any>("/order/create", {
       method: "POST",
       body: JSON.stringify(payload),

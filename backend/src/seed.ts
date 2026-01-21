@@ -12,6 +12,7 @@ const stallsData = [
     categories: [
       {
         name: "Signatures",
+        sort_order: 1,
         items: [
           {
             name: 'Signature Dry Beef Noodles',
@@ -27,13 +28,6 @@ const stallsData = [
                   { name: "Yellow Noodle", price: 0 },
                   { name: "Thick Bee Hoon", price: 0 }
                 ]
-              },
-              {
-                name: "Add-ons", min: 0, max: 5,
-                modifiers: [
-                  { name: "Extra Beef", price: 2.00 },
-                  { name: "Extra Balls", price: 1.50 }
-                ]
               }
             ]
           }
@@ -41,6 +35,7 @@ const stallsData = [
       },
       {
         name: "Soup",
+        sort_order: 2,
         items: [
           {
             name: 'Sliced Beef Soup',
@@ -48,6 +43,20 @@ const stallsData = [
             price: 7.00,
             item_image: 'https://farm1.staticflickr.com/932/43378519961_7509d3000b_c.jpg',
             prep_time: 5,
+            sections: [], modifiers: []
+          }
+        ]
+      },
+      {
+        name: "Sides",
+        sort_order: 3,
+        items: [
+          {
+            name: 'Fried Beancurd Skin',
+            description: 'Crispy sides to go with your noodles.',
+            price: 2.50,
+            item_image: '',
+            prep_time: 3,
             sections: [], modifiers: []
           }
         ]
@@ -61,6 +70,7 @@ const stallsData = [
     categories: [
       {
         name: "Hot Drinks",
+        sort_order: 1,
         items: [
           {
             name: 'Kopi',
@@ -76,14 +86,6 @@ const stallsData = [
                   { name: "Kopi C", price: 0.20 },
                   { name: "Kopi O Kosong", price: 0 }
                 ]
-              },
-              {
-                name: "Request", min: 0, max: 5,
-                modifiers: [
-                  { name: "Less sugar", price: 0 },
-                  { name: "No Condensed Milk", price: 0 },
-                  { name: "Dairy-free Milk", price: 1.00 }
-                ]
               }
             ]
           },
@@ -93,20 +95,13 @@ const stallsData = [
             price: 1.40,
             item_image: '', 
             prep_time: 2,
-            sections: [
-              {
-                name: "Temperature", min: 1, max: 1,
-                modifiers: [
-                  { name: "Hot", price: 0 },
-                  { name: "Iced", price: 0.50 }
-                ]
-              }
-            ]
+            sections: []
           }
         ]
       },
       {
         name: "Cold Drinks",
+        sort_order: 2,
         items: [
           {
             name: 'Milo Dinosaur',
@@ -124,7 +119,7 @@ const stallsData = [
 
 async function seed() {
   try {
-    console.log('🚀 Starting seed...');
+    console.log('Starting seed...');
     
     // 1. CLEAR DB
     await pool.query(`TRUNCATE TABLE users, venue, "table", stall, menu_item_category, menu_item, menu_item_modifier_section, menu_item_modifier, "order", order_item, order_item_modifiers RESTART IDENTITY CASCADE;`);
@@ -138,24 +133,27 @@ async function seed() {
 
     // 4. INSERT TABLES
     for (let i = 1; i <= 10; i++) {
-        await pool.query(
-          `INSERT INTO "table" (venue_id, table_number, qr_code) VALUES ($1, $2, $3)`,
-          [venueId, String(i), `qr-code-table-${i}`]
-        );
+        await pool.query(`INSERT INTO "table" (venue_id, table_number, qr_code) VALUES ($1, $2, $3)`, [venueId, String(i), `qr-code-table-${i}`]);
     }
-    console.log('✅ Tables 1-10 created.');
 
-    // 5. INSERT STALLS & MENU
+    // 5. INSERT STALLS, CATEGORIES & ITEMS
     for (const stallData of stallsData) {
       const stallRes = await pool.query(`INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6) RETURNING stall_id`, [venueId, stallData.name, stallData.description || '', stallData.stall_image, true, stallData.waiting_time]);
       const stallId = stallRes.rows[0].stall_id;
 
       for (const catData of stallData.categories) {
-        const catRes = await pool.query(`INSERT INTO menu_item_category (stall_id, name, sort_order) VALUES ($1, $2, $3) RETURNING category_id`, [stallId, catData.name, 0]);
+        // Use the sort_order from the data object
+        const catRes = await pool.query(
+          `INSERT INTO menu_item_category (stall_id, name, sort_order) VALUES ($1, $2, $3) RETURNING category_id`, 
+          [stallId, catData.name, catData.sort_order]
+        );
         const catId = catRes.rows[0].category_id;
 
         for (const itemData of catData.items) {
-          const itemRes = await pool.query(`INSERT INTO menu_item (stall_id, category_id, name, description, price, item_image, prep_time, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING item_id`, [stallId, catId, itemData.name, itemData.description, itemData.price, itemData.item_image, itemData.prep_time, true]);
+          const itemRes = await pool.query(
+            `INSERT INTO menu_item (stall_id, category_id, name, description, price, item_image, prep_time, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING item_id`, 
+            [stallId, catId, itemData.name, itemData.description, itemData.price, itemData.item_image, itemData.prep_time, true]
+          );
           const itemId = itemRes.rows[0].item_id;
 
           if (itemData.sections) {
@@ -173,11 +171,12 @@ async function seed() {
         }
       }
     }
-    console.log('✅ Seed complete!');
+    console.log('Seed complete!');
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('Error during seeding:', error);
   } finally {
     await pool.end();
   }
 }
+
 seed();
