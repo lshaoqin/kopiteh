@@ -1,50 +1,30 @@
 import express from 'express';
-import { createServer } from 'http';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { WebSocketService } from './services/websocket.service';
-import routes from './routes/index';
+import http from 'http';
+import routes from './routes';
 import errorHandler from './middleware/error.handler';
-
-dotenv.config();
+import { WebSocketService } from './services/websocket.service';
 
 const app = express();
-const httpServer = createServer(app);
+const server = http.createServer(app);
 
-// middleware
-app.use(cors());
+// Initialize WebSocket
+WebSocketService.init(server);
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
+
 app.use(express.json());
-
-// websocket
-WebSocketService.init(httpServer);
-
-// routes
 app.use('/api', routes);
-
-// error handler
 app.use(errorHandler);
 
-// health
-app.get('/', (_req, res) => {
-  res.send('Express + Postgres backend is running 🚀');
-});
+const PORT = process.env.PORT || 3001;
 
-/* 
-// quick db check route (optional)
-app.get('/_db_health', async (_req, res) => {
-  try {
-    await db.query('SELECT 1');
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
-  }
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`WebSocket initialized`);
 });
-*/
-
-// start server
-if (process.env.NODE_ENV !== 'test') {
-  const port = Number(process.env.PORT || 3000);
-  httpServer.listen(port, () => console.log(`Listening on ${port}`));
-}
 
 export default app;
