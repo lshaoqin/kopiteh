@@ -55,6 +55,22 @@ export const MenuItemService = {
     }
   },
 
+  async findDefault(stall_id: number): Promise<ServiceResult<any>> {
+    try {
+      const result = await BaseService.query(
+        `SELECT * FROM menu_item WHERE stall_id = $1 AND name = 'Default Item' LIMIT 1`,
+        [stall_id]
+      );
+      if (!result.rows[0]) {
+        return errorResponse(ErrorCodes.NOT_FOUND, "Default menu item not found");
+      }
+
+      return successResponse(SuccessCodes.OK, result.rows[0]);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
   async create(payload: MenuItemPayload): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
