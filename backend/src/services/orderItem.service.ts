@@ -67,7 +67,7 @@ export const OrderItemService = {
   async create(payload: OrderItemPayload): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
-        'INSERT INTO Order_Item (order_id, item_id, stall_id, quantity, unit_price, line_subtotal) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+        'INSERT INTO Order_Item (order_id, item_id, quantity, unit_price, line_subtotal) VALUES ($1,$2,$3,$4,$5) RETURNING *',
         [
           payload.order_id,
           payload.item_id,
