@@ -30,7 +30,7 @@ export default function Home() {
     notes?: string;
     table: string;
   }) => {
-    const res = await fetch(`${API_URL}/order`, {
+    const res = await fetch(`${API_URL}/order/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,17 +60,14 @@ export default function Home() {
       unitPrice: string;
     }
   ) => {
-    // TEMP: hardcoded itemId until menu item selection is implemented
-    const itemId = 1;
-  
-    const res = await fetch(`${API_URL}/orderItem`, {
+
+    const res = await fetch(`${API_URL}/orderItem/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         order_id: orderId,
-        item_id: itemId,
         status: "INCOMING",
         quantity: parseInt(data.quantity),
         unit_price: parseFloat(data.unitPrice),
@@ -206,7 +203,7 @@ export default function Home() {
             try {
               const order = await createOrder(data);
 
-              await createOrderItem(order.id, data);
+              await createOrderItem(order.order_id, data);
         
             } catch (err) {
               console.error(err);
