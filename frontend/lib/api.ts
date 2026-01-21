@@ -64,7 +64,7 @@ export const api = {
         name: item.name,
         description: item.description,
         price: Number(item.price),
-        image_url: item.item_image, 
+        item_image: item.item_image, 
         is_available: item.is_available,
         prep_time: item.prep_time
     }));
@@ -78,7 +78,7 @@ export const api = {
         name: item.name,
         description: item.description,
         price: Number(item.price),
-        image_url: item.item_image,
+        item_image: item.item_image,
         is_available: item.is_available,
         prep_time: item.prep_time
     };

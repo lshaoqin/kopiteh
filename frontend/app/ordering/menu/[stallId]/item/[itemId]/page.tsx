@@ -156,9 +156,9 @@ function ItemCustomizationContent() {
             </div>
             
             <div className="mt-2 text-slate-400">
-                 {item.image_url ? (
+                 {item.item_image ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />
+                    <img src={item.item_image} alt={item.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />
                  ) : (
                     <ImageIcon className="w-10 h-10" />
                  )}
