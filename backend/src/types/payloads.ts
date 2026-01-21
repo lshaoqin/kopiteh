@@ -76,7 +76,7 @@ export interface UpdateOrderPayload extends Partial<OrderPayload> {}
 
 export interface OrderItemPayload {
   order_id: number;
-  item_id: number;
+  item_id?: number;
   status: OrderItemStatusCodes;
   quantity: number;
   price: number;

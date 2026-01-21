@@ -11,7 +11,7 @@ type AdminStallModal = {
   title: string;
 
   labelName: string;
-  labelImage: string;
+  labelImage?: string;
 
   initialName?: string;
   initialImageUrl?: string;
@@ -69,24 +69,26 @@ export function AdminStallModal({
           }}
         />
 
-        <FormField
-          className="flex flex-col space-y-2 font-semibold"
-          classNameOut={`
-            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
-            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
-          `}
-          classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-          variant="text"
-          label={labelImage}
-          inputProps={{
-            value: imageUrl,
-            placeholder: "Image URL",
-            onChange: (e) => {
-              setImageUrl(e.target.value);
-              setError(null);
-            },
-          }}
-        />
+        {labelImage && (
+          <FormField
+            className="flex flex-col space-y-2 font-semibold"
+            classNameOut={`
+      p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+      ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+    `}
+            classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+            variant="text"
+            label={labelImage}
+            inputProps={{
+              value: imageUrl,
+              placeholder: "Image URL",
+              onChange: (e) => {
+                setImageUrl(e.target.value);
+                setError(null);
+              },
+            }}
+          />
+        )}
 
         <div className={`mt-10 w-full flex justify-center ${deleteText ? "space-x-5" : ""
           }`}>

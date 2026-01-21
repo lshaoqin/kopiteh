@@ -46,10 +46,20 @@ CREATE TABLE IF NOT EXISTS stall (
 );
 CREATE INDEX IF NOT EXISTS idx_stall_venue_id ON stall (venue_id);
 
+-- menu item category
+CREATE TABLE IF NOT EXISTS menu_item_category (
+  category_id SERIAL PRIMARY KEY,
+  stall_id    INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
+  name        VARCHAR NOT NULL,
+  sort_order  INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_category_stall_id ON menu_item_category (stall_id);
+
 -- menu items
 CREATE TABLE IF NOT EXISTS menu_item (
   item_id      SERIAL PRIMARY KEY,
   stall_id     INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
+  category_id  INTEGER REFERENCES menu_item_category(category_id) ON DELETE SET NULL,
   item_image   VARCHAR,
   name         VARCHAR NOT NULL,
   description  TEXT,
@@ -58,19 +68,7 @@ CREATE TABLE IF NOT EXISTS menu_item (
   is_available BOOLEAN NOT NULL DEFAULT TRUE
 );
 CREATE INDEX IF NOT EXISTS idx_menu_item_stall_id ON menu_item (stall_id);
-
-CREATE TABLE IF NOT EXISTS menu_item_category (
-  category_id SERIAL PRIMARY KEY,
-  stall_id    INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
-  name        VARCHAR NOT NULL,
-  sort_order  INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX idx_category_stall_id ON menu_item_category (stall_id);
-
-ALTER TABLE menu_item
-  ADD COLUMN category_id INTEGER REFERENCES menu_item_category(category_id) ON DELETE SET NULL;
-
-CREATE INDEX idx_menu_item_category_id ON menu_item (category_id);
+CREATE INDEX IF NOT EXISTS idx_menu_item_category_id ON menu_item (category_id);
 
 -- modifier sections (belongs to a menu_item)
 CREATE TABLE IF NOT EXISTS menu_item_modifier_section (
@@ -120,7 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_order_table_id ON "order" (table_id);
 CREATE TABLE IF NOT EXISTS order_item (
   order_item_id SERIAL PRIMARY KEY,
   order_id      INTEGER NOT NULL REFERENCES "order"(order_id) ON DELETE CASCADE,
-  item_id       INTEGER NOT NULL REFERENCES menu_item(item_id) ON DELETE RESTRICT,
+  item_id       INTEGER REFERENCES menu_item(item_id) ON DELETE RESTRICT,
   status        VARCHAR NOT NULL DEFAULT 'INCOMING',
   quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0)
