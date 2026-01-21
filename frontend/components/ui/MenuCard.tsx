@@ -1,46 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Plus, Image as ImageIcon } from "lucide-react";
 import { MenuItem } from "@/../types"; 
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "./button";
 
 interface MenuCardProps {
   item: MenuItem;
   href: string;
   rank?: number; // Temporary popularity index
+  quantity?: number;
+}
+
+function QuantityBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <div className="absolute -top-2 -right-2 w-5 h-5 bg-slate-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm z-10 ring-2 ring-white">
+      {count}
+    </div>
+  );
 }
 
 // 1. POPULAR CARD
-export function PopularMenuCard({ item, href, rank }: MenuCardProps) {
-    const [imgError, setImgError] = useState(false);
-  
+export function PopularMenuCard({ item, href, rank, quantity = 0 }: MenuCardProps) {
   return (
     <Link 
       href={href}
-      // Mobile: w-28, Desktop: w-44
-      className="flex-shrink-0 w-28 md:w-44 flex flex-col items-center group cursor-pointer"
+      className="flex-shrink-0 w-28 flex flex-col items-center group cursor-pointer relative"
     >
-      {/* Container */}
-      <div className="w-full aspect-square bg-white rounded-2xl border-2 border-slate-500 flex items-center justify-center overflow-hidden mb-3 relative transition-colors group-hover:bg-slate-50">
-        
-        {item.image_url && !imgError ? (
+      <div className="w-28 h-28 bg-white rounded-xl border-2 border-slate-500 flex items-center justify-center overflow-hidden mb-2 relative transition-colors group-hover:bg-slate-50">
+        {item.image_url ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img 
-              src={item.image_url} 
-              alt={item.name} 
-              className="w-full h-full object-cover"
-              onError={() => setImgError(true)} // If broken, switch to icon
-            />
+            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
         ) : (
-            <ImageIcon className="w-8 h-8 md:w-12 md:h-12 text-slate-300" strokeWidth={1.5} />
+            <ImageIcon className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
         )}
-
+        
+        {/* Badge overlaps the image for popular items */}
+        {quantity > 0 && (
+            <div className="absolute top-2 right-2">
+                <QuantityBadge count={quantity} />
+            </div>
+        )}
       </div>
       
-      {/* Text */}
       <div className="px-1 text-center w-full">
-        <p className="text-xs md:text-sm font-bold text-slate-600 truncate">
+        <p className="text-xs font-semibold text-slate-600 truncate">
           {rank ? `#${rank}: ` : ""}{item.name}
         </p>
       </div>
@@ -48,46 +54,46 @@ export function PopularMenuCard({ item, href, rank }: MenuCardProps) {
   );
 }
 
-// 2. STANDARD LIST CARD 
-export function StandardMenuCard({ item, href }: MenuCardProps) {
-  const [imgError, setImgError] = useState(false);
-
+// 2. STANDARD LIST CARD (Matches your screenshot)
+export function StandardMenuCard({ item, href, quantity = 0 }: MenuCardProps) {
   return (
     <Link 
       href={href}
-      className="flex items-center justify-between py-4 border-b border-slate-100 last:border-none hover:bg-slate-50 transition-colors group px-2 rounded-xl"
+      className="flex items-center justify-between py-4 border-b border-slate-100 last:border-none active:bg-slate-50 transition-colors group"
     >
       <div className="flex items-center gap-4 flex-1 overflow-hidden">
-          {/* Image Container: Mobile w-16, Desktop w-24 */}
-          <div className="w-16 h-16 md:w-24 md:h-24 bg-white rounded-xl flex-shrink-0 flex items-center justify-center border-2 border-slate-500 overflow-hidden">
-              {item.image_url && !imgError ? (
+          {/* Image */}
+          <div className="w-16 h-16 bg-white rounded-xl flex-shrink-0 flex items-center justify-center border-2 border-slate-500 overflow-hidden">
+              {item.image_url ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img 
-                    src={item.image_url} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover" 
-                    onError={() => setImgError(true)}
-                  />
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
               ) : (
-                  <ImageIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-300" strokeWidth={1.5} />
+                  <ImageIcon className="w-6 h-6 text-slate-400" strokeWidth={1.5} />
               )}
           </div>
           
-          {/* Item Info */}
+          {/* Text */}
           <div className="flex-1 min-w-0 pr-2">
-              <h3 className="font-bold text-slate-700 truncate text-base md:text-lg">{item.name}</h3>
-              <p className="text-xs md:text-sm text-slate-500 line-clamp-1 mt-1">
+              <h3 className="font-bold text-slate-700 truncate text-base">{item.name}</h3>
+              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                 {item.description || "No description"}
-              </p>
-              <p className="text-sm md:text-base font-semibold text-slate-800 mt-2">
-                ${Number(item.price).toFixed(2)}
               </p>
           </div>
       </div>
 
-      {/* Circular Plus Button */}
-      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 ml-4 shrink-0 group-hover:bg-slate-200 group-hover:text-slate-700 transition-all">
-          <Plus className="w-4 h-4 md:w-5 md:h-5" />
+      {/* Button Container */}
+      <div className="relative ml-3">
+          
+          {/* The Badge (Overlaps top-right) */}
+          <QuantityBadge count={quantity} />
+
+          {/* The Plus Button */}
+          <div className={cn(
+              buttonVariants({ variant: "circle", size: "icon-sm" }), 
+              "flex cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          )}>
+              <Plus className="w-4 h-4" />
+          </div>
       </div>
     </Link>
   );

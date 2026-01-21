@@ -13,7 +13,7 @@ const venues = [
   },
 ];
 
-const stalls = [
+const stallsData = [
   {
     venue_id: 1,
     name: 'Hong Kee Beef Noodle',
@@ -21,6 +21,51 @@ const stalls = [
     stall_image: 'https://i.pinimg.com/736x/32/b6/f0/32b6f024a935bc4263c5813cdbecbd1f.jpg',
     is_open: true,
     waiting_time: 5,
+    categories: [
+      {
+        name: "Signatures",
+        items: [
+          {
+            name: 'Signature Dry Beef Noodles',
+            description: 'Dry noodles tossed in savory dark sauce.',
+            price: 6.50,
+            item_image: 'https://4.bp.blogspot.com/-F8yMcy-gWl0/V4Wk-R4ZqWI/AAAAAAAAHvY/k2Sl2l_TbEwJ1UEfTWHNbVubO6KFBqg1gCLcB/s1600/DSCF6841.JPG',
+            prep_time: 5,
+            sections: [
+              {
+                name: "Noodle Type", min: 1, max: 1,
+                modifiers: [
+                  { name: "Kway Teow", price: 0 },
+                  { name: "Yellow Noodle", price: 0 },
+                  { name: "Thick Bee Hoon", price: 0 }
+                ]
+              },
+              {
+                name: "Add-ons", min: 0, max: 5,
+                modifiers: [
+                  { name: "Extra Beef", price: 2.00 },
+                  { name: "Extra Balls", price: 1.50 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        name: "Soup",
+        items: [
+          {
+            name: 'Sliced Beef Soup',
+            description: 'Comforting herbal beef broth with tender slices.',
+            price: 7.00,
+            item_image: 'https://farm1.staticflickr.com/932/43378519961_7509d3000b_c.jpg',
+            prep_time: 5,
+            sections: [],
+            modifiers: [] 
+          }
+        ]
+      }
+    ]
   },
   {
     venue_id: 1,
