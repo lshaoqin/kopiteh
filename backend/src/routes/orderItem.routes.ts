@@ -4,11 +4,11 @@ import {
   createOrderItemValidation,
   updateOrderItemValidation,
   orderItemIdParamValidation,
+  orderIdParamValidation,
+  stallIdParamValidation,
 } from '../middleware/orderItem.validation'
 import { runValidation } from '../middleware/base.validation';
 import { authenticateToken } from '../middleware/auth.middleware';
-import { stallIdParamValidation } from '../middleware/stall.validation';
-import { orderIdParamValidation } from '../middleware/order.validation';
 
 const router = Router();
 
