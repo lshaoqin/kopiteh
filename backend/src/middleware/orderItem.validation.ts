@@ -12,7 +12,7 @@ export const orderItemIdParamValidation = [
 export const createOrderItemValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('order_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('item_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  optionalNonNegativeNum('item_id'),
   body('quantity').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('unit_price').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('line_subtotal').exists({ checkFalsy: true }).isInt({ gt: 0 }),
