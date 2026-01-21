@@ -194,10 +194,16 @@ async function seed() {
     // 2. Stalls
     const existingStalls = await pool.query('SELECT 1 FROM stall LIMIT 1');
     if ((existingStalls.rowCount ?? 0) === 0) {
-      for (const stall of stalls) {
-        await pool.query(
-          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6)`,
+      for (const stall of stallsData) {
+        const stallRes = await pool.query(
+          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6) returning stall_id`,
           [stall.venue_id, stall.name, stall.description, stall.stall_image, stall.is_open, stall.waiting_time],
+        );
+        const stallId = stallRes.rows[0].stall_id;
+        // Default menu item for order items to reference
+        await pool.query(
+          `INSERT INTO menu_item (stall_id, name) VALUES ($1, 'Default Item')`,
+          [stallId]
         );
       }
       console.log('Stall table seeded.');
