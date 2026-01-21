@@ -118,7 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_order_table_id ON "order" (table_id);
 CREATE TABLE IF NOT EXISTS order_item (
   order_item_id SERIAL PRIMARY KEY,
   order_id      INTEGER NOT NULL REFERENCES "order"(order_id) ON DELETE CASCADE,
-  item_id       INTEGER REFERENCES menu_item(item_id) ON DELETE RESTRICT,
+  item_id       INTEGER NOT NULL REFERENCES menu_item(item_id) ON DELETE RESTRICT,
   status        VARCHAR NOT NULL DEFAULT 'INCOMING',
   quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0)

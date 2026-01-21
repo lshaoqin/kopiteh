@@ -193,19 +193,28 @@ async function seed() {
 
     // 2. Stalls
     const existingStalls = await pool.query('SELECT 1 FROM stall LIMIT 1');
+    const existingItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
+    const skipMenuItem = (existingItems.rowCount ?? 0) > 0;
     if ((existingStalls.rowCount ?? 0) === 0) {
-      for (const stall of stalls) {
-        await pool.query(
-          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6)`,
+      for (const stall of stallsData) {
+        const stallres = await pool.query(
+          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, $5, $6) returning stall_id`,
           [stall.venue_id, stall.name, stall.description, stall.stall_image, stall.is_open, stall.waiting_time],
         );
+        const stallId = stallres.rows[0].stall_id;
+
+        // Insert a default menu item that orderItems can reference
+        if (!skipMenuItem) {
+          await pool.query(`INSERT INTO menu_item (stall_id, name) VALUES ($1, $2)`,
+            [stallId, 'Default Item']
+          );
+        }
       }
       console.log('Stall table seeded.');
     }
 
     // 3. Menu Items
-    const existingItems = await pool.query('SELECT 1 FROM menu_item LIMIT 1');
-    if ((existingItems.rowCount ?? 0) === 0) {
+    if (!skipMenuItem) {
       console.log('Seeding menu items...');
       for (const item of menuItems) {
         // Insert Item
