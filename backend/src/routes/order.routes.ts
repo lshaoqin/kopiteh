@@ -15,7 +15,7 @@ router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.
 router.get('/order/user/:user_id', orderIdParamValidation, runValidation, OrderController.getByUser);
 
 // Public writes
-router.post('/order/create', authenticateToken, createOrderValidation, runValidation, OrderController.create);
+router.post('/order/create', createOrderValidation, runValidation, OrderController.create); // removed authenticateToken because no logins
 router.put('/order/update/:id', authenticateToken, ...updateOrderValidation, runValidation, OrderController.update);
 router.put('/order/cancel/:id', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
 

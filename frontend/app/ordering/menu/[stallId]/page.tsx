@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { Search, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { MenuItem, Stall } from "@/../types";
 import { useCartStore } from "@/stores/cart.store";
 import { BackButton } from "@/components/ui/BackButton"; 
-import { Button } from "@/components/ui/button";
 import { PopularMenuCard, StandardMenuCard } from "@/components/ui/MenuCard";
+import { FloatingCartButton } from "@/components/ui/FloatingCartButton";
 
 export default function MenuListPage() {
   const params = useParams();
@@ -75,32 +74,54 @@ export default function MenuListPage() {
 
   if (error || !stall) return <div>Error loading stall</div>;
 
-  return (
+return (
     <div className="min-h-screen bg-white font-sans text-slate-600 pb-32 w-full flex flex-col">
       
-      {/* Header */}
-      <div className="bg-slate-50 pb-6 pt-4 px-6 rounded-b-[2rem]">
-         <div className="flex items-center justify-between mb-4">
-            <BackButton href="/ordering/stalls" />
-            <h1 className="text-lg font-bold text-slate-700">{stall.name}</h1>
-            <button className="p-2 -mr-2 rounded-full hover:bg-slate-200 transition-colors">
-                <Search className="w-6 h-6 text-slate-700" />
-            </button>
-         </div>
-         <div className="flex justify-center">
-            {stall.stall_image ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={stall.stall_image} alt="stall" className="w-12 h-12 object-cover rounded-xl" />
-            ) : (
-                <div className="flex flex-col items-center text-slate-400">
-                     <ImageIcon className="w-8 h-8 mb-1" strokeWidth={1.5} />
-                </div>
-            )}
+      {/* --- HEADER START --- */}
+      <div className="relative w-full h-64 rounded-b-[2.5rem] overflow-hidden shadow-md shrink-0">
+         
+         {/* 1. Background Image Layer */}
+         {stall.stall_image ? (
+            <img 
+              src={stall.stall_image} 
+              alt={stall.name} 
+              className="absolute inset-0 w-full h-full object-cover" 
+            />
+         ) : (
+            <div className="absolute inset-0 bg-slate-300 flex items-center justify-center">
+                <ImageIcon className="w-16 h-16 text-slate-400" strokeWidth={1.5} />
+            </div>
+         )}
+
+         {/* 2. Gradient Overlay */}
+         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
+
+         {/* 3. Content Layer  */}
+         <div className="relative z-10 h-full flex flex-col justify-between p-6">
+            
+            {/* Top Row: Buttons */}
+            <div className="flex items-center justify-between">
+               <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
+                  <BackButton href="/ordering/stalls" />
+               </div>
+
+               {/* <button className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors text-slate-700">
+                   <Search className="w-5 h-5" />
+               </button> */}
+            </div>
+
+            {/* Bottom Row: Title Centered */}
+            <div className="text-center pb-2">
+                <h1 className="text-3xl font-bold text-white tracking-wide shadow-sm drop-shadow-md">
+                    {stall.name}
+                </h1>
+            </div>
          </div>
       </div>
+      {/* --- HEADER END --- */}
 
       {/* Content */}
-      <div className="flex-1 px-6 pt-6 space-y-8">
+      <div className="flex-1 px-6 pt-8 space-y-8">
         
         {/* Popular */}
         {popularItems.length > 0 && (
@@ -154,20 +175,7 @@ export default function MenuListPage() {
 
       </div>
 
-      {/* FLOATING CART BUTTON */}
-      {totalCartCount > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 px-6 py-6 pb-8 z-30">
-            <Link href="/ordering/cart">
-                <Button 
-                    variant="confirm" 
-                    size="xl" 
-                    className="w-full text-lg font-semibold"
-                >
-                    Go To Cart ({totalCartCount})
-                </Button>
-            </Link>
-          </div>
-      )}
+      <FloatingCartButton />
 
     </div>
   );

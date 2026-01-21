@@ -1,4 +1,5 @@
 import { Stall, MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../types";
+import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -17,6 +18,7 @@ async function fetchClient<T>(endpoint: string, options?: RequestInit): Promise<
   // 1. Check for success flag 
   // If status is not 2xx OR json.success is false, throw error
   if (!res.ok || json.success === false) {
+    console.error("API Error Details:", json);
     const errorMessage = json.payload?.message || json.payload?.details || "An error occurred";
     throw new Error(errorMessage);
   }
@@ -106,5 +108,36 @@ export const api = {
         price_modifier: Number(m.price_modifier),
         is_available: m.is_available
     }));
+  },
+
+  createOrder: async (orderData: {
+    table_number: number;
+    total_price: number;
+    items: CartItem[];
+  }) => {
+    // Transform frontend CartItems to backend payload structure
+    const payload = {
+      table_number: orderData.table_number,
+      total_price: orderData.total_price,
+      items: orderData.items.map((item) => ({
+        item_id: Number(item.menuItem.item_id),
+        quantity: item.quantity,
+        price: Number(item.menuItem.price),
+        notes: item.remarks,
+        modifiers: item.modifiers.map((mod) => ({
+          option_id: Number(mod.option_id),
+          name: mod.name,
+          price: Number(mod.price_modifier),
+        })),
+      })),
+    };
+
+    // Note: Matches backend route "/order/create" (singular 'order' based on your routes file)
+    const response = await fetchClient<any>("/order/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    
+    return response;
   }
 };
