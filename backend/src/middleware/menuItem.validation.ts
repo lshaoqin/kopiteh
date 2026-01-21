@@ -5,6 +5,7 @@ import type { Request, Response, NextFunction } from "express";
 const MENU_ITEM_FIELDS = [
   "stall_id",
   "item_image",
+  "category_id",
   "name",
   "description",
   "price",
@@ -91,37 +92,18 @@ export const menuItemIdParamValidation = [
 export const createMenuItemValidation = [
   enforceKnownMenuItemFields,
 
-  body("stall_id")
-    .exists({ checkFalsy: true })
-    .withMessage("stall_id is required")
-    .isInt({ gt: 0 })
-    .withMessage("stall_id must be a positive integer"),
-
-  body("name")
-    .exists({ checkFalsy: true })
-    .withMessage("name is required")
-    .isString()
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage("name must be at most 255 characters"),
-
-  body("price")
-    .exists()
-    .withMessage("price is required")
-    .isFloat({ min: 0 })
-    .withMessage("price must be a non-negative number"),
-
-  body("category_id")
-    .optional({ nullable: true })
-    .isInt({ gt: 0 })
-    .withMessage("category_id must be a positive integer"),
+  body("stall_id").exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  body("name").exists({ checkFalsy: true }).isString().trim().isLength({ max: 255 }),
+  body("price").exists().isFloat({ min: 0 }),
 
   optionalTextField("item_image", 2048),
   optionalTextField("description", 1000),
   optionalNonNegativeInt("prep_time"),
   optionalBoolean("is_available"),
+
   optionalPositiveIntNullable("category_id"),
 ];
+
 
 /**
  * Update validation

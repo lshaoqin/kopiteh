@@ -28,6 +28,13 @@ export interface MenuItemModifier {
   is_available: boolean;
 }
 
+export interface MenuCategory {
+  category_id: number;
+  stall_id: number;
+  name: string;
+  sort_order?: number | null;
+}
+
 export interface DiningTable {
   table_id: ID;
   venue_id: ID;
