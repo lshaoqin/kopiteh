@@ -93,9 +93,18 @@ export const createMenuItemValidation = [
   enforceKnownMenuItemFields,
 
   body("stall_id").exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body("name").exists({ checkFalsy: true }).isString().trim().isLength({ max: 255 }),
+  body("name")
+    .exists({ checkFalsy: true })
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
   body("price").exists().isFloat({ min: 0 }),
 
+  body("item_image")
+    .optional({ nullable: true })
+    .isString()
+    .trim()
+    .isLength({ max: 2048 }),
   optionalTextField("item_image", 2048),
   optionalTextField("description", 1000),
   optionalNonNegativeInt("prep_time"),
@@ -103,7 +112,6 @@ export const createMenuItemValidation = [
 
   optionalPositiveIntNullable("category_id"),
 ];
-
 
 /**
  * Update validation
@@ -117,7 +125,12 @@ export const updateMenuItemValidation = [
     .optional()
     .isInt({ gt: 0 })
     .withMessage("stall_id must be a positive integer"),
-  
+  body("item_image")
+    .optional({ nullable: true })
+    .isString()
+    .trim()
+    .isLength({ max: 2048 }),
+
   optionalPositiveIntNullable("category_id"),
 
   optionalTextField("name"),
