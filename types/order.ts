@@ -27,8 +27,7 @@ export interface OrderItem {
   item_id: ID;
   status: OrderItemStatus;
   quantity: number;
-  unit_price: Decimal;
-  line_subtotal: Decimal;
+  price: Decimal;
 }
 
 export interface OrderItemModifier {

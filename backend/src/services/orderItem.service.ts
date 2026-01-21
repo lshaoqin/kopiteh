@@ -72,8 +72,7 @@ export const OrderItemService = {
           payload.order_id,
           payload.item_id,
           payload.quantity,
-          payload.unit_price,
-          payload.line_subtotal,
+          payload.price,
         ]
       );
       return successResponse(SuccessCodes.CREATED, result.rows[0]);
