@@ -3,8 +3,9 @@
 import { BackButton, AddButton } from "@/components/ui/button";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
+import { useWebSocket } from "@/context/WebSocketContext";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -12,6 +13,7 @@ export default function Home() {
   const params = useParams();
   const venueId = params.venueId;
   const stallId = params.stallId;
+  const { socket, isConnected, joinStall, leaveStall } = useWebSocket();
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<any>(null);
@@ -23,6 +25,38 @@ export default function Home() {
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
   );
+
+  // Handle WebSocket events for real-time updates
+  const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
+    console.log('New order item received:', data.orderItem);
+    setOrderItems((prev) => [...prev, data.orderItem]);
+  }, []);
+
+  const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
+    console.log('Order item updated:', data.orderItem);
+    setOrderItems((prev) =>
+      prev.map((item) =>
+        item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
+      )
+    );
+  }, []);
+
+  // Join stall room and set up WebSocket listeners
+  useEffect(() => {
+    if (!socket || !isConnected || !stallId) return;
+
+    const numericStallId = Number(stallId);
+    joinStall(numericStallId);
+
+    socket.on('order_item_created', handleOrderItemCreated);
+    socket.on('order_item_updated', handleOrderItemUpdated);
+
+    return () => {
+      socket.off('order_item_created', handleOrderItemCreated);
+      socket.off('order_item_updated', handleOrderItemUpdated);
+      leaveStall(numericStallId);
+    };
+  }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
   const createOrder = async (data: {
     quantity: string;

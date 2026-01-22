@@ -1,17 +1,21 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../stores/auth.store';
 
 interface WebSocketContextType {
   socket: Socket | null;
   isConnected: boolean;
+  joinStall: (stallId: number) => void;
+  leaveStall: (stallId: number) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
   socket: null,
   isConnected: false,
+  joinStall: () => {},
+  leaveStall: () => {},
 });
 
 export const useWebSocket = () => useContext(WebSocketContext);
@@ -22,8 +26,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (!user?.user_id) return;
-
+    // Create socket connection regardless of user authentication for runner pages
     const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
       transports: ['websocket'],
       reconnection: true,
@@ -34,7 +37,10 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     newSocket.on('connect', () => {
       console.log('WebSocket connected:', newSocket.id);
       setIsConnected(true);
-      newSocket.emit('join_user', user.user_id);
+      // Only join user room if authenticated
+      if (user?.user_id) {
+        newSocket.emit('join_user', user.user_id);
+      }
     });
 
     newSocket.on('disconnect', () => {
@@ -54,8 +60,22 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, [user?.user_id]);
 
+  const joinStall = useCallback((stallId: number) => {
+    if (socket && isConnected) {
+      socket.emit('join_stall', stallId);
+      console.log(`Joining stall room: stall_${stallId}`);
+    }
+  }, [socket, isConnected]);
+
+  const leaveStall = useCallback((stallId: number) => {
+    if (socket && isConnected) {
+      socket.emit('leave_stall', stallId);
+      console.log(`Leaving stall room: stall_${stallId}`);
+    }
+  }, [socket, isConnected]);
+
   return (
-    <WebSocketContext.Provider value={{ socket, isConnected }}>
+    <WebSocketContext.Provider value={{ socket, isConnected, joinStall, leaveStall }}>
       {children}
     </WebSocketContext.Provider>
   );
