@@ -121,4 +121,17 @@ export const OrderController = {
     //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
+
+  async getMonthlyAnalytics(req: Request, res: Response) {
+    const year = Number(req.query.year);
+    const month = Number(req.query.month);
+
+    if (!year || !month || month < 1 || month > 12) {
+      const result = errorResponse(ErrorCodes.VALIDATION_ERROR, 'Invalid year or month');
+      return res.status(result.payload.status).json(result);
+    }
+
+    const result = await OrderService.getMonthlyAnalytics(year, month);
+    return res.status(result.payload.status).json(result);
+  },
 };
