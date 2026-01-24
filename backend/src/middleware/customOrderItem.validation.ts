@@ -3,7 +3,7 @@ import { enforceKnownFields, requireAtLeastOneField, optionalNonNegativeNum } fr
 
 const ITEM_FIELDS = ['stall_id', 'table_id', 'user_id', 'order_item_name', 'status', 'quantity', 'price', 'remarks'] as const;
 
-export const orderItemIdParamValidation = [
+export const customOrderItemIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
 ];
 
@@ -19,7 +19,7 @@ export const userIdParamValidation = [
   param('user_id').isInt({ gt: 0 }).withMessage('user_id must be positive integer'),
 ];
 
-export const createOrderItemValidation = [
+export const createCustomOrderItemValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('stall_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('table_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
@@ -30,9 +30,9 @@ export const createOrderItemValidation = [
   body('price').exists({ checkFalsy: true }).isFloat({ gt: 0 }),
 ];
 
-export const updateOrderItemValidation = [
+export const updateCustomOrderItemValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
-  orderItemIdParamValidation,
+  customOrderItemIdParamValidation,
   requireAtLeastOneField(ITEM_FIELDS as readonly string[]),
   optionalNonNegativeNum('quantity'),
 ];
