@@ -6,13 +6,16 @@ const ITEM_FIELDS = ['table_id', 'user_id', 'status', 'total_price', 'created_at
 
 export const orderIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
+];
+
+export const userIdParamValidation = [
   param('user_id').isInt({ gt: 0 }).withMessage('user_id must be positive integer'),
 ];
 
 export const createOrderValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('table_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  optionalNonNegativeNum('user_id'),
   body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
   body('created_at').exists().isString().isISO8601().trim(),

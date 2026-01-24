@@ -7,12 +7,20 @@ export const orderItemIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
 ];
 
+export const orderIdParamValidation = [
+  param('order_id').isInt({ gt: 0 }).withMessage('order_id must be positive integer'),
+];
+
+export const stallIdParamValidation = [
+  param('stall_id').isInt({ gt: 0 }).withMessage('stall_id must be positive integer'),
+];
+
 export const createOrderItemValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('order_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('item_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('quantity').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-  body('price').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  body('price').exists({ checkFalsy: true }).isFloat({ gt: 0 }),
 ];
 
 export const updateOrderItemValidation = [
