@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import type { OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
 import { OrderItemService } from '../services/orderItem.service';
+import { MenuItemService } from '../services/menuItem.service';
+import { WebSocketService } from '../services/websocket.service';
 import { BadRequestError } from './errors';
 import { errorResponse, successResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
@@ -32,7 +34,18 @@ export const OrderItemController = {
     try {
       const payload = req.body as OrderItemPayload;
       const result = await OrderItemService.create(payload);
-      //const result = successResponse(SuccessCodes.OK, data);
+      
+      // Emit WebSocket event to the stall room if order item created successfully
+      if (result.success && result.payload.data) {
+        const orderItem = result.payload.data;
+        // Get stall_id from the menu item
+        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
+        if (menuItemResult.success && menuItemResult.payload.data) {
+          const stallId = menuItemResult.payload.data.stall_id;
+          WebSocketService.notifyStallOrderItemCreated(stallId, orderItem);
+        }
+      }
+      
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -51,7 +64,17 @@ export const OrderItemController = {
       const id = Number(req.params.id);
       const payload = req.body as UpdateOrderItemPayload;
       const result = await OrderItemService.update(id, payload);
-      //const result = successResponse(SuccessCodes.OK, data);
+      
+      // Emit WebSocket event to the stall room if order item updated successfully
+      if (result.success && result.payload.data) {
+        const orderItem = result.payload.data;
+        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
+        if (menuItemResult.success && menuItemResult.payload.data) {
+          const stallId = menuItemResult.payload.data.stall_id;
+          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
+        }
+      }
+      
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -67,7 +90,17 @@ export const OrderItemController = {
     try {
       const id = Number(req.params.id);
       const result = await OrderItemService.updateStatus(id);
-      //const result = successResponse(SuccessCodes.OK, data);
+      
+      // Emit WebSocket event to the stall room if status updated successfully
+      if (result.success && result.payload.data) {
+        const orderItem = result.payload.data;
+        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
+        if (menuItemResult.success && menuItemResult.payload.data) {
+          const stallId = menuItemResult.payload.data.stall_id;
+          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
+        }
+      }
+      
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
