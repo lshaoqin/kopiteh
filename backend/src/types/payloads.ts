@@ -95,6 +95,8 @@ export interface CustomOrderItemPayload {
   remarks?: string;
 }
 
+export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
+
 export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;
