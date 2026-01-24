@@ -126,6 +126,21 @@ CREATE TABLE IF NOT EXISTS order_item (
 CREATE INDEX IF NOT EXISTS idx_order_item_order_id ON order_item (order_id);
 CREATE INDEX IF NOT EXISTS idx_order_item_item_id ON order_item (item_id);
 
+-- custom order items
+CREATE TABLE IF NOT EXISTS custom_order_item (
+  custom_order_item_id SERIAL PRIMARY KEY,
+  stall_id            INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
+  table_id           INTEGER NOT NULL REFERENCES "table"(table_id) ON DELETE RESTRICT,
+  user_id             INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  order_item_name    VARCHAR NOT NULL,
+  status        VARCHAR NOT NULL DEFAULT 'INCOMING',
+  quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0), -- unit price
+  remarks       TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_custom_order_item_stall_id ON custom_order_item (stall_id);
+CREATE INDEX IF NOT EXISTS idx_custom_order_item_table_id ON custom_order_item (table_id);
+
 -- order item modifiers (selected options for an order_item)
 CREATE TABLE IF NOT EXISTS order_item_modifiers (
   order_item_option_id SERIAL PRIMARY KEY,
