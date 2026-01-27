@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react"; 
-import { Search, Filter } from "lucide-react";
+// import { Search, Filter } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { Stall } from "@/../types";
 
@@ -10,6 +10,7 @@ import { StallGridCard } from "@/components/ui/StallGridCard";
 import { FilterButton } from "@/components/ui/FilterButton";
 import { BackButton } from "@/components/ui/BackButton";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { FloatingCartButton } from "@/components/ui/FloatingCartButton";
 
 export default function StallSelectionPage() {
   const [stalls, setStalls] = useState<Stall[]>([]); 
@@ -19,8 +20,8 @@ export default function StallSelectionPage() {
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [cuisine, setCuisine] = useState("");
-  const [diet, setDiet] = useState("");
+  // const [cuisine, setCuisine] = useState("");
+  // const [diet, setDiet] = useState("");
 
   useEffect(() => {
     async function fetchStalls() {
@@ -73,10 +74,10 @@ export default function StallSelectionPage() {
 
           {/* Filter Row */}
           <div className="flex gap-3 flex-wrap relative z-20">
-            <FilterButton 
+            {/* <FilterButton 
                 icon={Filter} 
                 className="w-9 px-0 shrink-0" 
-            />
+            /> */}
             
             <FilterButton 
                 label="Sort By" 
@@ -85,7 +86,7 @@ export default function StallSelectionPage() {
                 onChange={setSortBy} 
             />
 
-            <FilterButton 
+            {/* <FilterButton 
                 label="Cuisines" 
                 options={["Chinese", "Western", "Malay"]}
                 value={cuisine}
@@ -97,7 +98,7 @@ export default function StallSelectionPage() {
                 options={["Halal", "Vegetarian"]}
                 value={diet}
                 onChange={setDiet} 
-            />
+            /> */}
           </div>
         </div>
 
@@ -119,7 +120,7 @@ export default function StallSelectionPage() {
             ))}
             </div>
         </div>
-
+        <FloatingCartButton />
       </div>
     </div>
   );

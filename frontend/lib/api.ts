@@ -1,4 +1,5 @@
-import { Stall, MenuItem, MenuItemModifier, MenuItemModifierSection } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable } from "../../types";
+import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -17,6 +18,7 @@ async function fetchClient<T>(endpoint: string, options?: RequestInit): Promise<
   // 1. Check for success flag 
   // If status is not 2xx OR json.success is false, throw error
   if (!res.ok || json.success === false) {
+    console.error("API Error Details:", json);
     const errorMessage = json.payload?.message || json.payload?.details || "An error occurred";
     throw new Error(errorMessage);
   }
@@ -27,6 +29,17 @@ async function fetchClient<T>(endpoint: string, options?: RequestInit): Promise<
 }
 
 export const api = {
+  // --- TABLES ---
+  getTablesByVenue: async (venueId: number): Promise<DiningTable[]> => {
+    const rawData = await fetchClient<any[]>(`/tables/venue/${venueId}`);
+    return rawData.map((t) => ({
+      table_id: String(t.table_id),
+      venue_id: String(t.venue_id),
+      table_number: Number(t.table_number),
+      qr_code: t.qr_code || null,
+    }));
+  },
+
   // --- STALLS ---
   getStallsByVenue: async (venueId: number): Promise<Stall[]> => {
     const rawData = await fetchClient<any[]>(`/stalls/venue/${venueId}`);
@@ -61,6 +74,7 @@ export const api = {
     return rawData.map((item) => ({
         item_id: String(item.item_id),
         stall_id: String(item.stall_id),
+        category_id: item.category_id ? Number(item.category_id) : null,
         name: item.name,
         description: item.description,
         price: Number(item.price),
@@ -106,5 +120,46 @@ export const api = {
         price_modifier: Number(m.price_modifier),
         is_available: m.is_available
     }));
+  },
+
+  getCategoriesByStall: async (stallId: number): Promise<MenuCategory[]> => {
+    const rawData = await fetchClient<any[]>(`/categories/stalls/${stallId}`);
+    return rawData.map((cat) => ({
+      category_id: Number(cat.category_id),
+      stall_id: Number(cat.stall_id),
+      name: cat.name,
+      sort_order: cat.sort_order,
+    }));
+  },
+
+  createOrder: async (orderData: {
+    table_number: number;
+    total_price: number;
+    items: CartItem[];
+  }) => {
+    // Transform frontend CartItems to backend payload structure
+    const payload = {
+      table_number: orderData.table_number,
+      total_price: orderData.total_price,
+      items: orderData.items.map((item) => ({
+        item_id: Number(item.menuItem.item_id),
+        quantity: item.quantity,
+        price: Number(item.menuItem.price),
+        notes: item.remarks,
+        modifiers: item.modifiers.map((mod) => ({
+          option_id: Number(mod.option_id),
+          name: mod.name,
+          price: Number(mod.price_modifier),
+        })),
+      })),
+      status: "INCOMING",
+    };
+
+    const response = await fetchClient<any>("/order/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    
+    return response;
   }
 };

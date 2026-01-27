@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
 import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
+import pool from '../config/database'; 
 
 const ITEM_COLUMNS = new Set([
   'table_id',
@@ -82,10 +83,54 @@ export const OrderService = {
           payload.remarks ?? null,
         ]
       );
-      return successResponse(SuccessCodes.CREATED, result.rows[0]);
-    } catch (error) {
-      console.error('OrderService.create error:', error);
-      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+
+      if (tableRes.rows.length === 0) {
+        throw new Error(`Table ${payload.table_number} does not exist`);
+      }
+      const tableId = tableRes.rows[0].table_id;
+      
+      // 2. Insert Order
+      // Use ID 1 (Guest) if user_id is missing/not provided
+      const userId = (payload as any).user_id || 1; 
+
+      const orderRes = await client.query(
+        `INSERT INTO "order" (table_id, user_id, status, total_price, created_at) 
+         VALUES ($1, $2, $3, $4, NOW()) 
+         RETURNING order_id`,
+        [tableId, userId, 'pending', payload.total_price]
+      );
+      const orderId = orderRes.rows[0].order_id;
+
+      // 3. Insert Items & Modifiers
+      for (const item of payload.items) {
+        const itemRes = await client.query(
+          `INSERT INTO order_item (order_id, item_id, quantity, price, status)
+           VALUES ($1, $2, $3, $4, 'INCOMING')
+           RETURNING order_item_id`,
+          [orderId, item.item_id, item.quantity, item.price]
+        );
+        const orderItemId = itemRes.rows[0].order_item_id;
+
+        if (item.modifiers && item.modifiers.length > 0) {
+          for (const mod of item.modifiers) {
+            await client.query(
+              `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
+               VALUES ($1, $2, $3, $4)`,
+              [orderItemId, mod.option_id, mod.price, mod.name]
+            );
+          }
+        }
+      }
+
+      await client.query('COMMIT');
+      return successResponse(SuccessCodes.CREATED, { order_id: orderId });
+
+    } catch (error: any) {
+      await client.query('ROLLBACK');
+      console.error("Order Create Error:", error);
+      return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
+    } finally {
+      client.release();
     }
   },
 

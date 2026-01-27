@@ -15,12 +15,8 @@ router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.
 router.get('/order/user/:user_id', userIdParamValidation, runValidation, OrderController.getByUser);
 
 // Public writes
-interface RequestWithTraceId extends Request {
-  traceId?: string;
-}
-
-router.post('/order/create', createOrderValidation, runValidation, OrderController.create);
-router.put('/order/update/:id', ...updateOrderValidation, runValidation, OrderController.update);
-router.put('/order/cancel/:id', orderIdParamValidation, runValidation, OrderController.cancel);
+router.post('/order/create', createOrderValidation, runValidation, OrderController.create); // removed authenticateToken because no logins
+router.put('/order/update/:id', authenticateToken, ...updateOrderValidation, runValidation, OrderController.update);
+router.put('/order/cancel/:id', authenticateToken, orderIdParamValidation, runValidation, OrderController.cancel);
 
 export default router;

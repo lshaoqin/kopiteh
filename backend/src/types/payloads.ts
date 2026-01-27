@@ -63,23 +63,48 @@ export interface TablePayload {
   qr_code: string;
 }
 
+// 1. Nested Modifier Payload
+export interface OrderModifierPayload {
+  option_id: number;
+  name: string;
+  price: number;
+}
+
+// 2. Nested Item Payload
+export interface OrderItemPayload {
+  item_id: number;
+  quantity: number;
+  price: number;
+  notes?: string;
+  modifiers: OrderModifierPayload[]; // Nested array
+  
+  // Optional fields for DB retrieval/Updates later
+  order_id?: number;
+  status?: OrderItemStatusCodes;
+  unit_price?: number;
+  line_subtotal?: number;
+}
+
+// 3. Main Order Payload (Matches Frontend Request)
 export interface OrderPayload {
-  table_id: number;
-  user_id?: number;
-  status: OrderStatusCodes;
+  table_number: number; // Changed from table_id to number
   total_price: number;
-  created_at: string;
+  items: OrderItemPayload[]; // Nested array
+  
+  // Optional/Backend generated
+  table_id?: number; 
+  user_id?: number;
+  status?: OrderStatusCodes;
+  created_at?: string;
   remarks?: string;
 }
 
-export interface UpdateOrderPayload extends Partial<OrderPayload> {}
-
-export interface OrderItemPayload {
-  order_id: number;
-  item_id: number;
-  status: OrderItemStatusCodes;
-  quantity: number;
-  price: number;
+// 4. Update Payload (Decoupled from OrderPayload to avoid nested items issues)
+export interface UpdateOrderPayload {
+  status?: OrderStatusCodes;
+  total_price?: number;
+  remarks?: string;
+  created_at?: string;
 }
 
 export interface UpdateOrderItemPayload extends Partial<OrderItemPayload> {}
