@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, Plus, X } from "lucide-react";
 import { FormField } from "../formfield";
+import { Button } from "../button";
 
 type ModifierOptionDraft = {
   option_id?: number;
@@ -259,7 +260,7 @@ export default function ItemModal({
             ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
           `}
                 classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-                variant="text"
+                variant="number"
                 label="Base Price ($)"
                 inputProps={{
                   value: price,
@@ -279,7 +280,7 @@ export default function ItemModal({
             ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
           `}
                 classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-                variant="text"
+                variant="number"
                 label="Est. Prep Time (min)"
                 inputProps={{
                   value: prepTime,
@@ -297,27 +298,46 @@ export default function ItemModal({
           {/* Variants */}
           <div className="pt-2">
             <div className="flex items-center justify-center w-full">
-              <button
-                type="button"
+              <Button
                 onClick={addVariant}
-                className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-                disabled={loading}
+                variant="editstall"
+                className="rounded-lg border gap-1 px-3 py-2 text-sm text-primary1 hover:bg-gray-50"
+                disabled={loading || !name.trim() || !price.trim() || !prepTime.trim()}
               >
                 <Plus className="h-4 w-4" />
                 Add Variant
-              </button>
+              </Button>
             </div>
 
             {(sections as any[]).length === 0 ? (
               <div className="text-sm opacity-70 w-full mt-2 flex justify-center">
-                No variants added.
+                No variants added
               </div>
             ) : (
               <div className="mt-3 space-y-4">
                 {(sections as any[]).map((s: any, sectionIdx: number) => (
 
                   <div key={sectionIdx} className="rounded-xl border p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-lg">Variant</span>
+                        <span className="text-lg text-gray-500">#{sectionIdx + 1}</span>
+                      </div>
+
+
+                      <Button
+                        variant="deletestall"
+                        onClick={() => removeVariant(sectionIdx)}
+                        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm bg-transparent text-red-500 hover:bg-transparent hover:text-red-600"
+                        disabled={loading}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+
+                    </div>
+                    <hr className="my-2 border-gray-200" />
                     <div className="flex items-start justify-between gap-3">
+
                       <div className="flex-1 space-y-3">
                         <div className="grid grid-cols-3 gap-3">
                           <div className="space-y-2">
@@ -387,22 +407,22 @@ export default function ItemModal({
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium">Options</p>
-                            <button
+                            <Button
                               type="button"
                               onClick={() => addOption(sectionIdx)}
-                              className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+                              className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 hover:text-black/70"
                               disabled={loading}
                             >
                               <Plus className="h-4 w-4" />
                               Add Option
-                            </button>
+                            </Button>
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-4">
                             {(s.options ?? []).map((o: any, optionIdx: number) => (
                               <div
                                 key={optionIdx}
-                                className="grid grid-cols-12 gap-2 rounded-lg bg-gray-50 p-2"
+                                className="grid grid-cols-12 gap-2 rounded-lg bg-gray-50 p-2 items-center"
                               >
                                 <div className="col-span-6">
                                   <FormField
@@ -458,15 +478,15 @@ export default function ItemModal({
                                 </div>
 
                                 <div className="col-span-1 flex justify-end">
-                                  <button
-                                    type="button"
+                                  <Button
+                                    variant="backcreatestall"
                                     onClick={() => removeOption(sectionIdx, optionIdx)}
-                                    className="rounded-md p-2 hover:bg-white"
+                                    className="rounded-md p-1 hover:bg-gray-100"
                                     aria-label="Remove option"
                                     disabled={loading}
                                   >
                                     <X className="h-4 w-4 opacity-70" />
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                             ))}
@@ -476,15 +496,7 @@ export default function ItemModal({
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(sectionIdx)}
-                        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50"
-                        disabled={loading}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Remove
-                      </button>
+
                     </div>
                   </div>
                 ))}
@@ -493,36 +505,29 @@ export default function ItemModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t px-6 py-4">
+        <div className="flex items-center border-t px-6 py-4">
           {onDelete ? (
-            <button
+            <Button
               onClick={onDelete}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50"
               disabled={loading}
             >
               <Trash2 className="h-4 w-4" />
               Delete
-            </button>
+            </Button>
           ) : (
             <div />
           )}
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="rounded-lg px-3 py-2 text-sm hover:bg-gray-100"
-              disabled={loading}
-            >
-              Cancel
-            </button>
+          <div className="flex items-center w-full justify-center">
 
-            <button
+            <Button
               onClick={handleSubmit}
-              className="rounded-lg bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800 disabled:opacity-60"
-              disabled={loading}
+              disabled={loading || !name.trim() || !price.trim() || !prepTime.trim()}
+              variant="addstall"
             >
               {loading ? "Saving..." : submitText}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
