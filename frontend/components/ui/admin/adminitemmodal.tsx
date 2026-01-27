@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trash2, Plus, X } from "lucide-react";
+import { FormField } from "../formfield";
 
 type ModifierOptionDraft = {
   option_id?: number;
@@ -97,13 +98,13 @@ export default function ItemModal({
     );
 
   const addOption = (sectionIdx: number) => {
-  setSections((curr) =>
-    curr.map((s, i) => {
-      if (i !== sectionIdx) return s;
-      return { ...s, options: [...s.options, emptyOption()] };
-    })
-  );
-};
+    setSections((curr) =>
+      curr.map((s, i) => {
+        if (i !== sectionIdx) return s;
+        return { ...s, options: [...s.options, emptyOption()] };
+      })
+    );
+  };
 
   const removeOption = (sectionIdx: number, optionIdx: number) =>
     setSections((curr) =>
@@ -175,9 +176,9 @@ export default function ItemModal({
       modifier_sections: sections,
     });
   };
-  
+
   return (
-    
+
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
       <div className="w-full max-w-3xl rounded-2xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b px-6 py-4">
@@ -196,29 +197,53 @@ export default function ItemModal({
 
           {/* Base fields */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Item Name</label>
-            <input
-              className="w-full rounded-lg border px-3 py-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Steamed Chicken Rice"
+            <FormField
+              className="flex flex-col space-y-2 font-semibold"
+              classNameOut={`
+            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+          `}
+              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+              variant="text"
+              label="Item Name"
+              inputProps={{
+                value: name,
+                placeholder: "Steamed Chicken Rice",
+                onChange: (e) => {
+                  setName(e.target.value);
+                  setFormError(null);
+                },
+              }}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Image URL (optional)</label>
-            <input
-              className="w-full rounded-lg border px-3 py-2"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
+            <FormField
+              className="flex flex-col space-y-2 font-semibold"
+              classNameOut={`
+            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+          `}
+              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+              variant="text"
+              label="Image URL (optional)"
+              inputProps={{
+                value: imageUrl,
+                placeholder: "https//...",
+                onChange: (e) => {
+                  setImageUrl(e.target.value);
+                  setFormError(null);
+                },
+              }}
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description (optional)</label>
+          <div className="space-y-2 flex flex-col">
+            <label className="text-md font-bold">Description (optional)</label>
             <textarea
-              className="w-full rounded-lg border px-3 py-2"
+              className={`
+            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:outline-none focus-within:ring-primary1/80"}
+          `}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -227,38 +252,51 @@ export default function ItemModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Base Price ($)</label>
-              <input
-                className="w-full rounded-lg border px-3 py-2"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="5.00"
-                inputMode="decimal"
+              <FormField
+                className="flex flex-col space-y-2 font-semibold"
+                classNameOut={`
+            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+          `}
+                classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                variant="text"
+                label="Base Price ($)"
+                inputProps={{
+                  value: price,
+                  placeholder: "5",
+                  onChange: (e) => {
+                    setPrice(e.target.value);
+                    setFormError(null);
+                  },
+                }}
               />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium">Est. Prep Time (min)</label>
-              <input
-                className="w-full rounded-lg border px-3 py-2"
-                value={prepTime}
-                onChange={(e) => setPrepTime(e.target.value)}
-                placeholder="5"
-                inputMode="numeric"
+              <FormField
+                className="flex flex-col space-y-2 font-semibold"
+                classNameOut={`
+            p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+            ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+          `}
+                classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                variant="text"
+                label="Est. Prep Time (min)"
+                inputProps={{
+                  value: prepTime,
+                  placeholder: "10",
+                  onChange: (e) => {
+                    setPrepTime(e.target.value);
+                    setFormError(null);
+                  },
+                }}
               />
+
             </div>
           </div>
 
           {/* Variants */}
           <div className="pt-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold">Variants (optional)</h3>
-                <p className="text-xs opacity-60">
-                  Example: Add-ons / Size / Spice level. Each variant has options.
-                </p>
-              </div>
-
+            <div className="flex items-center justify-center w-full">
               <button
                 type="button"
                 onClick={addVariant}
@@ -271,46 +309,77 @@ export default function ItemModal({
             </div>
 
             {(sections as any[]).length === 0 ? (
-              <div className="mt-3 rounded-lg border border-dashed p-4 text-sm opacity-70">
+              <div className="text-sm opacity-70 w-full mt-2 flex justify-center">
                 No variants added.
               </div>
             ) : (
               <div className="mt-3 space-y-4">
                 {(sections as any[]).map((s: any, sectionIdx: number) => (
-                  
+
                   <div key={sectionIdx} className="rounded-xl border p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 space-y-3">
                         <div className="grid grid-cols-3 gap-3">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Variant Name</label>
-                            <input
-                              className="w-full rounded-lg border px-3 py-2"
-                              value={s.name}
-                              onChange={(e) => updateVariant(sectionIdx, { name: e.target.value })}
-                              placeholder="Add-ons"
+                            <FormField
+                              className="flex flex-col space-y-2 font-semibold"
+                              classNameOut={`
+                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                              `}
+                              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                              variant="text"
+                              label="Variant Name"
+                              inputProps={{
+                                value: s.name,
+                                placeholder: "Add-ons",
+                                onChange: (e) => {
+                                  updateVariant(sectionIdx, { name: e.target.value })
+                                  setFormError(null);
+                                },
+                              }}
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Min selections</label>
-                            <input
-                              className="w-full rounded-lg border px-3 py-2"
-                              value={s.min_selections}
-                              onChange={(e) => updateVariant(sectionIdx, { min_selections: e.target.value })}
-                              inputMode="numeric"
-                              placeholder="0"
+                            <FormField
+                              className="flex flex-col space-y-2 font-semibold"
+                              classNameOut={`
+                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                              `}
+                              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                              variant="number"
+                              label="Min Selections"
+                              inputProps={{
+                                value: s.min_selections,
+                                placeholder: "0",
+                                onChange: (e) => {
+                                  updateVariant(sectionIdx, { min_selections: e.target.value })
+                                  setFormError(null);
+                                },
+                              }}
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Max selections</label>
-                            <input
-                              className="w-full rounded-lg border px-3 py-2"
-                              value={s.max_selections}
-                              onChange={(e) => updateVariant(sectionIdx, { max_selections: e.target.value })}
-                              inputMode="numeric"
-                              placeholder="1"
+                            <FormField
+                              className="flex flex-col space-y-2 font-semibold"
+                              classNameOut={`
+                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                              `}
+                              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                              variant="number"
+                              label="Max Selections"
+                              inputProps={{
+                                value: s.max_selections,
+                                placeholder: "1",
+                                onChange: (e) => {
+                                  updateVariant(sectionIdx, { max_selections: e.target.value })
+                                  setFormError(null);
+                                },
+                              }}
                             />
                           </div>
                         </div>
@@ -333,28 +402,48 @@ export default function ItemModal({
                             {(s.options ?? []).map((o: any, optionIdx: number) => (
                               <div
                                 key={optionIdx}
-                                className="grid grid-cols-12 items-center gap-2 rounded-lg bg-gray-50 p-2"
+                                className="grid grid-cols-12 gap-2 rounded-lg bg-gray-50 p-2"
                               >
                                 <div className="col-span-6">
-                                  <input
-                                    className="w-full rounded-lg border bg-white px-3 py-2"
-                                    value={o.name}
-                                    onChange={(e) => updateOption(sectionIdx, optionIdx, { name: e.target.value })}
-                                    placeholder="Egg"
+                                  <FormField
+                                    className="flex flex-col space-y-2 font-semibold"
+                                    classNameOut={`
+                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                              `}
+                                    classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                                    variant="text"
+                                    label=""
+                                    inputProps={{
+                                      value: o.name,
+                                      placeholder: "Spicy-level",
+                                      onChange: (e) => {
+                                        updateOption(sectionIdx, optionIdx, { name: e.target.value });
+                                        setFormError(null);
+                                      },
+                                    }}
                                   />
                                 </div>
 
                                 <div className="col-span-4">
-                                  <input
-                                    className="w-full rounded-lg border bg-white px-3 py-2"
-                                    value={o.price_modifier}
-                                    onChange={(e) =>
-                                      updateOption(sectionIdx, optionIdx, { price_modifier: e.target.value })
-                                    }
-                                    placeholder="1.00"
-                                    inputMode="decimal"
+                                  <FormField
+                                    className="flex flex-col space-y-2 font-semibold"
+                                    classNameOut={`
+                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                              `}
+                                    classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                                    variant="text"
+                                    label=""
+                                    inputProps={{
+                                      value: o.price_modifier,
+                                      placeholder: "Price add-on",
+                                      onChange: (e) => {
+                                        updateOption(sectionIdx, optionIdx, { price_modifier: e.target.value });
+                                        setFormError(null);
+                                      },
+                                    }}
                                   />
-                                  <p className="mt-1 text-[11px] opacity-60">Price add-on ($)</p>
                                 </div>
 
                                 <div className="col-span-1 flex justify-center">
