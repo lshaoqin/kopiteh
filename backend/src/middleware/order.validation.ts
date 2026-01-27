@@ -12,11 +12,11 @@ export const orderIdParamValidation = [
 export const createOrderValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('table_number').exists().withMessage('Table number is required'),
-  // body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+  body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-  // body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
+  body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
-  // body('created_at').exists().isString().isISO8601().trim(),
+  body('created_at').exists().isString().isISO8601().trim(),
   optionalTextField('remarks', 1000),
 ];
 

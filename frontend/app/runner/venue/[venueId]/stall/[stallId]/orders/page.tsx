@@ -3,26 +3,111 @@
 import { BackButton, AddButton } from "@/components/ui/button";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
+import { Stall } from "../../../../../../../../types/stall";
+import { get } from "http";
+import { useWebSocket } from "@/context/WebSocketContext";
 
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const params = useParams();
   const venueId = params.venueId;
-  const stallId = params.stallId;
-
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [stall, setStall] = useState<any>(null);
-  const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
-  const [showAddOrder, setShowAddOrder] = useState(false);
+  const stallId = params.stallId[0];
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { socket, isConnected, joinStall, leaveStall } = useWebSocket();
+
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [stall, setStall] = useState<Stall | null>(null);
+  const [defaultItem, setDefaultItem] = useState<OrderItem | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+
+  const [showAddOrder, setShowAddOrder] = useState(false);
+  
 
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
   );
+
+  // -- FETCHING STALL AND ORDER ITEMS --
+  const getStall = async () => {
+    try{
+      const res = await fetch(`${API_URL}/stalls/${stallId}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error("Failed to fetch stall");
+      }
+      setStall(json.payload.data);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const getOrderItemsByStall = async () => {
+    try {
+      const res = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error("Failed to fetch order items");
+      }
+      console.log("Fetched order items:", json.payload.data);
+      setOrderItems(json.payload.data);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const getDefaultItem = async () => {
+    try {
+      const res = await fetch(`${API_URL}/items/default/${stallId}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error("Failed to fetch default item");
+      }
+      setDefaultItem(json.payload.data);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  // -- CREATING ORDER AND ORDER ITEMS --
+  // Handle WebSocket events for real-time updates
+  const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
+    console.log('New order item received:', data.orderItem);
+    setOrderItems((prev) => [...prev, data.orderItem]);
+  }, []);
+
+  const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
+    console.log('Order item updated:', data.orderItem);
+    setOrderItems((prev) =>
+      prev.map((item) =>
+        item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
+      )
+    );
+  }, []);
+
+  // Join stall room and set up WebSocket listeners
+  useEffect(() => {
+    if (!socket || !isConnected || !stallId) return;
+
+    const numericStallId = Number(stallId);
+    joinStall(numericStallId);
+
+    socket.on('order_item_created', handleOrderItemCreated);
+    socket.on('order_item_updated', handleOrderItemUpdated);
+
+    return () => {
+      socket.off('order_item_created', handleOrderItemCreated);
+      socket.off('order_item_updated', handleOrderItemUpdated);
+      leaveStall(numericStallId);
+    };
+  }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
   const createOrder = async (data: {
     quantity: string;
@@ -30,7 +115,7 @@ export default function Home() {
     notes?: string;
     table: string;
   }) => {
-    const res = await fetch(`${API_URL}/order`, {
+    const res = await fetch(`${API_URL}/order/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,6 +129,8 @@ export default function Home() {
       }),
     });
     const json = await res.json();
+
+    console.log("Create Order response:", json);
 
     if (!res.ok || !json.success) {
       throw new Error(json?.message || "Failed to create order");
@@ -60,60 +147,41 @@ export default function Home() {
       unitPrice: string;
     }
   ) => {
-    // TEMP: hardcoded itemId until menu item selection is implemented
-    const itemId = 1;
-  
-    const res = await fetch(`${API_URL}/orderItem`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        order_id: orderId,
-        item_id: itemId,
-        status: "INCOMING",
-        quantity: parseInt(data.quantity),
-        unit_price: parseFloat(data.unitPrice),
-        line_subtotal: parseInt(data.quantity) * parseFloat(data.unitPrice),
-      }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/orderItem/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          item_id: defaultItem?.item_id,
+          status: "INCOMING",
+          quantity: parseInt(data.quantity),
+          price: parseInt(data.quantity) * parseFloat(data.unitPrice),
+        }),
+      });
+      
+      const json = await res.json();
+
+      console.log("Create Order Item response:", json);
     
-    const json = await res.json();
-  
-    if (!res.ok || !json.success) {
-      throw new Error(json?.message || "Failed to create order item");
+      if (!res.ok || !json.success) {
+        throw new Error(json?.message || "Failed to create order item");
+      } else {
+        getOrderItemsByStall();
+      }
+    } catch (error: any) {
+      setError(error.message);
     }
-  
-    return json.payload.data;
   };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        // Fetch stall details
-        const stallRes = await fetch(`${API_URL}/stalls/${stallId}`);
-        const stallJson = await stallRes.json();
-        if (!stallRes.ok || !stallJson.success) {
-          throw new Error(stallJson?.message || "Failed to fetch stall");
-        }
-        setStall(stallJson.payload.data ?? []);
-
-        // Fetch order items for the stall
-        const orderItemsRes = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
-        const orderItemsJson = await orderItemsRes.json();
-        if (!orderItemsRes.ok || !orderItemsJson.success) {
-          throw new Error("Failed to fetch order items");
-        }
-        setOrderItems(orderItemsJson.payload.data ?? []);
-      } catch (err: any) {
-        console.error(err);
-        const message = err instanceof Error ? err.message : "Unexpected error occurred";
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    setLoading(true);
+    getStall();
+    getDefaultItem();
+    getOrderItemsByStall();
+    setLoading(false);
   }, [API_URL, stallId]);
 
 
@@ -188,7 +256,7 @@ export default function Home() {
                 <div className="text-right">
                   <p className="font-medium">x{item.quantity}</p>
                   <p className="text-sm text-gray-600">
-                    ${item.line_subtotal.toFixed(2)}
+                    ${item.price}
                   </p>
                 </div>
               </div>
@@ -206,11 +274,11 @@ export default function Home() {
             try {
               const order = await createOrder(data);
 
-              await createOrderItem(order.id, data);
+              await createOrderItem(order.order_id, data);
         
             } catch (err) {
               console.error(err);
-              alert("Failed to create order");
+              setError(err instanceof Error ? err.message : String(err));
             }
           }}
         />

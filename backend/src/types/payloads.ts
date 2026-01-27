@@ -109,6 +109,22 @@ export interface UpdateOrderPayload {
 
 export interface UpdateOrderItemPayload extends Partial<OrderItemPayload> {}
 
+export interface CustomOrderItemPayload {
+  stall_id: number;
+  table_id: number;
+  user_id?: number;
+  order_item_name: string;
+  status: OrderItemStatusCodes;
+  quantity: number;
+  price: number;
+  created_at: string;
+  remarks?: string;
+}
+
+export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
+
+export interface FetchOrderItemsPayload extends CustomOrderItemPayload {}
+
 export interface OrderItemModifierPayload {
   order_item_id: number;
   option_id: number;

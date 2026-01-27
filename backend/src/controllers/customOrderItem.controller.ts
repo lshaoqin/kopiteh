@@ -1,49 +1,45 @@
 import type { Request, Response } from 'express';
-import type { OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
-import { OrderItemService } from '../services/orderItem.service';
-import { MenuItemService } from '../services/menuItem.service';
+import type { CustomOrderItemPayload, UpdateCustomOrderItemPayload } from '../types/payloads';
+import { CustomOrderItemService } from '../services/customOrderItem.service';
 import { WebSocketService } from '../services/websocket.service';
 import { BadRequestError } from './errors';
-import { errorResponse, successResponse } from '../types/responses';
+import { errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
-import { SuccessCodes } from '../types/success';
 
-export const OrderItemController = {
-  async getByOrder(req: Request, res: Response) {
-    const orderId = Number(req.params.order_id);
-    const result = await OrderItemService.findByOrder(orderId);
-    //const result = successResponse(SuccessCodes.OK, data);
+export const CustomOrderItemController = {
+  async getByStall(req: Request, res: Response) {
+    const stallId = Number(req.params.stall_id);
+    const result = await CustomOrderItemService.findByStall(stallId);
     return res.status(result.payload.status).json(result);
   },
 
-  async getByStall(req: Request, res: Response) {
-    const stallId = Number(req.params.stall_id);
-    const result = await OrderItemService.findByStall(stallId);
-    //const result = successResponse(SuccessCodes.OK, data);
+  async getByUser(req: Request, res: Response) {
+    const userId = Number(req.params.user_id);
+    const result = await CustomOrderItemService.findByUser(userId);
     return res.status(result.payload.status).json(result);
   },
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.findById(id);
-    //const result = successResponse(SuccessCodes.OK, data);
+    const result = await CustomOrderItemService.findById(id);
+    return res.status(result.payload.status).json(result);
+  },
+
+  async getByStallAsOrder(req: Request, res: Response) {
+    const stallId = Number(req.params.stall_id);
+    const result = await CustomOrderItemService.findByStallAsOrder(stallId);
     return res.status(result.payload.status).json(result);
   },
 
   async create(req: Request, res: Response) {
     try {
-      const payload = req.body as OrderItemPayload;
-      const result = await OrderItemService.create(payload);
+      const payload = req.body as CustomOrderItemPayload;
+      const result = await CustomOrderItemService.create(payload);
       
-      // Emit WebSocket event to the stall room if order item created successfully
+      // Emit WebSocket event to the stall room if custom order item created successfully
       if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        // Get stall_id from the menu item
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemCreated(stallId, orderItem);
-        }
+        const customOrderItem = result.payload.data;
+        WebSocketService.notifyStallOrderItemCreated(customOrderItem.stall_id, customOrderItem);
       }
       
       return res.status(result.payload.status).json(result);
@@ -62,17 +58,13 @@ export const OrderItemController = {
   async update(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const payload = req.body as UpdateOrderItemPayload;
-      const result = await OrderItemService.update(id, payload);
+      const payload = req.body as UpdateCustomOrderItemPayload;
+      const result = await CustomOrderItemService.update(id, payload);
       
-      // Emit WebSocket event to the stall room if order item updated successfully
+      // Emit WebSocket event to the stall room if custom order item updated successfully
       if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
-        }
+        const customOrderItem = result.payload.data;
+        WebSocketService.notifyStallOrderItemUpdated(customOrderItem.stall_id, customOrderItem);
       }
       
       return res.status(result.payload.status).json(result);
@@ -89,16 +81,12 @@ export const OrderItemController = {
   async updateStatus(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const result = await OrderItemService.updateStatus(id);
+      const result = await CustomOrderItemService.updateStatus(id);
       
       // Emit WebSocket event to the stall room if status updated successfully
       if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
-        }
+        const customOrderItem = result.payload.data;
+        WebSocketService.notifyStallOrderItemUpdated(customOrderItem.stall_id, customOrderItem);
       }
       
       return res.status(result.payload.status).json(result);
@@ -114,15 +102,13 @@ export const OrderItemController = {
 
   async cancel(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.cancel(id);
-    //const result = successResponse(SuccessCodes.OK, data);
+    const result = await CustomOrderItemService.cancel(id);
     return res.status(result.payload.status).json(result);
   },
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.delete(id);
-    //const result = successResponse(SuccessCodes.OK, data);
+    const result = await CustomOrderItemService.delete(id);
     return res.status(result.payload.status).json(result);
   },
 };

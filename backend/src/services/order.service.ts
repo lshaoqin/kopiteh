@@ -32,9 +32,9 @@ export const OrderService = {
   async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        `SELECT * FROM Order WHERE order_id IN (
-          SELECT order_id FROM Order_Item WHERE item_id IN (
-            SELECT item_id FROM Menu_Item WHERE stall_id = $1
+        `SELECT * FROM "order" WHERE order_id IN (
+          SELECT order_id FROM order_item WHERE item_id IN (
+            SELECT item_id FROM menu_item WHERE stall_id = $1
           )
         ) ORDER BY order_id`,
         [stall_id]
@@ -49,7 +49,7 @@ export const OrderService = {
   async findByTable(table_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order WHERE table_id = $1 ORDER BY order_id',
+        'SELECT * FROM "order" WHERE table_id = $1 ORDER BY order_id',
         [table_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -60,7 +60,7 @@ export const OrderService = {
 
   async findById(id: number): Promise<ServiceResult<any>> {
     try {
-      const result = await BaseService.query('SELECT * Order WHERE order_id = $1', [id]);
+      const result = await BaseService.query('SELECT * FROM "order" WHERE order_id = $1', [id]);
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
@@ -139,7 +139,7 @@ export const OrderService = {
     const values = entries.map(([, v]) => v ?? null);
 
     try {
-      const query = `UPDATE Order SET ${setClause} WHERE order_id = $${
+      const query = `UPDATE "order" SET ${setClause} WHERE order_id = $${ 
         entries.length + 1
       } RETURNING *`;
       const result = await BaseService.query(query, [...values, id]);
@@ -167,12 +167,12 @@ export const OrderService = {
       if (allCompleted) {
         if (allCancelled) {
           result = await BaseService.query(
-            'UPDATE Order SET status = $1 WHERE order_id = $2 RETURNING *', 
+            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *', 
             [OrderStatusCodes.CANCELLED, id]
           )
         } else {
           result = await BaseService.query(
-            'UPDATE Order SET status = $1 WHERE order_id = $2 RETURNING *', 
+            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *', 
             [OrderStatusCodes.COMPLETED, id]
           )
         }
@@ -189,7 +189,7 @@ export const OrderService = {
 
   async delete(id: number): Promise<ServiceResult<null>> {
     try {
-      const result = await BaseService.query('DELETE FROM Order WHERE order_id = $1', [id]);
+      const result = await BaseService.query('DELETE FROM "order" WHERE order_id = $1', [id]);
       if (result.rowCount === 0)
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse<null>(SuccessCodes.OK, null);
