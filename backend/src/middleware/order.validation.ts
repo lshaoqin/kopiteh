@@ -12,7 +12,11 @@ export const orderIdParamValidation = [
 export const createOrderValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('table_number').exists().withMessage('Table number is required'),
+<<<<<<< HEAD
   body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
+=======
+  optionalNonNegativeNum('user_id'),
+>>>>>>> f0f76ab (changes)
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
   body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
