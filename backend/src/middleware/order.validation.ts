@@ -6,7 +6,10 @@ const ITEM_FIELDS = ['table_number', 'items', 'user_id', 'status', 'total_price'
 
 export const orderIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
-  // param('user_id').isInt({ gt: 0 }).withMessage('user_id must be positive integer'),
+];
+
+export const userIdParamValidation = [
+  param('user_id').isInt({ gt: 0 }).withMessage('user_id must be positive integer'),
 ];
 
 export const analyticsQueryValidation = [
@@ -21,11 +24,7 @@ export const analyticsQueryValidation = [
 export const createOrderValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('table_number').exists().withMessage('Table number is required'),
-<<<<<<< HEAD
-  body('user_id').exists({ checkFalsy: true }).isInt({ gt: 0 }),
-=======
   optionalNonNegativeNum('user_id'),
->>>>>>> f0f76ab (changes)
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
   body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
