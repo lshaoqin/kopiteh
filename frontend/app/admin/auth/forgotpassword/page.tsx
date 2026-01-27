@@ -31,23 +31,13 @@ export default function ForgotPasswordPage() {
         setError(null);
         setSuccess(null);
 
-        if (!email) {
-            setError("Please enter your email.");
-            return;
-        }
-
-        if (!userName) {
-            setError("Please enter your username.");
-            return;
-        }
-
-        if (!newPassword) {
-            setError("Please enter your new password.");
-            return;
-        }
-
-        if (!confirmPassword) {
-            setError("Please confirm your new password.");
+        if (
+            !userName?.trim() ||
+            !email?.trim() ||
+            !newPassword ||
+            !confirmPassword
+        ) {
+            setError("Please fill in all fields");
             return;
         }
 
@@ -79,12 +69,15 @@ export default function ForgotPasswordPage() {
                 throw new Error("Invalid JSON response from server.");
             }
 
-            if (!res.ok || data?.success === false) {
-                const msg =
-                    data?.payload?.message ||
-                    data?.message ||
-                    "Something went wrong. Please try again.";
-                setError(msg);
+            if (!data.success) {
+                const validationErrors = data?.error?.details?.errors;
+
+                if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+                    const msg = validationErrors.map((e: any) => e.msg).join(", ");
+                    setError(msg);
+                } else {
+                    setError(data?.payload?.details || `Request failed: ${res.status}`);
+                }
                 return;
             }
 
