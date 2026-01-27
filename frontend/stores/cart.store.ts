@@ -15,6 +15,7 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isHydrated: boolean;
+  venueId: number | null;
   tableNumber: number | null;
 
   // Actions
@@ -23,6 +24,7 @@ interface CartState {
   updateQuantity: (uniqueId: string, delta: number) => void;
   updateItem: (uniqueId: string, updates: Partial<Omit<CartItem, 'uniqueId'>>) => void;
   clearCart: () => void;
+  setVenueId: (id: number) => void;
   setTableNumber: (table: number) => void;
   
   // Getters
@@ -37,7 +39,9 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isHydrated: false,
+      venueId: null,
       tableNumber: null,
+      setVenueId: (id) => set({ venueId: id }),
       setTableNumber: (table) => set({ tableNumber: table }),
 
       addItem: (menuItem, modifiers, quantity, stallName, remarks = "") => {

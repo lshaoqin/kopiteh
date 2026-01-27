@@ -4,15 +4,15 @@ import {
   createOrderValidation,
   updateOrderValidation,
   orderIdParamValidation,
-  userIdParamValidation,
 } from '../middleware/order.validation'
 import { runValidation } from '../middleware/base.validation';
+import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // Public reads
 router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.getById);
-router.get('/order/user/:user_id', userIdParamValidation, runValidation, OrderController.getByUser);
+router.get('/order/user/:user_id', orderIdParamValidation, runValidation, OrderController.getByUser);
 
 // Public writes
 router.post('/order/create', createOrderValidation, runValidation, OrderController.create); // removed authenticateToken because no logins

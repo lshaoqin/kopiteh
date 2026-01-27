@@ -7,6 +7,9 @@ import { SuccessCodes } from '../types/success';
 import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
 import {MenuItemService} from "./menuItem.service";
 import { OrderService } from './order.service';
+import { PoolClient } from 'pg';
+import pool from '../config/database';
+import { query } from 'express-validator';
 
 const ITEM_COLUMNS = new Set([
   'order_id',
@@ -63,19 +66,40 @@ export const OrderItemService = {
     }
   },
 
-  async create(payload: OrderItemPayload): Promise<ServiceResult<any>> {
+  async create(payload: OrderItemPayload, client?: PoolClient): Promise<ServiceResult<any>> {
+    // 1. Determine which "Query Runner" to use
+    // If a transaction client is passed, use it. Otherwise, use the global pool.
+    const queryRunner = client || pool; 
+
     try {
-      const result = await BaseService.query(
-        'INSERT INTO order_item (order_id, item_id, quantity, price) VALUES ($1,$2,$3,$4) RETURNING *',
+      // 2. Insert the Item
+      const itemRes = await queryRunner.query(
+        'INSERT INTO order_item (order_id, item_id, quantity, price, status) VALUES ($1,$2,$3,$4,$5) RETURNING order_item_id',
         [
           payload.order_id,
           payload.item_id,
           payload.quantity,
           payload.price,
+          payload.status || 'INCOMING' 
         ]
       );
-      return successResponse(SuccessCodes.CREATED, result.rows[0]);
+      const orderItemId = itemRes.rows[0].order_item_id;
+
+      // 3. Insert Modifiers 
+      if (payload.modifiers && payload.modifiers.length > 0) {
+        for (const mod of payload.modifiers) {
+          await queryRunner.query(
+            `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
+             VALUES ($1, $2, $3, $4)`,
+            [orderItemId, mod.option_id, mod.price, mod.name]
+          );
+        }
+      }
+
+      return successResponse(SuccessCodes.CREATED, itemRes.rows[0]);
     } catch (error) {
+      // If we are NOT in a shared transaction, we should log here. 
+      // If we ARE in a shared transaction, the caller (OrderService) will catch this.
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
