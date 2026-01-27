@@ -19,6 +19,7 @@ export interface Order {
   total_price: Decimal;
   created_at: string; // ISO
   remarks?: string | null;
+  type: 'STANDARD' | 'CUSTOM';
 }
 
 export interface OrderItem {
@@ -32,6 +33,7 @@ export interface OrderItem {
   price: Decimal;
   created_at: string;
   remarks?: string | null;
+  type: 'STANDARD' | 'CUSTOM';
 }
 
 export interface OrderItemModifier {

@@ -20,7 +20,7 @@ export const OrderItemService = {
     try {
       const result = await BaseService.query(
         `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, oi.type
+        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
         FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
         JOIN table t ON o.table_id = t.table_id 
@@ -45,7 +45,7 @@ export const OrderItemService = {
       for (const item of stallItems.payload.data) {
         const orderItems = await BaseService.query(
           `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-          oi.status, oi.quantity, oi.price, o.created_at, o.remarks, oi.type
+          oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
           FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
           JOIN "order" o ON oi.order_id = o.order_id 
           JOIN table t ON o.table_id = t.table_id 
@@ -64,7 +64,7 @@ export const OrderItemService = {
     try {
       const result = await BaseService.query(
         `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, oi.type
+        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
         FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
         JOIN table t ON o.table_id = t.table_id 
@@ -119,7 +119,7 @@ export const OrderItemService = {
     }
   },
 
-  async updateStatus(id: number): Promise<ServiceResult<any>> {
+  async updateStatus(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
     // Get status and order_id of the OrderItem
     const orderItemInfo = await BaseService.query(
       'SELECT status, order_id FROM order_item WHERE order_item_id = $1', [id]

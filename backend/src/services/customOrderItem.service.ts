@@ -21,7 +21,7 @@ export const CustomOrderItemService = {
   async findByStall(stall_id: number): Promise<ServiceResult<FetchOrderItemsPayload[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM custom_order_item WHERE stall_id = $1 ORDER BY order_item_id',
+        'SELECT *, "CUSTOM" as type FROM custom_order_item WHERE stall_id = $1 ORDER BY order_item_id',
         [stall_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -33,7 +33,7 @@ export const CustomOrderItemService = {
   async findByUser(user_id: number): Promise<ServiceResult<FetchOrderItemsPayload[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM custom_order_item WHERE user_id = $1 ORDER BY order_item_id',
+        'SELECT *, "CUSTOM" as type FROM custom_order_item WHERE user_id = $1 ORDER BY order_item_id',
         [user_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -45,7 +45,7 @@ export const CustomOrderItemService = {
   async findById(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM custom_order_item WHERE order_item_id = $1', 
+        'SELECT *, "CUSTOM" as type FROM custom_order_item WHERE order_item_id = $1', 
         [id]
       );
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
@@ -58,7 +58,7 @@ export const CustomOrderItemService = {
   async findByStallAsOrder(stall_id: number): Promise<ServiceResult<FetchOrderPayload[]>> {
     try {
       const result = await BaseService.query(
-        `SELECT table_id, user_id, status, price*quantity AS total_price, created_at, remarks FROM custom_order_item 
+        `SELECT table_id, user_id, status, price*quantity AS total_price, created_at, remarks, "CUSTOM" as type FROM custom_order_item 
          WHERE stall_id = $1
           ORDER BY order_item_id`,
         [stall_id]
@@ -77,7 +77,7 @@ export const CustomOrderItemService = {
     try {
       const result = await BaseService.query(
         `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *, "CUSTOM" as type`,
         [
           payload.stall_id,
           payload.table_id,
@@ -96,7 +96,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async update(id: number, payload: UpdateCustomOrderItemPayload): Promise<ServiceResult<any>> {
+  async update(id: number, payload: UpdateCustomOrderItemPayload): Promise<ServiceResult<FetchOrderItemsPayload>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
@@ -107,7 +107,7 @@ export const CustomOrderItemService = {
     try {
       const query = `UPDATE custom_order_item SET ${setClause} WHERE order_item_id = $${
         entries.length + 1
-      } RETURNING *`;
+      } RETURNING *, "CUSTOM" as type`;
       const result = await BaseService.query(query, [...values, id]);
       if (!result.rows[0])
         return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
@@ -117,7 +117,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async updateStatus(id: number): Promise<ServiceResult<any>> {
+  async updateStatus(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
     // Get status and order_id of the OrderItem
     const orderItemInfo = await BaseService.query(
       'SELECT status, custom_order_id FROM custom_order_item WHERE order_item_id = $1', [id]
@@ -134,7 +134,7 @@ export const CustomOrderItemService = {
 
     try {
       const result = await BaseService.query(
-        'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *',
+        'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, "CUSTOM" as type',
         [nextStatus, id]
       );
       return successResponse(SuccessCodes.OK, result.rows[0]);
@@ -146,7 +146,7 @@ export const CustomOrderItemService = {
   async cancel(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *', 
+        'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, "CUSTOM" as type',
         [OrderItemStatusCodes.CANCELLED, id]
       );
       if (result.rowCount === 0)
