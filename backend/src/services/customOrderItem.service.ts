@@ -1,26 +1,28 @@
-import type { OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
+import type { CustomOrderItemPayload, UpdateCustomOrderItemPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
-import {MenuItemService} from "./menuItem.service";
-import { OrderService } from './order.service';
+import { OrderItemStatusCodes, OrderItemToOrderStatusMap, NextOrderItemStatusMap } from '../types/orderStatus';
 
 const ITEM_COLUMNS = new Set([
-  'order_id',
-  'item_id',
+  'stall_id',
+  'table_id',
+  'user_id',
+  'order_item_name',
+  'status',
   'quantity',
   'price',
+  'remarks',
 ]);
 
-export const OrderItemService = {
-  async findByOrder(order_id: number): Promise<ServiceResult<any[]>> {
+export const CustomOrderItemService = {
+  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM order_item WHERE order_id = $1 ORDER BY order_item_id',
-        [order_id]
+        'SELECT * FROM custom_order_item WHERE stall_id = $1 ORDER BY custom_order_item_id',
+        [stall_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
@@ -28,23 +30,13 @@ export const OrderItemService = {
     }
   },
 
-  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
+  async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
-      const stallItems = await MenuItemService.findAllByStall(stall_id);
-      if (!stallItems.success) {
-        return errorResponse(ErrorCodes.DATABASE_ERROR, stallItems.payload.message);
-      } else if (stallItems.payload.data === null) {
-        return successResponse(SuccessCodes.OK, []); 
-      }
-      const result = [];
-      for (const item of stallItems.payload.data) {
-        const orderItems = await BaseService.query(
-          'SELECT * FROM order_item WHERE item_id = $1 ORDER BY order_item_id',
-          [item.item_id]
-        );
-        result.push(...orderItems.rows);
-      }
-      return successResponse(SuccessCodes.OK, result);
+      const result = await BaseService.query(
+        'SELECT * FROM custom_order_item WHERE user_id = $1 ORDER BY custom_order_item_id',
+        [user_id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
@@ -53,25 +45,49 @@ export const OrderItemService = {
   async findById(id: number): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM order_item WHERE order_item_id = $1', 
+        'SELECT * FROM custom_order_item WHERE custom_order_item_id = $1', 
         [id]
       );
-      if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+      if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
-  async create(payload: OrderItemPayload): Promise<ServiceResult<any>> {
+  async findByStallAsOrder(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'INSERT INTO order_item (order_id, item_id, quantity, price) VALUES ($1,$2,$3,$4) RETURNING *',
+        `SELECT table_id, user_id, status, price*quantity AS total_price, created_at, remarks FROM custom_order_item 
+         WHERE stall_id = $1
+          ORDER BY custom_order_item_id`,
+        [stall_id]
+      );
+      for (const row of result.rows) {
+        const orderStatus = OrderItemToOrderStatusMap[row.status as OrderItemStatusCodes];
+        row.order_status = orderStatus;
+      }
+      return successResponse(SuccessCodes.OK, result.rows);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async create(payload: CustomOrderItemPayload): Promise<ServiceResult<any>> {
+    try {
+      const result = await BaseService.query(
+        `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
         [
-          payload.order_id,
-          payload.item_id,
+          payload.stall_id,
+          payload.table_id,
+          payload.user_id ?? null,
+          payload.order_item_name,
+          payload.status,
           payload.quantity,
           payload.price,
+          payload.created_at,
+          payload.remarks ?? null,
         ]
       );
       return successResponse(SuccessCodes.CREATED, result.rows[0]);
@@ -80,7 +96,7 @@ export const OrderItemService = {
     }
   },
 
-  async update(id: number, payload: UpdateOrderItemPayload): Promise<ServiceResult<any>> {
+  async update(id: number, payload: UpdateCustomOrderItemPayload): Promise<ServiceResult<any>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
@@ -89,12 +105,12 @@ export const OrderItemService = {
     const values = entries.map(([, v]) => v ?? null);
 
     try {
-      const query = `UPDATE order_item SET ${setClause} WHERE order_item_id = $${
+      const query = `UPDATE custom_order_item SET ${setClause} WHERE custom_order_item_id = $${
         entries.length + 1
       } RETURNING *`;
       const result = await BaseService.query(query, [...values, id]);
       if (!result.rows[0])
-        return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
@@ -104,24 +120,23 @@ export const OrderItemService = {
   async updateStatus(id: number): Promise<ServiceResult<any>> {
     // Get status and order_id of the OrderItem
     const orderItemInfo = await BaseService.query(
-      'SELECT status, order_id FROM order_item WHERE order_item_id = $1', [id]
+      'SELECT status, custom_order_id FROM custom_order_item WHERE custom_order_item_id = $1', [id]
     );
     if (!orderItemInfo.rows[0])
-      return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+      return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
     const currStatus = orderItemInfo.rows[0].status;
-    const orderId = orderItemInfo.rows[0].order_id;
+    const orderId = orderItemInfo.rows[0].custom_order_id;
 
     // Determine next status
-    const nextStatus = NextOrderItemStatusMap[currStatus.rows[0].status as OrderItemStatusCodes];
+    const nextStatus = NextOrderItemStatusMap[currStatus as OrderItemStatusCodes];
     if (!nextStatus)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Order Item is already in final status');
 
     try {
       const result = await BaseService.query(
-        'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING *',
+        'UPDATE custom_order_item SET status = $1 WHERE custom_order_item_id = $2 RETURNING *',
         [nextStatus, id]
       );
-      OrderService.updateStatus(orderId); // Try to update order status as well
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
@@ -131,12 +146,11 @@ export const OrderItemService = {
   async cancel(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING *', 
+        'UPDATE custom_order_item SET status = $1 WHERE custom_order_item_id = $2 RETURNING *', 
         [OrderItemStatusCodes.CANCELLED, id]
       );
       if (result.rowCount === 0)
-        return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
-      OrderService.updateStatus(id); // Try to update order status as well
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
       return successResponse<null>(SuccessCodes.OK, null);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
@@ -146,11 +160,11 @@ export const OrderItemService = {
   async delete(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'DELETE FROM order_item WHERE order_item_id = $1', 
+        'DELETE FROM custom_order_item WHERE custom_order_item_id = $1', 
         [id]
       );
       if (result.rowCount === 0)
-        return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
       return successResponse<null>(SuccessCodes.OK, null);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
