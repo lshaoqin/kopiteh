@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS custom_order_item (
   status        VARCHAR NOT NULL DEFAULT 'INCOMING',
   quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0), -- unit price
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   remarks       TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_custom_order_item_stall_id ON custom_order_item (stall_id);

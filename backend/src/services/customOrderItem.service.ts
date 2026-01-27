@@ -58,7 +58,8 @@ export const CustomOrderItemService = {
   async create(payload: CustomOrderItemPayload): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
-        'INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, remarks) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+        `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
         [
           payload.stall_id,
           payload.table_id,
@@ -67,6 +68,7 @@ export const CustomOrderItemService = {
           payload.status,
           payload.quantity,
           payload.price,
+          payload.created_at,
           payload.remarks ?? null,
         ]
       );
@@ -108,7 +110,7 @@ export const CustomOrderItemService = {
     const orderId = orderItemInfo.rows[0].custom_order_id;
 
     // Determine next status
-    const nextStatus = NextOrderItemStatusMap[currStatus.rows[0].status as OrderItemStatusCodes];
+    const nextStatus = NextOrderItemStatusMap[currStatus as OrderItemStatusCodes];
     if (!nextStatus)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Order Item is already in final status');
 

@@ -92,10 +92,13 @@ export interface CustomOrderItemPayload {
   status: OrderItemStatusCodes;
   quantity: number;
   price: number;
+  created_at: string;
   remarks?: string;
 }
 
 export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
+
+export interface FetchOrderItemsPayload extends CustomOrderItemPayload {}
 
 export interface OrderItemModifierPayload {
   order_item_id: number;
