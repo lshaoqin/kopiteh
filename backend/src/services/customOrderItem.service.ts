@@ -1,4 +1,4 @@
-import type { CustomOrderItemPayload, UpdateCustomOrderItemPayload } from '../types/payloads';
+import type { CustomOrderItemPayload, FetchOrderItemsPayload, FetchOrderPayload, UpdateCustomOrderItemPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
@@ -18,7 +18,7 @@ const ITEM_COLUMNS = new Set([
 ]);
 
 export const CustomOrderItemService = {
-  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
+  async findByStall(stall_id: number): Promise<ServiceResult<FetchOrderItemsPayload[]>> {
     try {
       const result = await BaseService.query(
         'SELECT * FROM custom_order_item WHERE stall_id = $1 ORDER BY custom_order_item_id',
@@ -30,7 +30,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
+  async findByUser(user_id: number): Promise<ServiceResult<FetchOrderItemsPayload[]>> {
     try {
       const result = await BaseService.query(
         'SELECT * FROM custom_order_item WHERE user_id = $1 ORDER BY custom_order_item_id',
@@ -42,7 +42,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async findById(id: number): Promise<ServiceResult<any>> {
+  async findById(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
     try {
       const result = await BaseService.query(
         'SELECT * FROM custom_order_item WHERE custom_order_item_id = $1', 
@@ -55,7 +55,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async findByStallAsOrder(stall_id: number): Promise<ServiceResult<any[]>> {
+  async findByStallAsOrder(stall_id: number): Promise<ServiceResult<FetchOrderPayload[]>> {
     try {
       const result = await BaseService.query(
         `SELECT table_id, user_id, status, price*quantity AS total_price, created_at, remarks FROM custom_order_item 
@@ -73,7 +73,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async create(payload: CustomOrderItemPayload): Promise<ServiceResult<any>> {
+  async create(payload: CustomOrderItemPayload): Promise<ServiceResult<FetchOrderItemsPayload>> {
     try {
       const result = await BaseService.query(
         `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
@@ -96,7 +96,7 @@ export const CustomOrderItemService = {
     }
   },
 
-  async update(id: number, payload: UpdateCustomOrderItemPayload): Promise<ServiceResult<any>> {
+  async update(id: number, payload: UpdateCustomOrderItemPayload): Promise<ServiceResult<FetchOrderItemsPayload>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
