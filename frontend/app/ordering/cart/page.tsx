@@ -26,7 +26,7 @@ export default function CartPage() {
         await api.createOrder({
             table_number: tableNumber,
             total_price: totalPrice(),
-            items: items
+            items: items,
         });
 
         // Success
