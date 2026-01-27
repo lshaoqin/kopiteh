@@ -42,36 +42,6 @@ export default function Home() {
     return null;
   }
 
-
-  const handleLogout = async () => {
-    try {
-      const refreshToken = useAuthStore.getState().refreshToken;
-
-      if (!refreshToken) {
-        logout();
-        router.push("/login");
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          refresh_token: refreshToken,
-        }),
-      });
-
-      await res.json();
-
-      logout();
-
-      router.push("/admin/auth/login");
-    } catch (err) {
-      useAuthStore.getState().logout();
-      router.push("/login");
-    }
-  };
-
   return (
     <main className="min-h-screen px-6 py-10 flex w-full">
       <div className="flex-1 w-full ">
