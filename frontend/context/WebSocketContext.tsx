@@ -27,7 +27,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     // Create socket connection regardless of user authentication for runner pages
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL_ROOT || 'http://localhost:4000', {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,

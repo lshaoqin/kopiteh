@@ -1,70 +1,202 @@
 'use client'
 
-import type { Stall } from "../../../../../types/stall"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/stores/auth.store"
-import { User } from "../../../../../types/auth"
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
 
-export default function Home() {
-  const [stalls, setStalls] = useState<Stall[]>([])
-  const { user, isHydrated, logout } = useAuthStore();
-  const router = useRouter();
+interface StallAnalytics {
+  stall_id: number
+  stall_name: string
+  total_orders: number
+  total_amount: string
+}
+
+interface MonthlyAnalytics {
+  total_orders: number
+  total_amount: string
+  stalls: StallAnalytics[]
+}
+
+export default function ViewAnalytics() {
+  const currentDate = new Date()
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1)
+  const [analytics, setAnalytics] = useState<MonthlyAnalytics | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const { user, isHydrated, logout, accessToken } = useAuthStore()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isHydrated && !user) {
+      router.push("/admin/auth/login")
+    }
+  }, [isHydrated, user, router])
+
+  useEffect(() => {
+    if (isHydrated && user && accessToken) {
+      fetchAnalytics()
+    }
+  }, [selectedYear, selectedMonth, isHydrated, user, accessToken])
+
+  const fetchAnalytics = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/order/analytics/monthly?year=${selectedYear}&month=${selectedMonth}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        }
+      )
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch analytics")
+      }
+
+      if (data.success && data.payload?.data) {
+        setAnalytics(data.payload.data)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!isHydrated || !user) {
-    return null;
+    return null
   }
-  const handleLogout = async () => {
-  try {
-    const refreshToken = useAuthStore.getState().refreshToken;
 
-    if (!refreshToken) {
-      logout();
-      router.push("/login");
-      return;
-    }
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ]
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-      }),
-    });
-
-    await res.json();
-
-    logout();
-
-    // Redirect to login
-    router.push("/admin/auth/login");
-  } catch (err) {
-    // Still clear local state to avoid being stuck
-    useAuthStore.getState().logout();
-    router.push("/login");
-  }
-};
+  const years = Array.from({ length: 10 }, (_, i) => currentDate.getFullYear() - i)
 
   return (
-    <main className="p-2">
-      <div>
-        <h1>Hi {user.name}</h1>
-        <Button onClick={handleLogout}>
-          Logout
-        </Button>
-        <h1>Stalls:</h1>
-        {stalls.length > 0 ? (
-          <ul>
-            {stalls.map((stall) => (
-              <li key={stall.stall_id}>{stall.name}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No stalls found.</p>
-        )}
+    <main className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
       </div>
+
+      {/* Month/Year Picker */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Select Period</h2>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2">Month</label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {monthNames.map((month, index) => (
+                <option key={month} value={index + 1}>
+                  {month}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2">Year</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics Display */}
+      {loading && (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <p className="text-gray-600">Loading analytics...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <p className="text-red-800">Error: {error}</p>
+        </div>
+      )}
+
+      {!loading && !error && analytics && (
+        <>
+          {/* Overall Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-blue-50 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Total Orders</h3>
+              <p className="text-4xl font-bold text-blue-700">{analytics.total_orders}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-green-900 mb-2">Total Expenditure</h3>
+              <p className="text-4xl font-bold text-green-700">
+                ${parseFloat(analytics.total_amount).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Per-Stall Analytics */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Breakdown by stall</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stall Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Orders
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Expenditure
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {analytics.stalls.map((stall) => (
+                    <tr key={stall.stall_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {stall.stall_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {stall.total_orders}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        ${parseFloat(stall.total_amount).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {analytics.stalls.length === 0 && (
+                <div className="p-6 text-center text-gray-500">
+                  No stall data available for this period.
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </main>
   )
 }
