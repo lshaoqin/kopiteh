@@ -1,4 +1,4 @@
-import type { FetchOrderItemsPayload, OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
+import type { FetchOrderItemPayload, OrderItemPayload, UpdateOrderItemPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
@@ -16,14 +16,15 @@ const ITEM_COLUMNS = new Set([
 ]);
 
 export const OrderItemService = {
-  async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemsPayload[]>> {
+  async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemPayload[]>> {
     try {
       const result = await BaseService.query(
         `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
-        FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
+        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
+        FROM order_item oi 
+        JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
-        JOIN table t ON o.table_id = t.table_id 
+        JOIN "table" t ON o.table_id = t.table_id 
         WHERE oi.order_id = $1 ORDER BY oi.order_item_id`,
         [order_id]
       );
@@ -33,7 +34,7 @@ export const OrderItemService = {
     }
   },
 
-  async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
+  async findByStall(stall_id: number): Promise<ServiceResult<FetchOrderItemPayload[]>> {
     try {
       const stallItems = await MenuItemService.findAllByStall(stall_id);
       if (!stallItems.success) {
@@ -41,33 +42,31 @@ export const OrderItemService = {
       } else if (stallItems.payload.data === null) {
         return successResponse(SuccessCodes.OK, []); 
       }
-      const result = [];
-      for (const item of stallItems.payload.data) {
-        const orderItems = await BaseService.query(
-          `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-          oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
-          FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
-          JOIN "order" o ON oi.order_id = o.order_id 
-          JOIN table t ON o.table_id = t.table_id 
-          WHERE o.stall_id = $1 ORDER BY oi.order_item_id`,
-          [item.item_id]
-        );
-        result.push(...orderItems.rows);
-      }
-      return successResponse(SuccessCodes.OK, result);
+      const result = await BaseService.query(
+        `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
+        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
+        FROM order_item oi 
+        JOIN menu_item m ON oi.item_id = m.item_id 
+        JOIN "order" o ON oi.order_id = o.order_id 
+        JOIN "table" t ON o.table_id = t.table_id 
+        WHERE m.stall_id = $1 ORDER BY oi.order_item_id`,
+        [stall_id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
-  async findById(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
+  async findById(id: number): Promise<ServiceResult<FetchOrderItemPayload>> {
     try {
       const result = await BaseService.query(
         `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, "STANDARD" as type
-        FROM order_item oi JOIN menu_item m ON oi.item_id = m.item_id 
+        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
+        FROM order_item oi 
+        JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
-        JOIN table t ON o.table_id = t.table_id 
+        JOIN "table" t ON o.table_id = t.table_id 
         WHERE oi.order_item_id = $1 ORDER BY oi.order_item_id`,
         [id]
       );
@@ -78,7 +77,7 @@ export const OrderItemService = {
     }
   },
 
-  async create(payload: OrderItemPayload): Promise<ServiceResult<FetchOrderItemsPayload>> {
+  async create(payload: OrderItemPayload): Promise<ServiceResult<FetchOrderItemPayload>> {
     try {
       const orderItemId = await BaseService.query(
         `INSERT INTO order_item (order_id, item_id, quantity, price) VALUES ($1,$2,$3,$4) RETURNING order_item_id`,
@@ -97,7 +96,7 @@ export const OrderItemService = {
     }
   },
 
-  async update(id: number, payload: UpdateOrderItemPayload): Promise<ServiceResult<FetchOrderItemsPayload>> {
+  async update(id: number, payload: UpdateOrderItemPayload): Promise<ServiceResult<FetchOrderItemPayload>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
@@ -119,7 +118,7 @@ export const OrderItemService = {
     }
   },
 
-  async updateStatus(id: number): Promise<ServiceResult<FetchOrderItemsPayload>> {
+  async updateStatus(id: number): Promise<ServiceResult<FetchOrderItemPayload>> {
     // Get status and order_id of the OrderItem
     const orderItemInfo = await BaseService.query(
       'SELECT status, order_id FROM order_item WHERE order_item_id = $1', [id]

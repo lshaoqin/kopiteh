@@ -1,4 +1,4 @@
-import type { OrderPayload, FetchOrdersPayload, UpdateOrderPayload } from '../types/payloads';
+import type { OrderPayload, FetchOrderPayload, UpdateOrderPayload } from '../types/payloads';
 import type { ServiceResult } from '../types/responses';
 import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
@@ -16,10 +16,10 @@ const ITEM_COLUMNS = new Set([
 ]);
 
 export const OrderService = {
-  async findByUser(user_id: number): Promise<ServiceResult<FetchOrdersPayload[]>> {
+  async findByUser(user_id: number): Promise<ServiceResult<FetchOrderPayload[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT *, "STANDARD" as type FROM "order" WHERE user_id = $1 ORDER BY order_id',
+        'SELECT *, \'STANDARD\' AS type FROM "order" WHERE user_id = $1 ORDER BY order_id',
         [user_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -28,10 +28,10 @@ export const OrderService = {
     }
   },
 
-  async findByStall(stall_id: number): Promise<ServiceResult<FetchOrdersPayload[]>> {
+  async findByStall(stall_id: number): Promise<ServiceResult<FetchOrderPayload[]>> {
     try {
       const result = await BaseService.query(
-        `SELECT *, "STANDARD" as type FROM "order" WHERE order_id IN (
+        `SELECT *, \'STANDARD\' AS type FROM "order" WHERE order_id IN (
           SELECT order_id FROM order_item WHERE item_id IN (
             SELECT item_id FROM menu_item WHERE stall_id = $1
           )
@@ -45,10 +45,10 @@ export const OrderService = {
   },
 
   // Currently not used but kept for future reference
-  async findByTable(table_id: number): Promise<ServiceResult<FetchOrdersPayload[]>> {
+  async findByTable(table_id: number): Promise<ServiceResult<FetchOrderPayload[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT *, "STANDARD" as type FROM "order" WHERE table_id = $1 ORDER BY order_id',
+        'SELECT *, \'STANDARD\' AS type FROM "order" WHERE table_id = $1 ORDER BY order_id',
         [table_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -57,9 +57,9 @@ export const OrderService = {
     }
   },
 
-  async findById(id: number): Promise<ServiceResult<FetchOrdersPayload>> {
+  async findById(id: number): Promise<ServiceResult<FetchOrderPayload>> {
     try {
-      const result = await BaseService.query('SELECT *, "STANDARD" as type FROM "order" WHERE order_id = $1', [id]);
+      const result = await BaseService.query('SELECT *, \'STANDARD\' AS type FROM "order" WHERE order_id = $1', [id]);
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
@@ -67,12 +67,12 @@ export const OrderService = {
     }
   },
 
-  async create(payload: OrderPayload): Promise<ServiceResult<FetchOrdersPayload>> {
+  async create(payload: OrderPayload): Promise<ServiceResult<FetchOrderPayload>> {
     try {
       console.log('Creating order with payload:', payload);
 
       const result = await BaseService.query(
-        'INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *, "STANDARD" as type',
+        'INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *, \'STANDARD\' AS type',
         [
           payload.table_id,
           payload.user_id ?? null,
@@ -89,7 +89,7 @@ export const OrderService = {
     }
   },
 
-  async update(id: number, payload: UpdateOrderPayload): Promise<ServiceResult<FetchOrdersPayload>> {
+  async update(id: number, payload: UpdateOrderPayload): Promise<ServiceResult<FetchOrderPayload>> {
     const entries = Object.entries(payload).filter(([key]) => ITEM_COLUMNS.has(key));
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
@@ -100,7 +100,7 @@ export const OrderService = {
     try {
       const query = `UPDATE "order" SET ${setClause} WHERE order_id = $${ 
         entries.length + 1
-      } RETURNING *, "STANDARD" as type`;
+      } RETURNING *, \'STANDARD\' AS type`;
       const result = await BaseService.query(query, [...values, id]);
       if (!result.rows[0])
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
@@ -110,7 +110,7 @@ export const OrderService = {
     }
   },
 
-  async updateStatus(id: number): Promise<ServiceResult<FetchOrdersPayload>> {
+  async updateStatus(id: number): Promise<ServiceResult<FetchOrderPayload>> {
     try {
       // get the list of order items for the order
       const orderItemStatus = await BaseService.query(
@@ -126,12 +126,12 @@ export const OrderService = {
       if (allCompleted) {
         if (allCancelled) {
           result = await BaseService.query(
-            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *, "STANDARD" as type', 
+            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *, \'STANDARD\' AS type', 
             [OrderStatusCodes.CANCELLED, id]
           )
         } else {
           result = await BaseService.query(
-            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *, "STANDARD" as type', 
+            'UPDATE "order" SET status = $1 WHERE order_id = $2 RETURNING *, \'STANDARD\' AS type', 
             [OrderStatusCodes.COMPLETED, id]
           )
         }
@@ -140,7 +140,7 @@ export const OrderService = {
       }
       if (result.rowCount === 0)
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
-      return successResponse<FetchOrdersPayload>(SuccessCodes.OK, result.rows[0]);
+      return successResponse<FetchOrderPayload>(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

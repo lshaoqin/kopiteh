@@ -58,7 +58,7 @@ export const OrderController = {
       // Emit WebSocket event if status changed
       if (result.success && payload.status && result.payload.data) {
         const order = result.payload.data;
-        WebSocketService.notifyOrderStatusChange(order.user_id, id, payload.status);
+        //WebSocketService.notifyOrderStatusChange(order.user_id, id, payload.status);
       }
       
       return res.status(result.payload.status).json(result);
@@ -79,7 +79,7 @@ export const OrderController = {
       // Emit WebSocket event after successful update
       if (result.success && result.payload.data) {
         const order = result.payload.data;
-        WebSocketService.notifyOrderStatusChange(order.user_id, id, order.status);
+        //WebSocketService.notifyOrderStatusChange(order.user_id, id, order.status);
       }
       
       return res.status(result.payload.status).json(result);
