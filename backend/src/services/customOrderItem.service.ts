@@ -4,7 +4,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
+import { OrderItemStatusCodes, OrderItemToOrderStatusMap, NextOrderItemStatusMap } from '../types/orderStatus';
 
 const ITEM_COLUMNS = new Set([
   'stall_id',
@@ -50,6 +50,24 @@ export const CustomOrderItemService = {
       );
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async findByStallAsOrder(stall_id: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        `SELECT table_id, user_id, status, price*quantity AS total_price, created_at, remarks FROM custom_order_item 
+         WHERE stall_id = $1
+          ORDER BY custom_order_item_id`,
+        [stall_id]
+      );
+      for (const row of result.rows) {
+        const orderStatus = OrderItemToOrderStatusMap[row.status as OrderItemStatusCodes];
+        row.order_status = orderStatus;
+      }
+      return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

@@ -16,6 +16,7 @@ const router = Router();
 router.get('/customOrderItem/:id', customOrderItemIdParamValidation, runValidation, CustomOrderItemController.getById);
 router.get('/customOrderItem/user/:user_id', userIdParamValidation, runValidation, CustomOrderItemController.getByUser);
 router.get('/customOrderItem/stall/:stall_id', stallIdParamValidation, runValidation, CustomOrderItemController.getByStall);
+router.get('/customOrderItem/asOrder/stall/:stall_id', stallIdParamValidation, runValidation, CustomOrderItemController.getByStallAsOrder);
 
 // Public writes
 router.put('/customOrderItem/update/:id', ...updateCustomOrderItemValidation, runValidation, CustomOrderItemController.update);

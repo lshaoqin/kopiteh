@@ -25,6 +25,12 @@ export const CustomOrderItemController = {
     return res.status(result.payload.status).json(result);
   },
 
+  async getByStallAsOrder(req: Request, res: Response) {
+    const stallId = Number(req.params.stall_id);
+    const result = await CustomOrderItemService.findByStallAsOrder(stallId);
+    return res.status(result.payload.status).json(result);
+  },
+
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as CustomOrderItemPayload;
