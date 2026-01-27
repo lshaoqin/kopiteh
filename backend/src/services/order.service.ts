@@ -69,64 +69,21 @@ export const OrderService = {
   },
 
   async create(payload: OrderPayload): Promise<ServiceResult<any>> {
-    const client = await pool.connect();
-
     try {
-      await client.query('BEGIN');
-
-      // 1. Look up Table ID using Table Number
-      const tableRes = await client.query(
-        'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
-        [String(payload.table_number)]
+      const result = await BaseService.query(
+        'INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *, \'STANDARD\' AS type',
+        [
+          payload.table_id,
+          payload.user_id,
+          payload.status ?? null,
+          payload.total_price ?? null,
+          payload.created_at,
+          payload.remarks ?? null,
+        ]
       );
-
-      if (tableRes.rows.length === 0) {
-        throw new Error(`Table ${payload.table_number} does not exist`);
-      }
-      const tableId = tableRes.rows[0].table_id;
-      
-      // 2. Insert Order
-      // Use ID 1 (Guest) if user_id is missing/not provided
-      const userId = (payload as any).user_id || 1; 
-
-      const orderRes = await client.query(
-        `INSERT INTO "order" (table_id, user_id, status, total_price, created_at) 
-         VALUES ($1, $2, $3, $4, NOW()) 
-         RETURNING order_id`,
-        [tableId, userId, 'pending', payload.total_price]
-      );
-      const orderId = orderRes.rows[0].order_id;
-
-      // 3. Insert Items & Modifiers
-      for (const item of payload.items) {
-        const itemRes = await client.query(
-          `INSERT INTO order_item (order_id, item_id, quantity, price, status)
-           VALUES ($1, $2, $3, $4, 'INCOMING')
-           RETURNING order_item_id`,
-          [orderId, item.item_id, item.quantity, item.price]
-        );
-        const orderItemId = itemRes.rows[0].order_item_id;
-
-        if (item.modifiers && item.modifiers.length > 0) {
-          for (const mod of item.modifiers) {
-            await client.query(
-              `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
-               VALUES ($1, $2, $3, $4)`,
-              [orderItemId, mod.option_id, mod.price, mod.name]
-            );
-          }
-        }
-      }
-
-      await client.query('COMMIT');
-      return successResponse(SuccessCodes.CREATED, { order_id: orderId });
-
-    } catch (error: any) {
-      await client.query('ROLLBACK');
-      console.error("Order Create Error:", error);
-      return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
-    } finally {
-      client.release();
+      return successResponse(SuccessCodes.CREATED, result.rows[0]);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
