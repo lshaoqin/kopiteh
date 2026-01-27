@@ -182,7 +182,37 @@ export default function Stalls() {
         }
     };
 
+    const handleDeleteStall = async () => {
+        if (!editingStall) return;
 
+        try {
+            setUpdateError(null);   
+            setUpdating(true);
+
+            const stallId = editingStall.stall_id;
+
+            const res = await fetch(`${API_URL}/stalls/remove/${stallId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to delete stall");
+            }
+
+            setStalls((curr) => curr.filter((s) => s.stall_id !== stallId));
+            setShowUpdateModal(false);
+            setEditingStall(null);
+        } catch (err: any) {
+            setUpdateError(err?.message ?? "Failed to delete stall");
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     return (
         <main className="min-h-screen px-6 py-10 flex w-full">
@@ -251,6 +281,7 @@ export default function Stalls() {
                     initialName={editingStall.name}
                     initialImageUrl={editingStall.stall_image ?? ""}
                     onSubmit={handleUpdate}
+                    onDelete={handleDeleteStall}
                 />
             )}
         </main>
