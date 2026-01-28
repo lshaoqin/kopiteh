@@ -4,15 +4,24 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 
-dotenv.config();
+// Load .env from backend root directory
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MIGRATIONS_DIR = path.join(__dirname, '../../migrations');
 
-const pool = new Pool({ user: process.env.DB_USER ?? process.env.POSTGRES_USER,
-  host: process.env.DB_HOST ?? process.env.POSTGRES_HOST,
-  database: process.env.DB_NAME ?? process.env.POSTGRES_DB,
-  password: process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD,
-  port: parseInt(process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432', 10), });
+// Use SUPABASE_URL connection string if available, otherwise fall back to individual env vars
+const pool = process.env.SUPABASE_URL
+  ? new Pool({
+      connectionString: process.env.SUPABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    })
+  : new Pool({
+      user: process.env.DB_USER ?? process.env.POSTGRES_USER,
+      host: process.env.DB_HOST ?? process.env.POSTGRES_HOST,
+      database: process.env.DB_NAME ?? process.env.POSTGRES_DB,
+      password: process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD,
+      port: parseInt(process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432', 10),
+    });
 
 async function run() {
   const client = await pool.connect();
