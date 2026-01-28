@@ -68,10 +68,8 @@ export const OrderService = {
     }
   },
 
-  async create(payload: OrderPayload): Promise<ServiceResult<FetchOrderPayload>> {
+  async create(payload: OrderPayload): Promise<ServiceResult<any>> {
     try {
-      console.log('Creating order with payload:', payload);
-
       const result = await BaseService.query(
         'INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *, \'STANDARD\' AS type',
         [
@@ -83,54 +81,9 @@ export const OrderService = {
           payload.remarks ?? null,
         ]
       );
-
-      if (tableRes.rows.length === 0) {
-        throw new Error(`Table ${payload.table_number} does not exist`);
-      }
-      const tableId = tableRes.rows[0].table_id;
-      
-      // 2. Insert Order
-      // Use ID 1 (Guest) if user_id is missing/not provided
-      const userId = (payload as any).user_id || 1; 
-
-      const orderRes = await client.query(
-        `INSERT INTO "order" (table_id, user_id, status, total_price, created_at) 
-         VALUES ($1, $2, $3, $4, NOW()) 
-         RETURNING order_id`,
-        [tableId, userId, 'pending', payload.total_price]
-      );
-      const orderId = orderRes.rows[0].order_id;
-
-      // 3. Insert Items & Modifiers
-      for (const item of payload.items) {
-        const itemRes = await client.query(
-          `INSERT INTO order_item (order_id, item_id, quantity, price, status)
-           VALUES ($1, $2, $3, $4, 'INCOMING')
-           RETURNING order_item_id`,
-          [orderId, item.item_id, item.quantity, item.price]
-        );
-        const orderItemId = itemRes.rows[0].order_item_id;
-
-        if (item.modifiers && item.modifiers.length > 0) {
-          for (const mod of item.modifiers) {
-            await client.query(
-              `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
-               VALUES ($1, $2, $3, $4)`,
-              [orderItemId, mod.option_id, mod.price, mod.name]
-            );
-          }
-        }
-      }
-
-      await client.query('COMMIT');
-      return successResponse(SuccessCodes.CREATED, { order_id: orderId });
-
-    } catch (error: any) {
-      await client.query('ROLLBACK');
-      console.error("Order Create Error:", error);
-      return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
-    } finally {
-      client.release();
+      return successResponse(SuccessCodes.CREATED, result.rows[0]);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
@@ -197,6 +150,52 @@ export const OrderService = {
       if (result.rowCount === 0)
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse<null>(SuccessCodes.OK, null);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async getMonthlyAnalytics(year: number, month: number): Promise<ServiceResult<any>> {
+    try {
+      // Get the start and end dates for the month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 1);
+
+      // Get total orders and total amount for the month
+      const totalResult = await BaseService.query(
+        `SELECT 
+          COUNT(*)::int as total_orders,
+          COALESCE(SUM(total_price), 0) as total_amount
+        FROM "order"
+        WHERE created_at >= $1 AND created_at < $2
+          AND status != 'CANCELLED'`,
+        [startDate.toISOString(), endDate.toISOString()]
+      );
+
+      // Get analytics per stall
+      const stallResult = await BaseService.query(
+        `SELECT 
+          s.stall_id,
+          s.name as stall_name,
+          COUNT(DISTINCT o.order_id)::int as total_orders,
+          COALESCE(SUM(oi.price * oi.quantity), 0) as total_amount
+        FROM stall s
+        LEFT JOIN menu_item mi ON s.stall_id = mi.stall_id
+        LEFT JOIN order_item oi ON mi.item_id = oi.item_id
+        LEFT JOIN "order" o ON oi.order_id = o.order_id
+          AND o.created_at >= $1 
+          AND o.created_at < $2
+          AND o.status != 'CANCELLED'
+        GROUP BY s.stall_id, s.name
+        ORDER BY s.name`,
+        [startDate.toISOString(), endDate.toISOString()]
+      );
+
+      return successResponse(SuccessCodes.OK, {
+        total_orders: totalResult.rows[0].total_orders,
+        total_amount: totalResult.rows[0].total_amount,
+        stalls: stallResult.rows,
+      });
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
