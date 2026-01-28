@@ -1,7 +1,10 @@
 import dotenv from 'dotenv';
 import pool from './config/database';
+import path from 'path'
 
 dotenv.config();
+// Load .env from backend root directory
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const stallsData = [
   {
