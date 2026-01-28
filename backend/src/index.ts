@@ -1,30 +1,47 @@
 import express from 'express';
 import cors from 'cors';
-import http from 'http';
+import dotenv from 'dotenv';
+import path from 'path';
+import { createServer } from 'http';
 import routes from './routes';
 import errorHandler from './middleware/error.handler';
 import { WebSocketService } from './services/websocket.service';
 
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 const app = express();
-const server = http.createServer(app);
+const PORT = parseInt(process.env.PORT || '4000', 10);
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true,
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API routes
+app.use('/api', routes);
+
+// Error handler
+app.use(errorHandler);
+
+// Create HTTP server
+const server = createServer(app);
 
 // Initialize WebSocket
 WebSocketService.init(server);
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
-
-app.use(express.json());
-app.use('/api', routes);
-app.use(errorHandler);
-
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, () => {
+// Start server
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`WebSocket initialized`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
 export default app;

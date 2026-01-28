@@ -70,6 +70,7 @@ export const OrderService = {
   },
 
   async create(payload: OrderPayload): Promise<ServiceResult<any>> {
+    const client = await pool.connect();
     try {
       await client.query('BEGIN'); // Start Transaction
 
