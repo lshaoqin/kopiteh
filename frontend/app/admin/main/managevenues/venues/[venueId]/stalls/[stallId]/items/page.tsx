@@ -282,8 +282,21 @@ export default function ManageItemsPage() {
             }
 
             setCreatingItem(true);
+            const sections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map(
+                (s: ModifierSectionDraft) => ({
+                    // no section_id on create
+                    name: s.name.trim(),
+                    min_selections: Number(s.min_selections),
+                    max_selections: Number(s.max_selections),
+                    options: (s.options ?? []).map((o) => ({
+                        // no option_id on create
+                        name: o.name.trim(),
+                        price_modifier: Number(o.price_modifier),
+                        is_available: Boolean(o.is_available),
+                    })),
+                })
+            );
 
-            // 1) create item
             const res = await fetch(`${API_URL}/items/create`, {
                 method: "POST",
                 headers: {
@@ -299,6 +312,7 @@ export default function ManageItemsPage() {
                     price: priceNum,
                     prep_time: prepNum,
                     is_available: true,
+                    modifier_sections: sections,
                 }),
             });
 
@@ -308,54 +322,6 @@ export default function ManageItemsPage() {
             }
 
             const created: MenuItem = data.payload?.data;
-            const itemId = created.item_id;
-
-            // 2) create variants (optional)
-            const sections: ModifierSectionDraft[] = v.modifier_sections ?? [];
-            for (const s of sections) {
-                const secRes = await fetch(`${API_URL}/item-sections/create`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        name: s.name.trim(),
-                        min_selections: Number(s.min_selections),
-                        max_selections: Number(s.max_selections),
-                    }),
-                });
-
-                const secData = await secRes.json();
-                if (!secRes.ok || secData?.success === false) {
-                    throw new Error(secData?.payload?.message ?? "Failed to create variant section");
-                }
-
-                const sectionId = secData.payload?.data?.section_id;
-
-                for (const o of s.options ?? []) {
-                    const optRes = await fetch(`${API_URL}/modifiers/create`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId,
-                            section_id: sectionId,
-                            name: o.name.trim(),
-                            price_modifier: Number(o.price_modifier),
-                            is_available: Boolean(o.is_available),
-                        }),
-                    });
-
-                    const optData = await optRes.json();
-                    if (!optRes.ok || optData?.success === false) {
-                        throw new Error(optData?.payload?.message ?? "Failed to create option");
-                    }
-                }
-            }
 
             setItems((curr) => [...curr, created]);
             setShowCreateItem(false);
@@ -366,6 +332,7 @@ export default function ManageItemsPage() {
             setCreatingItem(false);
         }
     };
+
     const handleOpenCreateItem = (categoryId: number) => {
         setSelectedCategoryId(categoryId);
         setShowCreateItem(true);
@@ -392,116 +359,6 @@ export default function ManageItemsPage() {
         }
     };
 
-    const syncVariants = async (
-        itemId: string,
-        initialSections: ModifierSectionDraft[],
-        nextSections: ModifierSectionDraft[]
-    ) => {
-        const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        };
-
-        const initialById = new Map<number, ModifierSectionDraft>();
-        for (const s of initialSections ?? []) if (s.section_id) initialById.set(s.section_id, s);
-
-        const nextById = new Map<number, ModifierSectionDraft>();
-        for (const s of nextSections ?? []) if (s.section_id) nextById.set(s.section_id, s);
-
-        // 1) delete removed sections (cascade deletes options)
-        for (const section_id of initialById.keys()) {
-            if (!nextById.has(section_id)) {
-                await fetch(`${API_URL}/item-sections/remove/${section_id}`, {
-                    method: "DELETE",
-                    headers,
-                });
-            }
-        }
-
-        // 2) upsert sections + options
-        for (const s of nextSections ?? []) {
-            let sectionId = s.section_id;
-
-            // upsert section
-            if (sectionId) {
-                await fetch(`${API_URL}/item-sections/update/${sectionId}`, {
-                    method: "PUT",
-                    headers,
-                    body: JSON.stringify({
-                        name: s.name.trim(),
-                        min_selections: Number(s.min_selections),
-                        max_selections: Number(s.max_selections),
-                    }),
-                });
-            } else {
-                const secRes = await fetch(`${API_URL}/item-sections/create`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        name: s.name.trim(),
-                        min_selections: Number(s.min_selections),
-                        max_selections: Number(s.max_selections),
-                    }),
-                });
-
-                const secData = await secRes.json();
-                if (!secRes.ok || secData?.success === false) {
-                    throw new Error(secData?.payload?.message ?? "Failed to create variant section");
-                }
-                sectionId = secData.payload?.data?.section_id;
-            }
-
-            const initialSec = sectionId ? initialById.get(sectionId) : undefined;
-
-            const initialOptsById = new Map<number, ModifierOptionDraft>();
-            for (const o of initialSec?.options ?? []) if (o.option_id) initialOptsById.set(o.option_id, o);
-
-            const nextOptsById = new Map<number, ModifierOptionDraft>();
-            for (const o of s.options ?? []) if (o.option_id) nextOptsById.set(o.option_id, o);
-
-            // delete removed options
-            for (const option_id of initialOptsById.keys()) {
-                if (!nextOptsById.has(option_id)) {
-                    await fetch(`${API_URL}/modifiers/remove/${option_id}`, {
-                        method: "DELETE",
-                        headers,
-                    });
-                }
-            }
-
-            // upsert options
-            for (const o of s.options ?? []) {
-                if (o.option_id) {
-                    await fetch(`${API_URL}/modifiers/update/${o.option_id}`, {
-                        method: "PUT",
-                        headers,
-                        body: JSON.stringify({
-                            name: o.name.trim(),
-                            price_modifier: Number(o.price_modifier),
-                            is_available: Boolean(o.is_available),
-                            item_id: itemId,
-                            section_id: sectionId,
-                        }),
-                    });
-                } else {
-                    await fetch(`${API_URL}/modifiers/create`, {
-                        method: "POST",
-                        headers,
-                        body: JSON.stringify({
-                            item_id: itemId,
-                            section_id: sectionId,
-                            name: o.name.trim(),
-                            price_modifier: Number(o.price_modifier),
-                            is_available: Boolean(o.is_available),
-                        }),
-                    });
-                }
-            }
-        }
-    };
-
-
     const handleUpdateItem = async (v: any) => {
         if (!editingItem) return;
 
@@ -509,25 +366,30 @@ export default function ManageItemsPage() {
             setUpdateItemError(null);
 
             const trimmedName = v.name.trim();
-            if (!trimmedName) {
-                setUpdateItemError("Item name is required.");
-                return;
-            }
+            if (!trimmedName) return setUpdateItemError("Item name is required.");
 
             const priceNum = Number(v.price);
             const prepNum = Number(v.prep_time);
-            if (Number.isNaN(priceNum) || priceNum < 0) {
-                setUpdateItemError("Price must be a non-negative number.");
-                return;
-            }
-            if (Number.isNaN(prepNum) || prepNum < 0) {
-                setUpdateItemError("Prep time must be a non-negative number.");
-                return;
-            }
+            if (Number.isNaN(priceNum) || priceNum < 0)
+                return setUpdateItemError("Price must be a non-negative number.");
+            if (Number.isNaN(prepNum) || prepNum < 0)
+                return setUpdateItemError("Prep time must be a non-negative number.");
 
             setUpdatingItem(true);
 
-            // 1) update base item
+            const nextSections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map((s: any) => ({
+                section_id: s.section_id, // keep if existing
+                name: s.name.trim(),
+                min_selections: Number(s.min_selections),
+                max_selections: Number(s.max_selections),
+                options: (s.options ?? []).map((o: any) => ({
+                    option_id: o.option_id, // keep if existing
+                    name: o.name.trim(),
+                    price_modifier: Number(o.price_modifier),
+                    is_available: Boolean(o.is_available),
+                })),
+            }));
+
             const res = await fetch(`${API_URL}/items/update/${editingItem.item_id}`, {
                 method: "PUT",
                 headers: {
@@ -540,6 +402,7 @@ export default function ManageItemsPage() {
                     description: v.description?.trim() ? v.description.trim() : null,
                     price: priceNum,
                     prep_time: prepNum,
+                    modifier_sections: nextSections,
                 }),
             });
 
@@ -550,11 +413,6 @@ export default function ManageItemsPage() {
 
             const updated: MenuItem = data.payload?.data;
 
-            // 2) sync variants
-            const nextSections: ModifierSectionDraft[] = v.modifier_sections ?? [];
-            await syncVariants(editingItem.item_id, initialEditingItemVariants, nextSections);
-
-            // 3) update UI
             setItems((curr) =>
                 curr.map((it) => (it.item_id === updated.item_id ? { ...it, ...updated } : it))
             );
@@ -569,6 +427,7 @@ export default function ManageItemsPage() {
             setUpdatingItem(false);
         }
     };
+
 
     return (
         <main className="min-h-screen px-6 py-10 flex w-full">
