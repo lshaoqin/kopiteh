@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 
@@ -9,10 +8,12 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MIGRATIONS_DIR = path.join(__dirname, '../../migrations');
 
-// Use SUPABASE_URL connection string if available, otherwise fall back to individual env vars
-const pool = process.env.SUPABASE_URL
+const isProduction = process.env.NODE_ENV === 'production';
+const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL;
+
+const pool = connectionString
   ? new Pool({
-      connectionString: process.env.SUPABASE_URL,
+      connectionString,
       ssl: { rejectUnauthorized: false },
     })
   : new Pool({
@@ -24,8 +25,20 @@ const pool = process.env.SUPABASE_URL
     });
 
 async function run() {
+  console.log('Starting migrations...');
+  console.log('Connection string:', connectionString ? 'Using DATABASE_URL/SUPABASE_URL' : 'Using individual env vars');
+  
   const client = await pool.connect();
   try {
+    // Create migrations tracking table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS _migrations (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     const files = (await fs.readdir(MIGRATIONS_DIR))
       .filter(f => f.endsWith('.sql'))
       .sort();
@@ -35,12 +48,23 @@ async function run() {
       return;
     }
 
+    // Get already applied migrations
+    const { rows: applied } = await client.query('SELECT name FROM _migrations');
+    const appliedNames = new Set(applied.map(r => r.name));
+
     for (const file of files) {
+      if (appliedNames.has(file)) {
+        console.log(`Skipping (already applied): ${file}`);
+        continue;
+      }
+
       const sql = await fs.readFile(path.join(MIGRATIONS_DIR, file), 'utf8');
       console.log(`Applying: ${file}`);
+      
       await client.query('BEGIN');
       try {
         await client.query(sql);
+        await client.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
         await client.query('COMMIT');
         console.log(`✓ ${file}`);
       } catch (err) {
