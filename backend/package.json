@@ -1,50 +1,43 @@
 {
-  "name": "backend",
+  "name": "kopiteh-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.ts",
+  "description": "KopiTeh Backend API",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts",
-    "seed": "ts-node src/seed.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "ts-node src/scripts/migrate.ts",
-    "migrate:rollback": "ts-node src/scripts/rollback.ts"
+    "seed": "ts-node src/seed.ts",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.968.0",
-    "@sendgrid/mail": "^8.1.6",
-    "bcrypt": "^6.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "express-validator": "^7.3.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
-    "pg": "^8.16.3",
-    "socket.io": "^4.8.1"
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.3",
+    "uuid": "^11.0.5",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/jest": "^30.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^24.7.2",
-    "@types/pg": "^8.15.5",
-    "@types/socket.io": "^3.0.1",
-    "@types/socket.io-client": "^1.4.36",
-    "jest": "^30.2.0",
-    "node-fetch": "^3.3.2",
-    "socket.io-client": "^4.8.1",
-    "supertest": "^7.1.4",
-    "ts-jest": "^29.4.6",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.13",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.7.2"
   }
 }
