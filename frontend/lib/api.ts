@@ -1,4 +1,4 @@
-import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue } from "../../types";
 import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -29,9 +29,15 @@ async function fetchClient<T>(endpoint: string, options?: RequestInit): Promise<
 }
 
 export const api = {
+  // --- VENUES ---
+  getVenues: async (): Promise<Venue[]> => {
+    return await fetchClient<Venue[]>("/venue");
+  },
+
   // --- TABLES ---
   getTablesByVenue: async (venueId: number): Promise<DiningTable[]> => {
-    const rawData = await fetchClient<any[]>(`/tables/venue/${venueId}`);
+    const rawData = await fetchClient<any[]>(`/venue/${venueId}/tables`);
+    
     return rawData.map((t) => ({
       table_id: String(t.table_id),
       venue_id: String(t.venue_id),
@@ -152,7 +158,6 @@ export const api = {
           price: Number(mod.price_modifier),
         })),
       })),
-      status: "INCOMING",
     };
 
     const response = await fetchClient<any>("/order/create", {
