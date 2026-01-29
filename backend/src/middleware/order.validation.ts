@@ -26,9 +26,7 @@ export const createOrderValidation = [
   body('table_number').exists().withMessage('Table number is required'),
   optionalNonNegativeNum('user_id'),
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-  body('status').exists({ checkFalsy: true }).isIn(Object.values(OrderStatusCodes)),
   body('total_price').exists().isFloat({ min: 0 }),
-  body('created_at').exists().isString().isISO8601().trim(),
   optionalTextField('remarks', 1000),
 ];
 

@@ -1,40 +1,29 @@
-import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
-import filebaseClient, { FILEBASE_BUCKET_NAME, FILEBASE_GATEWAY_URL } from '../config/cloudflare';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import supabaseStorageClient, { SUPABASE_BUCKET_NAME, SUPABASE_PUBLIC_URL } from '../config/storage';
 import crypto from 'crypto';
 import path from 'path';
 
 export class UploadService {
   async uploadImage(
     file: Express.Multer.File,
-    folder: string = 'images'
+    folder: string = 'assets'
   ): Promise<string> {
     const fileExtension = path.extname(file.originalname);
     const fileName = `${folder}/${crypto.randomUUID()}${fileExtension}`;
 
     const command = new PutObjectCommand({
-      Bucket: FILEBASE_BUCKET_NAME,
+      Bucket: SUPABASE_BUCKET_NAME,
       Key: fileName,
       Body: file.buffer,
       ContentType: file.mimetype,
+      // Make the file publicly accessible
+      ACL: 'public-read',
     });
 
-    await filebaseClient.send(command);
+    await supabaseStorageClient.send(command);
 
-    // Get the CID (IPFS hash) from the uploaded file
-    const headCommand = new HeadObjectCommand({
-      Bucket: FILEBASE_BUCKET_NAME,
-      Key: fileName,
-    });
-    
-    const headResponse = await filebaseClient.send(headCommand);
-    const cid = headResponse.Metadata?.cid;
-
-    if (!cid) {
-      throw new Error('Failed to retrieve IPFS CID');
-    }
-
-    // Return IPFS gateway URL
-    return `${FILEBASE_GATEWAY_URL}/${cid}`;
+    // Return Supabase public URL for the uploaded file
+    return `${SUPABASE_PUBLIC_URL}/${SUPABASE_BUCKET_NAME}/${fileName}`;
   }
 
   async uploadMultipleImages(
