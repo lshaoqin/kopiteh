@@ -505,11 +505,11 @@ export default function ItemModal({
           </div>
         </div>
 
-        <div className="flex items-center border-t px-6 py-4">
+        <div className="flex items-center border-t px-6 py-4 w-full justify-between">
           {onDelete ? (
             <Button
               onClick={onDelete}
-              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+              variant="deletestall"
               disabled={loading}
             >
               <Trash2 className="h-4 w-4" />
@@ -519,8 +519,7 @@ export default function ItemModal({
             <div />
           )}
 
-          <div className="flex items-center w-full justify-center">
-
+          <div className="flex items-center">
             <Button
               onClick={handleSubmit}
               disabled={loading || !name.trim() || !price.trim() || !prepTime.trim()}
