@@ -29,15 +29,31 @@ export interface MenuItemCategoryPayload {
 
 export interface UpdateMenuItemCategoryPayload extends Partial<MenuItemCategoryPayload> {}
 
+export interface ModifierOptionDraft {
+  option_id?: number;
+  name: string;
+  price_modifier: number;
+  is_available?: boolean;
+}
+
+export interface ModifierSectionDraft {
+  section_id?: number;
+  name: string;
+  min_selections: number;
+  max_selections: number;
+  options?: ModifierOptionDraft[];
+}
+
 export interface MenuItemPayload {
   stall_id: number;
   category_id?: number | null;
-  item_image?: string;
+  item_image?: string | null;
   name: string;
-  description?: string;
+  description?: string | null;
   price: number;
   prep_time?: number;
   is_available?: boolean;
+  modifier_sections?: ModifierSectionDraft[];
 }
 
 export interface UpdateMenuItemPayload extends Partial<MenuItemPayload> {}

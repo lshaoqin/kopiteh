@@ -42,20 +42,20 @@ export const MOCK_STALLS: Stall[] = [
 
 // --- MENU ITEMS (For Menu List Page) ---
 export const MOCK_MENU_ITEMS: MenuItem[] = [
-  { item_id: "101", stall_id: "1", name: "Steamed Chicken Rice", description: "Signature tender chicken.", price: 5.50, image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=300&q=80", is_available: true },
-  { item_id: "102", stall_id: "1", name: "Roasted Chicken Rice", description: "Crispy skin roasted chicken.", price: 5.50, image_url: "https://plus.unsplash.com/premium_photo-1664472637341-3ec829d1f4df?auto=format&fit=crop&w=300&q=80", is_available: true },
-  { item_id: "103", stall_id: "1", name: "Lemon Chicken Cutlet", description: "Fried chicken with lemon sauce.", price: 6.50, image_url: null, is_available: true },
-  { item_id: "104", stall_id: "1", name: "Oyster Sauce Kai Lan", description: "Fresh vegetables.", price: 4.00, image_url: null, is_available: true },
-  { item_id: "105", stall_id: "1", name: "Braised Egg", description: "Soy sauce egg.", price: 1.00, image_url: null, is_available: true },
-  { item_id: "106", stall_id: "1", name: "Kopi O", description: "Black coffee.", price: 1.20, image_url: null, is_available: true },
-  { item_id: "107", stall_id: "1", name: "Teh C", description: "Tea with milk.", price: 1.40, image_url: null, is_available: true }
+  { item_id: "101", stall_id: "1", name: "Steamed Chicken Rice", description: "Signature tender chicken.", price: 5.50, item_image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=300&q=80", is_available: true },
+  { item_id: "102", stall_id: "1", name: "Roasted Chicken Rice", description: "Crispy skin roasted chicken.", price: 5.50, item_image: "https://plus.unsplash.com/premium_photo-1664472637341-3ec829d1f4df?auto=format&fit=crop&w=300&q=80", is_available: true },
+  { item_id: "103", stall_id: "1", name: "Lemon Chicken Cutlet", description: "Fried chicken with lemon sauce.", price: 6.50, item_image: null, is_available: true },
+  { item_id: "104", stall_id: "1", name: "Oyster Sauce Kai Lan", description: "Fresh vegetables.", price: 4.00, item_image: null, is_available: true },
+  { item_id: "105", stall_id: "1", name: "Braised Egg", description: "Soy sauce egg.", price: 1.00, item_image: null, is_available: true },
+  { item_id: "106", stall_id: "1", name: "Kopi O", description: "Black coffee.", price: 1.20, item_image: null, is_available: true },
+  { item_id: "107", stall_id: "1", name: "Teh C", description: "Tea with milk.", price: 1.40, item_image: null, is_available: true }
 ];
 
 // --- ITEM DETAILS (For Customization Page) ---
 export const MOCK_ITEM_DETAILS: Record<string, MenuItem> = {
-  "101": { item_id: "101", stall_id: "1", name: "Chicken Rice Set", description: "Steamed or Roasted chicken.", price: 5.50, image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80", is_available: true },
-  "106": { item_id: "106", stall_id: "1", name: "Kopi", description: "Traditional Nanyang Coffee", price: 1.20, image_url: null, is_available: true },
-  "default": { item_id: "0", stall_id: "1", name: "Generic Item", description: "Tasty food", price: 5.00, image_url: null, is_available: true }
+  "101": { item_id: "101", stall_id: "1", name: "Chicken Rice Set", description: "Steamed or Roasted chicken.", price: 5.50, item_image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80", is_available: true },
+  "106": { item_id: "106", stall_id: "1", name: "Kopi", description: "Traditional Nanyang Coffee", price: 1.20, item_image: null, is_available: true },
+  "default": { item_id: "0", stall_id: "1", name: "Generic Item", description: "Tasty food", price: 5.00, item_image: null, is_available: true }
 };
 
 // --- MODIFIERS (Options) ---
@@ -93,7 +93,7 @@ export const MOCK_KOPI_DATA = {
     name: "Kopi",
     description: "Coffee with condensed milk",
     price: 1.40,
-    image_url: "https://thehoneycombers.com/singapore/uploads/2017/04/Kopi-O-local-coffee-in-Singapore.jpg",
+    item_image: "https://thehoneycombers.com/singapore/uploads/2017/04/Kopi-O-local-coffee-in-Singapore.jpg",
     prep_time: 2,
     is_available: true
   } as MenuItem,
