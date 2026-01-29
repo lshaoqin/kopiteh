@@ -31,13 +31,23 @@ export default function ForgotPasswordPage() {
         setError(null);
         setSuccess(null);
 
-        if (
-            !userName?.trim() ||
-            !email?.trim() ||
-            !newPassword ||
-            !confirmPassword
-        ) {
-            setError("Please fill in all fields");
+        if (!userName?.trim()) {
+            setError("Please enter your username");
+            return;
+        }
+
+        if (!email?.trim()) {
+            setError("Please enter your email");
+            return;
+        }
+
+        if (!newPassword) {
+            setError("Please enter your password");
+            return;
+        }
+
+        if (!confirmPassword) {
+            setError("Please enter your password");
             return;
         }
 

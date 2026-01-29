@@ -33,15 +33,26 @@ export default function Home() {
             return;
         }
 
-        if (
-            !userName?.trim() ||
-            !email?.trim() ||
-            !password ||
-            String(secretCode ?? "").trim() === ""
-        ) {
-            setError("Please fill in all fields");
+        if (!userName?.trim()) {
+            setError("Please enter your username");
             return;
         }
+
+        if (!email?.trim()) {
+            setError("Please enter your email");
+            return;
+        }
+
+        if (!password) {
+            setError("Please enter your password");
+            return;
+        }
+
+        if (String(secretCode ?? "").trim() === "") {
+            setError("Please enter the secret code");
+            return;
+        }
+
 
         try {
             const payload: CreateAccountPayload = {

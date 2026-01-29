@@ -30,13 +30,16 @@ export default function Home() {
       return;
     }
 
-    if (
-      !email?.trim() ||
-      !password
-    ) {
-      setError("Please fill in all fields");
+    if (!email?.trim()) {
+      setError("Please enter your email");
       return;
     }
+
+    if (!password) {
+      setError("Please enter your password");
+      return;
+    }
+
 
     setLoading(true);
     try {
