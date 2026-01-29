@@ -4,7 +4,7 @@ export interface MenuItem {
   item_id: ID;
   stall_id: ID;
   category_id?: number | null;
-  image_url?: string | null;
+  item_image?: string | null;
   name: string;
   description?: string | null;
   price: Decimal;        // decimal(10,2)
