@@ -3,6 +3,10 @@ import { enforceKnownFields, requireAtLeastOneField, optionalNonNegativeNum } fr
 
 const ITEM_FIELDS = ['order_id', 'item_id', 'status', 'quantity', 'price'] as const;
 
+export const typeParamValidation = [
+  param('type').isIn(['STANDARD', 'CUSTOM']).withMessage('type must be either STANDARD or CUSTOM'),
+]
+
 export const orderItemIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
 ];

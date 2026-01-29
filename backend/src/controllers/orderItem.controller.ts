@@ -25,7 +25,8 @@ export const OrderItemController = {
 
   async getById(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.findById(id);
+    const type = req.params.type as 'STANDARD' | 'CUSTOM';
+    const result = await OrderItemService.findById(id, type);
     //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
@@ -33,7 +34,8 @@ export const OrderItemController = {
   async create(req: Request, res: Response) {
     try {
       const payload = req.body as OrderItemPayload;
-      const result = await OrderItemService.create(payload);
+      const type = req.params.type as 'STANDARD' | 'CUSTOM';
+      const result = await OrderItemService.create(payload, type);
       
       // Emit WebSocket event to the stall room if order item created successfully
       if (result.success && result.payload.data) {
@@ -59,7 +61,8 @@ export const OrderItemController = {
     try {
       const id = Number(req.params.id);
       const payload = req.body as UpdateOrderItemPayload;
-      const result = await OrderItemService.update(id, payload);
+      const type = req.params.type as 'STANDARD' | 'CUSTOM';
+      const result = await OrderItemService.update(id, payload, type);
       
       // Emit WebSocket event to the stall room if order item updated successfully
       if (result.success && result.payload.data) {
@@ -81,7 +84,8 @@ export const OrderItemController = {
   async updateStatus(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);
-      const result = await OrderItemService.updateStatus(id);
+      const type = req.params.type as 'STANDARD' | 'CUSTOM';
+      const result = await OrderItemService.updateStatus(id, type);
       
       // Emit WebSocket event to the stall room if status updated successfully
       if (result.success && result.payload.data) {
@@ -102,14 +106,16 @@ export const OrderItemController = {
 
   async cancel(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.cancel(id);
+    const type = req.params.type as 'STANDARD' | 'CUSTOM';
+    const result = await OrderItemService.cancel(id, type);
     //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
 
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
-    const result = await OrderItemService.delete(id);
+    const type = req.params.type as 'STANDARD' | 'CUSTOM';
+    const result = await OrderItemService.delete(id, type);
     //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
