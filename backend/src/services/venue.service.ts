@@ -73,4 +73,16 @@ export const VenueService = {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
+
+  async findTables(id: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        'SELECT * FROM "table" WHERE venue_id = $1 ORDER BY table_number::INTEGER ASC',
+        [id]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
 };

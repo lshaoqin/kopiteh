@@ -14,6 +14,8 @@ export default function MenuListPage() {
   const params = useParams();
   const stallId = Number(params.stallId); 
 
+  const { venueId, tableNumber } = useCartStore();
+
   const [stall, setStall] = useState<Stall | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -79,30 +81,20 @@ export default function MenuListPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-600 pb-32 w-full flex flex-col">
       
-      {/* --- HEADER --- */}
-      <div className="relative w-full h-64 rounded-b-[2.5rem] overflow-hidden shadow-md shrink-0">
-         {stall.stall_image ? (
-            <img src={stall.stall_image} alt={stall.name} className="absolute inset-0 w-full h-full object-cover" />
-         ) : (
-            <div className="absolute inset-0 bg-slate-300 flex items-center justify-center">
-                <ImageIcon className="w-16 h-16 text-slate-400" strokeWidth={1.5} />
-            </div>
-         )}
-
-         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
-
-         <div className="relative z-10 h-full flex flex-col justify-between p-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-sm w-fit">
-                  <BackButton href="/ordering/stalls" />
-            </div>
-
-            <div className="text-center pb-2">
-                <h1 className="text-3xl font-bold text-white tracking-wide drop-shadow-md">
-                    {stall.name}
-                </h1>
-            </div>
-         </div>
+    {/* --- HEADER --- */}
+    <div className="relative z-10 h-full flex flex-col justify-between p-6">
+      <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-sm w-fit">
+            <BackButton 
+              href={`/ordering/stalls?venue=${venueId}&table=${tableNumber}`} 
+            />
       </div>
+
+      <div className="text-center pb-2">
+          <h1 className="text-3xl font-bold text-white tracking-wide drop-shadow-md">
+              {stall.name}
+          </h1>
+      </div>
+    </div>
 
       {/* --- MENU SECTIONS --- */}
       <div className="flex-1 px-6 pt-8 space-y-10">

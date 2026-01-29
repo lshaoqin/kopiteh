@@ -17,14 +17,13 @@ export default function TableSelectionPage() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { tableNumber, setTableNumber } = useCartStore();
+  const { venueId, tableNumber, setTableNumber } = useCartStore();
 
   useEffect(() => {
     async function loadTables() {
       try {
         setLoading(true);
-        // Hardcoded venue 1 based on your seed script
-        const data = await api.getTablesByVenue(1);
+        const data = await api.getTablesByVenue(venueId); 
         setTables(data);
       } catch (err) {
         console.error("Failed to load tables:", err);
@@ -42,7 +41,7 @@ export default function TableSelectionPage() {
 
   const handleConfirm = () => {
     if (!tableNumber) return;
-    router.push("/ordering/stalls");
+    router.push(`/ordering/stalls?venue=${venueId}&table=${tableNumber}`);
   };
 
   return (
@@ -50,7 +49,7 @@ export default function TableSelectionPage() {
       
       {/* Header */}
       <header className="flex items-center pb-6">
-        <BackButton href="/" />
+        <BackButton href="/ordering/venue" />
       </header>
 
       {/* Title */}

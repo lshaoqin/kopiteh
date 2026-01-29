@@ -5,7 +5,9 @@ import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
 import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
-import pool from '../config/database'; 
+import { OrderItemService } from './orderItem.service';
+import { PoolClient } from 'pg';
+import pool from '../config/database';
 
 const ITEM_COLUMNS = new Set([
   'table_id',
@@ -68,22 +70,59 @@ export const OrderService = {
     }
   },
 
-  async create(payload: OrderPayload): Promise<ServiceResult<any>> {
+  async create(payload: OrderPayload, client?: PoolClient): Promise<ServiceResult<any>> {
+    const queryRunner = client || pool; 
+
     try {
-      const result = await BaseService.query(
-        'INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *, \'STANDARD\' AS type',
-        [
-          payload.table_id,
-          payload.user_id ?? null,
-          payload.status ?? null,
-          payload.total_price ?? null,
-          payload.created_at,
-          payload.remarks ?? null,
-        ]
+      await queryRunner.query('BEGIN'); // Start Transaction
+
+      // 1. Get Table ID
+      const tableRes = await queryRunner.query(
+        'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
+        [String(payload.table_number)]
       );
-      return successResponse(SuccessCodes.CREATED, result.rows[0]);
-    } catch (error) {
-      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+
+      if (tableRes.rows.length === 0) {
+        throw new Error(`Table ${payload.table_number} does not exist`);
+      }
+      const tableId = tableRes.rows[0].table_id;
+      
+      // 2. Create Order Header
+      const userId = (payload as any).user_id || 1; 
+      const orderRes = await queryRunner.query(
+        `INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) 
+         VALUES ($1, $2, $3, $4, NOW(), $5) 
+         RETURNING order_id`,
+        [tableId, userId, 'pending', payload.total_price, payload.remarks || null]
+      );
+      const orderId = orderRes.rows[0].order_id;
+
+      // 3. Loop through items and call the Sub-Service
+      for (const item of payload.items) {
+        
+        // Prepare the payload for the item service
+        const itemPayload = {
+          ...item,
+          order_id: orderId, // Inject the new Order ID
+          status: OrderItemStatusCodes.INCOMING
+        };
+
+        // CALL THE SERVICE, PASSING THE CLIENT
+        // This ensures the item is created inside this 'BEGIN' transaction
+        await OrderItemService.create(itemPayload, queryRunner);
+      }
+
+      await queryRunner.query('COMMIT'); // Save everything
+      return successResponse(SuccessCodes.CREATED, { order_id: orderId });
+
+    } catch (error: any) {
+      await queryRunner.query('ROLLBACK'); // Undo everything if any item fails
+      console.error("Order Create Error:", error);
+      return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
+    } finally {
+      if (!client) {
+        queryRunner.release();
+      }
     }
   },
 

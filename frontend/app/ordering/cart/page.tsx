@@ -89,6 +89,17 @@ export default function CartPage() {
         ))}
       </div>
 
+      <div className="px-6 mt-10 space-y-3 border-t border-slate-100 pt-6">
+        <div className="flex justify-between items-center text-slate-500 text-sm">
+          <span>Subtotal</span>
+          <span>${totalPrice().toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center text-slate-800 font-bold text-xl">
+          <span>Total</span>
+          <span>${totalPrice().toFixed(2)}</span>
+        </div>
+      </div>
+
       {/* Footer - Place Order Button */}
       <div className="fixed bottom-0 left-0 w-full bg-white px-6 py-6 pb-10 z-20">
         <Button 
