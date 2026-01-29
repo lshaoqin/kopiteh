@@ -128,7 +128,7 @@ CREATE INDEX IF NOT EXISTS idx_order_item_item_id ON order_item (item_id);
 
 -- custom order items
 CREATE TABLE IF NOT EXISTS custom_order_item (
-  custom_order_item_id SERIAL PRIMARY KEY,
+  order_item_id       SERIAL PRIMARY KEY,
   stall_id            INTEGER NOT NULL REFERENCES stall(stall_id) ON DELETE CASCADE,
   table_id           INTEGER NOT NULL REFERENCES "table"(table_id) ON DELETE RESTRICT,
   user_id             INTEGER REFERENCES users(user_id) ON DELETE CASCADE,

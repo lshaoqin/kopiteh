@@ -39,11 +39,7 @@ export const OrderItemController = {
       if (result.success && result.payload.data) {
         const orderItem = result.payload.data;
         // Get stall_id from the menu item
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemCreated(stallId, orderItem);
-        }
+        WebSocketService.notifyStallOrderItemCreated(orderItem.stall_id, orderItem);
       }
       
       return res.status(result.payload.status).json(result);
@@ -68,11 +64,7 @@ export const OrderItemController = {
       // Emit WebSocket event to the stall room if order item updated successfully
       if (result.success && result.payload.data) {
         const orderItem = result.payload.data;
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
-        }
+        WebSocketService.notifyStallOrderItemUpdated(orderItem.stall_id, orderItem);
       }
       
       return res.status(result.payload.status).json(result);
@@ -94,11 +86,7 @@ export const OrderItemController = {
       // Emit WebSocket event to the stall room if status updated successfully
       if (result.success && result.payload.data) {
         const orderItem = result.payload.data;
-        const menuItemResult = await MenuItemService.findById(orderItem.item_id);
-        if (menuItemResult.success && menuItemResult.payload.data) {
-          const stallId = menuItemResult.payload.data.stall_id;
-          WebSocketService.notifyStallOrderItemUpdated(stallId, orderItem);
-        }
+        WebSocketService.notifyStallOrderItemUpdated(orderItem.stall_id, orderItem);
       }
       
       return res.status(result.payload.status).json(result);
