@@ -119,6 +119,8 @@ export const OrderService = {
       await client.query('ROLLBACK'); // Undo everything if any item fails
       console.error("Order Create Error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
+    } finally {
+      client.release();
     }
   },
 
