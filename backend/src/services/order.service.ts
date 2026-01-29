@@ -6,7 +6,7 @@ import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
 import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
 import { OrderItemService } from './orderItem.service';
-import { PoolClient } from 'pg';
+import { PoolClient, Pool } from 'pg';
 import pool from '../config/database';
 
 const ITEM_COLUMNS = new Set([
@@ -22,7 +22,7 @@ export const OrderService = {
   async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * AS type FROM "order" WHERE user_id = $1 ORDER BY order_id',
+        'SELECT * FROM "order" WHERE user_id = $1 ORDER BY order_id',
         [user_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -34,7 +34,7 @@ export const OrderService = {
   async findByStall(stall_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        `SELECT * AS type FROM "order" WHERE order_id IN (
+        `SELECT * FROM "order" WHERE order_id IN (
           SELECT order_id FROM order_item WHERE item_id IN (
             SELECT item_id FROM menu_item WHERE stall_id = $1
           )
@@ -51,7 +51,7 @@ export const OrderService = {
   async findByTable(table_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * AS type FROM "order" WHERE table_id = $1 ORDER BY order_id',
+        'SELECT * FROM "order" WHERE table_id = $1 ORDER BY order_id',
         [table_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -62,7 +62,7 @@ export const OrderService = {
 
   async findById(id: number): Promise<ServiceResult<any>> {
     try {
-      const result = await BaseService.query('SELECT * AS type FROM "order" WHERE order_id = $1', [id]);
+      const result = await BaseService.query('SELECT * FROM "order" WHERE order_id = $1', [id]);
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
       return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
@@ -70,8 +70,8 @@ export const OrderService = {
     }
   },
 
-  async create(payload: OrderPayload, client?: PoolClient): Promise<ServiceResult<any>> {
-    const queryRunner = client || pool; 
+  async create(payload: OrderPayload, client?: PoolClient | Pool): Promise<ServiceResult<any>> {
+    const queryRunner = client? client : pool; 
 
     try {
       await queryRunner.query('BEGIN'); // Start Transaction
@@ -109,7 +109,7 @@ export const OrderService = {
 
         // CALL THE SERVICE, PASSING THE CLIENT
         // This ensures the item is created inside this 'BEGIN' transaction
-        await OrderItemService.create(itemPayload, queryRunner);
+        await OrderItemService.create(itemPayload, 'STANDARD', queryRunner);
       }
 
       await queryRunner.query('COMMIT'); // Save everything
@@ -119,10 +119,6 @@ export const OrderService = {
       await queryRunner.query('ROLLBACK'); // Undo everything if any item fails
       console.error("Order Create Error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
-    } finally {
-      if (!client) {
-        queryRunner.release();
-      }
     }
   },
 

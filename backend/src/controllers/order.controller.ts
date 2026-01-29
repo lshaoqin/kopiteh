@@ -101,7 +101,7 @@ export const OrderController = {
         return res.status(result.payload.status).json(result);
       }
       for (const item of orderItems.payload.data) {
-        await OrderItemService.cancel(item.order_item_id); // Cancels order after all items are cancelled
+        await OrderItemService.cancel(item.order_item_id, 'STANDARD'); // Cancels order after all items are cancelled
       }
       const result = successResponse(SuccessCodes.OK);
       return res.status(result.payload.status).json(result);

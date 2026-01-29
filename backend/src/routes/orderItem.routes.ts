@@ -14,7 +14,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const router = Router();
 
 // Public reads
-router.get('/orderItem/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.getById);
+router.get('/orderItem/id/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.getById);
 router.get('/orderItem/order/:order_id', orderIdParamValidation, runValidation, OrderItemController.getByOrder);
 router.get('/orderItem/stall/:stall_id', stallIdParamValidation, runValidation, OrderItemController.getByStall); // for runners
 
