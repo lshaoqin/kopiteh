@@ -33,11 +33,26 @@ export default function Home() {
             return;
         }
 
-        if (!userName || !email || !password || !secretCode) {
-            setError("Please fill in all fields");
-            setLoading(false);
+        if (!userName?.trim()) {
+            setError("Please enter your username");
             return;
         }
+
+        if (!email?.trim()) {
+            setError("Please enter your email");
+            return;
+        }
+
+        if (!password) {
+            setError("Please enter your password");
+            return;
+        }
+
+        if (String(secretCode ?? "").trim() === "") {
+            setError("Please enter the secret code");
+            return;
+        }
+
 
         try {
             const payload: CreateAccountPayload = {
@@ -53,8 +68,6 @@ export default function Home() {
                 body: JSON.stringify(payload)
             });
 
-            // Attempt to parse JSON, but safely
-            // Read raw text so we ALWAYS see something
             const raw = await res.text();
 
             let data;
@@ -66,12 +79,15 @@ export default function Home() {
                 return;
             }
 
-            // Backend validation error case (status 400)
             if (!data.success) {
-                const msg =
-                    data?.payload?.details ||
-                    `Request failed: ${res.status}`;
-                setError(msg);
+                const validationErrors = data?.error?.details?.errors;
+
+                if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+                    const msg = validationErrors.map((e: any) => e.msg).join(", ");
+                    setError(msg);
+                } else {
+                    setError(data?.payload?.details || `Request failed: ${res.status}`);
+                }
                 return;
             }
             // Success response
@@ -91,6 +107,7 @@ export default function Home() {
                 router.push("/admin/main/home");
             }, 2000);
         } catch (err: any) {
+            console.log(err)
             setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
