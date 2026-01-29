@@ -30,8 +30,11 @@ export default function Home() {
       return;
     }
 
-    if (!email || !password) {
-      setError("Please enter both your email and password.");
+    if (
+      !email?.trim() ||
+      !password
+    ) {
+      setError("Please fill in all fields");
       return;
     }
 
@@ -55,11 +58,15 @@ export default function Home() {
         throw new Error("Invalid JSON response from server.");
       }
 
-      if (!res.ok || data?.success === false) {
-        const msg =
-          data?.payload?.details ||
-          "Verification failed. Please check your code and try again.";
-        setError(msg);
+      if (!data.success) {
+        const validationErrors = data?.error?.details?.errors;
+
+        if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+          const msg = validationErrors.map((e: any) => e.msg).join(", ");
+          setError(msg);
+        } else {
+          setError(data?.payload?.details || `Request failed: ${res.status}`);
+        }
         return;
       }
 
