@@ -60,5 +60,11 @@ export const VenueController = {
       return res.status(result.payload.status).json(result);
     }
     return res.status(result.payload.status).json(result);
-  }
+  },
+
+  async getTables(req: Request, res: Response) {
+    const id = Number(req.params.id);
+    const result = await VenueService.findTables(id);
+    return res.status(result.payload.status).json(result);
+  },
 };

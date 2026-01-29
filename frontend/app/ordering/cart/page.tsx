@@ -1,20 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import { useCartStore } from "@/stores/cart.store";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton"; 
 import { CartItemRow } from "@/components/ui/CartItemRow";
+import { api } from "@/lib/api";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, clearCart } = useCartStore();
+  const { items, updateQuantity, clearCart, totalPrice, tableNumber } = useCartStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceOrder = async () => {
-    // TODO: Integrate API order creation here
-    alert("Order Placed Successfully!");
-    clearCart();
-    router.push("/ordering/stalls"); // Back to start or Order Status page
+    if (!tableNumber) {
+        alert("Table number missing. Redirecting to selection...");
+        router.push("/ordering/table");
+        return;
+    }
+
+    try {
+        setIsSubmitting(true);
+        
+        await api.createOrder({
+            table_number: tableNumber,
+            total_price: totalPrice(),
+            items: items,
+        });
+
+        // Success
+        clearCart();
+        router.push("/ordering/stalls");
+        alert("Order sent to kitchen!");
+        
+    } catch (error: any) {
+        console.error("Order error:", error);
+        alert(error.message || "Failed to place order.");
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   // Handle Quantity Logic
@@ -64,15 +89,27 @@ export default function CartPage() {
         ))}
       </div>
 
+      <div className="px-6 mt-10 space-y-3 border-t border-slate-100 pt-6">
+        <div className="flex justify-between items-center text-slate-500 text-sm">
+          <span>Subtotal</span>
+          <span>${totalPrice().toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center text-slate-800 font-bold text-xl">
+          <span>Total</span>
+          <span>${totalPrice().toFixed(2)}</span>
+        </div>
+      </div>
+
       {/* Footer - Place Order Button */}
       <div className="fixed bottom-0 left-0 w-full bg-white px-6 py-6 pb-10 z-20">
         <Button 
             onClick={handlePlaceOrder} 
+            disabled={isSubmitting}
             variant="confirm" 
             size="xl"
-            className="w-full text-lg shadow-none bg-slate-600 hover:bg-slate-700"
+            className="w-full text-lg shadow-none bg-slate-600 hover:bg-slate-700 disabled:opacity-70"
         >
-            Place Order
+            {isSubmitting ? "Processing..." : "Place Order"}
         </Button>
       </div>
     </div>

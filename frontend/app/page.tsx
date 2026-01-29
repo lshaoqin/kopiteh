@@ -22,7 +22,7 @@ export default function Home() {
               <Link href="/runner/venue/selectvenue">Runner</Link>
             </Button>
             <Button className="bg-primary1 h-11 rounded-md">
-              <Link href="/ordering/table">Ordering</Link>
+              <Link href="/ordering/venue">Ordering</Link>
             </Button>
           </div>
         </div>

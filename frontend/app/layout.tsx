@@ -1,5 +1,6 @@
 import "./globals.css"
 import { Inter } from "next/font/google";
+import { WebSocketProvider } from "@/context/WebSocketContext";
 
 export const metadata = {
   title: "The Volunteer Switchboard Ordering Helper",
@@ -16,7 +17,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
       </body>
     </html>
   )

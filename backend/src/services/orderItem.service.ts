@@ -7,20 +7,22 @@ import { SuccessCodes } from '../types/success';
 import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
 import {MenuItemService} from "./menuItem.service";
 import { OrderService } from './order.service';
+import { PoolClient } from 'pg';
+import pool from '../config/database';
+import { query } from 'express-validator';
 
 const ITEM_COLUMNS = new Set([
   'order_id',
   'item_id',
   'quantity',
-  'unit_price',
-  'line_subtotal',
+  'price',
 ]);
 
 export const OrderItemService = {
   async findByOrder(order_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order_Item WHERE order_id = $1 ORDER BY order_item_id',
+        'SELECT * FROM order_item WHERE order_id = $1 ORDER BY order_item_id',
         [order_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -40,7 +42,7 @@ export const OrderItemService = {
       const result = [];
       for (const item of stallItems.payload.data) {
         const orderItems = await BaseService.query(
-          'SELECT * FROM Order_Item WHERE item_id = $1 ORDER BY order_item_id',
+          'SELECT * FROM order_item WHERE item_id = $1 ORDER BY order_item_id',
           [item.item_id]
         );
         result.push(...orderItems.rows);
@@ -54,7 +56,7 @@ export const OrderItemService = {
   async findById(id: number): Promise<ServiceResult<any>> {
     try {
       const result = await BaseService.query(
-        'SELECT * Order_Item WHERE order_item_id = $1', 
+        'SELECT * FROM order_item WHERE order_item_id = $1', 
         [id]
       );
       if (!result.rows[0]) return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
@@ -64,20 +66,40 @@ export const OrderItemService = {
     }
   },
 
-  async create(payload: OrderItemPayload): Promise<ServiceResult<any>> {
+  async create(payload: OrderItemPayload, client?: PoolClient): Promise<ServiceResult<any>> {
+    // 1. Determine which "Query Runner" to use
+    // If a transaction client is passed, use it. Otherwise, use the global pool.
+    const queryRunner = client || pool; 
+
     try {
-      const result = await BaseService.query(
-        'INSERT INTO Order_Item (order_id, item_id, stall_id, quantity, unit_price, line_subtotal) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      // 2. Insert the Item
+      const itemRes = await queryRunner.query(
+        'INSERT INTO order_item (order_id, item_id, quantity, price, status) VALUES ($1,$2,$3,$4,$5) RETURNING order_item_id',
         [
           payload.order_id,
           payload.item_id,
           payload.quantity,
-          payload.unit_price,
-          payload.line_subtotal,
+          payload.price,
+          payload.status || 'INCOMING' 
         ]
       );
-      return successResponse(SuccessCodes.CREATED, result.rows[0]);
+      const orderItemId = itemRes.rows[0].order_item_id;
+
+      // 3. Insert Modifiers 
+      if (payload.modifiers && payload.modifiers.length > 0) {
+        for (const mod of payload.modifiers) {
+          await queryRunner.query(
+            `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
+             VALUES ($1, $2, $3, $4)`,
+            [orderItemId, mod.option_id, mod.price, mod.name]
+          );
+        }
+      }
+
+      return successResponse(SuccessCodes.CREATED, itemRes.rows[0]);
     } catch (error) {
+      // If we are NOT in a shared transaction, we should log here. 
+      // If we ARE in a shared transaction, the caller (OrderService) will catch this.
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
@@ -91,7 +113,7 @@ export const OrderItemService = {
     const values = entries.map(([, v]) => v ?? null);
 
     try {
-      const query = `UPDATE Order_Item SET ${setClause} WHERE order_item_id = $${
+      const query = `UPDATE order_item SET ${setClause} WHERE order_item_id = $${
         entries.length + 1
       } RETURNING *`;
       const result = await BaseService.query(query, [...values, id]);
@@ -106,7 +128,7 @@ export const OrderItemService = {
   async updateStatus(id: number): Promise<ServiceResult<any>> {
     // Get status and order_id of the OrderItem
     const orderItemInfo = await BaseService.query(
-      'SELECT status, order_id FROM Order_Item WHERE order_item_id = $1', [id]
+      'SELECT status, order_id FROM order_item WHERE order_item_id = $1', [id]
     );
     if (!orderItemInfo.rows[0])
       return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
@@ -120,7 +142,7 @@ export const OrderItemService = {
 
     try {
       const result = await BaseService.query(
-        'UPDATE Order_Item SET status = $1 WHERE order_item_id = $2 RETURNING *',
+        'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING *',
         [nextStatus, id]
       );
       OrderService.updateStatus(orderId); // Try to update order status as well
@@ -133,7 +155,7 @@ export const OrderItemService = {
   async cancel(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'UPDATE Order_Item SET status = $1 WHERE order_item_id = $2 RETURNING *', 
+        'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING *', 
         [OrderItemStatusCodes.CANCELLED, id]
       );
       if (result.rowCount === 0)
@@ -148,7 +170,7 @@ export const OrderItemService = {
   async delete(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'DELETE FROM Order_Item WHERE order_item_id = $1', 
+        'DELETE FROM order_item WHERE order_item_id = $1', 
         [id]
       );
       if (result.rowCount === 0)

@@ -14,6 +14,7 @@ const router = Router();
 // Public reads
 router.get("/items/stalls/:stall_id", stallIdParamValidation, runValidation, MenuItemController.getAll);
 router.get("/items/:id", menuItemIdParamValidation, runValidation, MenuItemController.getById);
+router.get("/items/default/:stall_id", stallIdParamValidation, runValidation, MenuItemController.getDefault);
 
 // Protected writes
 router.post("/items/create", authenticateToken, createMenuItemValidation, runValidation, MenuItemController.create);

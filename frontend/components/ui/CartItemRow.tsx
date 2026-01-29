@@ -54,7 +54,7 @@ export function CartItemRow({ item, onIncrease, onDecrease }: CartItemRowProps) 
         {/* Optional: Show Notes if they exist */}
         {item.remarks && (
             <p className="text-xs text-slate-400 mt-2 italic">
-                "{item.remarks}"
+                &quot;{item.remarks}&quot;
             </p>
         )}
       </div>

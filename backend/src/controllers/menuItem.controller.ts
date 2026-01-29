@@ -23,6 +23,13 @@ export const MenuItemController = {
     return res.status(result.payload.status).json(result);
   },
 
+  // GET /items/default/:stall_id
+  async getDefault(req: Request, res: Response) {
+    const stallId = Number(req.params.stall_id);
+    const result = await MenuItemService.findDefault(stallId);
+    return res.status(result.payload.status).json(result);
+  },
+
   // POST /items/create
   async create(req: Request, res: Response) {
     try {
