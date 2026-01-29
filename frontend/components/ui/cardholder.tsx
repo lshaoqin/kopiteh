@@ -20,7 +20,8 @@ function CardHolder({
   onActiveChange,
   onEdit,
 }: CardProps) {
-  const showActions = variant === "default";
+  const showActions = variant === "default" || variant === "venue";
+  const showToggle = variant === "default";
 
   // Prevent link navigation for interactive elements
   const stopPropagation = (e: React.MouseEvent | React.PointerEvent) => {
@@ -30,9 +31,8 @@ function CardHolder({
 
   return (
     <div
-      className={`flex flex-col rounded-xl bg-white shadow-md shadow-black/25 ${
-        showActions ? "h-80" : "h-50"
-      }`}
+      className={`flex flex-col rounded-xl bg-white shadow-md shadow-black/25 ${showActions ? "h-80" : "h-50"
+        }`}
     >
       <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
         {img ? (
@@ -51,12 +51,14 @@ function CardHolder({
             onClick={stopPropagation}
             onPointerDown={stopPropagation}
           >
-            <Switch
-              checked={isActive}
-              onCheckedChange={(v) => {
-                onActiveChange?.(v);
-              }}
-            />
+            {showToggle && (
+              <Switch
+                checked={isActive}
+                onCheckedChange={(v) => {
+                  onActiveChange?.(v);
+                }}
+              />
+            )}
             <Button
               size="bare"
               type="button"

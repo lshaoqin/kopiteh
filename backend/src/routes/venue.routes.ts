@@ -14,7 +14,7 @@ router.get('/venue', VenueController.getAll);
 router.get('/venue/:id', venueIdParamValidation, runValidation, VenueController.getById);
 router.get('/venue/:id/tables', venueIdParamValidation, runValidation, VenueController.getTables);
 router.post('/venue/create', authenticateToken, createVenueValidation, runValidation, VenueController.create);
-router.put('/venue/update/:id', authenticateToken, ...updateVenueValidation, runValidation, VenueController.update);
+router.patch('/venue/update/:id', authenticateToken, ...updateVenueValidation, runValidation, VenueController.update);
 router.delete('/venue/remove/:id', authenticateToken, venueIdParamValidation, runValidation, VenueController.remove);
 
 export default router;

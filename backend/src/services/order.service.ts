@@ -18,6 +18,7 @@ const ITEM_COLUMNS = new Set([
   'remarks',
 ]);
 
+
 export const OrderService = {
   async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
@@ -70,14 +71,13 @@ export const OrderService = {
     }
   },
 
-  async create(payload: OrderPayload, client?: PoolClient | Pool): Promise<ServiceResult<any>> {
-    const queryRunner = client? client : pool; 
-
+  async create(payload: OrderPayload): Promise<ServiceResult<any>> {
+    const client = await pool.connect();
     try {
-      await queryRunner.query('BEGIN'); // Start Transaction
+      await client.query('BEGIN'); // Start Transaction
 
       // 1. Get Table ID
-      const tableRes = await queryRunner.query(
+      const tableRes = await client.query(
         'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
         [String(payload.table_number)]
       );
@@ -89,7 +89,7 @@ export const OrderService = {
       
       // 2. Create Order Header
       const userId = (payload as any).user_id || 1; 
-      const orderRes = await queryRunner.query(
+      const orderRes = await client.query(
         `INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) 
          VALUES ($1, $2, $3, $4, NOW(), $5) 
          RETURNING order_id`,
@@ -109,14 +109,14 @@ export const OrderService = {
 
         // CALL THE SERVICE, PASSING THE CLIENT
         // This ensures the item is created inside this 'BEGIN' transaction
-        await OrderItemService.create(itemPayload, 'STANDARD', queryRunner);
+        await OrderItemService.create(itemPayload, 'STANDARD', client);
       }
 
-      await queryRunner.query('COMMIT'); // Save everything
+      await client.query('COMMIT'); // Save everything
       return successResponse(SuccessCodes.CREATED, { order_id: orderId });
 
     } catch (error: any) {
-      await queryRunner.query('ROLLBACK'); // Undo everything if any item fails
+      await client.query('ROLLBACK'); // Undo everything if any item fails
       console.error("Order Create Error:", error);
       return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
     }

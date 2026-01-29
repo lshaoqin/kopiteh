@@ -45,8 +45,12 @@ export default function ManageItemsPage() {
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [updatingItem, setUpdatingItem] = useState(false);
     const [updateItemError, setUpdateItemError] = useState<string | null>(null);
-
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
     const stallIdNum = Number(stallId);
+
+    const [deletingItem, setDeletingItem] = useState(false);
+    const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
     // group items by category
     const itemsByCategory = useMemo(() => {
@@ -199,6 +203,39 @@ export default function ManageItemsPage() {
         }
     };
 
+    const handleDeleteMenuCategory = async () => {
+        if (!updatingCategory) return;
+
+        try {
+            setDeleteError(null);
+            setDeleting(true);
+
+            const categoryId = updatingCategory.category_id;
+
+            const res = await fetch(`${API_URL}/categories/remove/${categoryId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to delete category");
+            }
+
+            setCategories((curr) => curr.filter((c) => c.category_id !== categoryId));
+            setShowUpdateCategory(false);
+            setUpdatingCategory(null);
+        } catch (e: any) {
+            setDeleteError(e?.message ?? "Failed to delete category");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+
     const handleCreateItem = async (v: any) => {
         try {
             setCreateItemError(null);
@@ -336,6 +373,39 @@ export default function ManageItemsPage() {
             setUpdatingItem(false);
         }
     };
+
+    const handleDeleteMenuItem = async () => {
+        if (!editingItem) return;
+
+        try {
+            setDeleteItemError(null);
+            setDeletingItem(true);
+
+            const itemId = editingItem.item_id;
+
+            const res = await fetch(`${API_URL}/items/remove/${itemId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to delete item");
+            }
+
+            setItems((curr) => curr.filter((it) => it.item_id !== itemId));
+            setShowEditItem(false);
+            setEditingItem(null);
+        } catch (e: any) {
+            setDeleteItemError(e?.message ?? "Failed to delete item");
+        } finally {
+            setDeletingItem(false);
+        }
+    };
+
 
     return (
         <main className="min-h-screen px-6 py-10 flex w-full">
@@ -502,6 +572,7 @@ export default function ManageItemsPage() {
                     setUpdateItemError(null);
                 }}
                 onSubmit={handleUpdateItem}
+                onDelete={handleDeleteMenuItem}
             />
 
             <AdminStallModal
@@ -522,11 +593,13 @@ export default function ManageItemsPage() {
                 labelName="Category Name"
                 initialName={updatingCategory?.name}
                 submitText="Update"
+                deleteText="Delete"
                 onClose={() => {
                     setShowUpdateCategory(false);
                     setUpdateCategoryError(null);
                 }}
                 onSubmit={handleUpdateMenuCategory}
+                onDelete={handleDeleteMenuCategory}
             />
 
         </main>
