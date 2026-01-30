@@ -6,7 +6,6 @@ import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
 import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
 import { OrderItemService } from './orderItem.service';
-import { PoolClient, Pool } from 'pg';
 import pool from '../config/database';
 
 const ITEM_COLUMNS = new Set([
