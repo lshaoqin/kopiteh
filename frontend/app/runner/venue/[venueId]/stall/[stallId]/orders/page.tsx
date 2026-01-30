@@ -22,7 +22,6 @@ export default function Home() {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<Stall | null>(null);
-  const [defaultItem, setDefaultItem] = useState<OrderItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
 
   const [showAddOrder, setShowAddOrder] = useState(false);
@@ -62,20 +61,6 @@ export default function Home() {
     }
   };
 
-  const getDefaultItem = async () => {
-    try {
-      const res = await fetch(`${API_URL}/items/default/${stallId}`);
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        throw new Error("Failed to fetch default item");
-      }
-      setDefaultItem(json.payload.data);
-    } catch (error: any) {
-      setError(error.message);
-    }
-  };
-
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
@@ -109,56 +94,30 @@ export default function Home() {
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
-  const createOrder = async (data: {
-    quantity: string;
-    unitPrice: string;
-    notes?: string;
-    table: string;
-  }) => {
-    const res = await fetch(`${API_URL}/order/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        table_id: data.table,
-        status: "PENDING",
-        total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
-        created_at: new Date().toISOString(),
-        remarks: data.notes,
-      }),
-    });
-    const json = await res.json();
-
-    console.log("Create Order response:", json);
-
-    if (!res.ok || !json.success) {
-      throw new Error(json?.message || "Failed to create order");
-    }
-
-    return json.payload.data;
-  };
 
   const createOrderItem = async (
-    orderId: number,
     data: {
       itemName: string;
       quantity: string;
       unitPrice: string;
+      notes?: string;
+      table: string;
     }
   ) => {
     try {
-      const res = await fetch(`${API_URL}/orderItem/create`, {
+      const res = await fetch(`${API_URL}/orderItem/create/CUSTOM`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          order_id: orderId,
-          item_id: defaultItem?.item_id,
+          stall_id: stallId,
+          table_id: data.table,
+          order_item_name: data.itemName,
           status: "INCOMING",
           quantity: parseInt(data.quantity),
-          price: parseInt(data.quantity) * parseFloat(data.unitPrice),
+          price: parseFloat(data.unitPrice),
+          remarks: data.notes,
         }),
       });
       
@@ -179,7 +138,6 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     getStall();
-    getDefaultItem();
     getOrderItemsByStall();
     setLoading(false);
   }, [API_URL, stallId]);
@@ -243,13 +201,13 @@ export default function Home() {
 
             {filteredOrderItems.map((item) => (
               <div
-                key={`${item.order_id}-${item.item_id}`}
+                key={`${item.order_item_id}`}
                 className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
               >
                 <div>
-                  <p className="font-medium">Order #{item.order_id}</p>
+                  <p className="font-medium">{item.order_item_name}</p>
                   <p className="text-sm text-gray-600">
-                    Item ID: {item.item_id}
+                    Item ID: {item.order_item_id}
                   </p>
                 </div>
 
@@ -272,10 +230,7 @@ export default function Home() {
             console.log("AddOrderPanel data:", data);
 
             try {
-              const order = await createOrder(data);
-
-              await createOrderItem(order.order_id, data);
-        
+              await createOrderItem(data);
             } catch (err) {
               console.error(err);
               setError(err instanceof Error ? err.message : String(err));

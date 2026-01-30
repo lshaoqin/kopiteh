@@ -18,7 +18,7 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers }: OrderItemDeta
 
   if (!open) return null;
 
-
+  
 
   return (
     <>
