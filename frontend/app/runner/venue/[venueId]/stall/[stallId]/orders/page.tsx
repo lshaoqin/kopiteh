@@ -25,6 +25,7 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
 
   const [showAddOrder, setShowAddOrder] = useState(false);
+  const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
   
 
   const filteredOrderItems = orderItems.filter(
@@ -202,20 +203,21 @@ export default function Home() {
             {filteredOrderItems.map((item) => (
               <div
                 key={`${item.order_item_id}`}
-                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
+                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
+                onClick={() => setShowOrderItemDetails(true)}
               >
                 <div>
-                  <p className="font-medium">{item.order_item_name}</p>
+                  <p className="font-medium">
+                    {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
+                  </p>
                   <p className="text-sm text-gray-600">
                     Item ID: {item.order_item_id}
                   </p>
+                  {/* Display modifiers here in the future */}
                 </div>
 
                 <div className="text-right">
-                  <p className="font-medium">x{item.quantity}</p>
-                  <p className="text-sm text-gray-600">
-                    ${item.price}
-                  </p>
+                  <p className="font-medium">Table {item.table_id}</p>
                 </div>
               </div>
             ))}
