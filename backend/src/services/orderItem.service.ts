@@ -145,6 +145,22 @@ async create(
             [orderItemId, mod.option_id, mod.price, mod.name]
           );
         }
+      } else {
+        const customItemPayload = payload as CustomOrderItemPayload;
+        result = await queryRunner.query(
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+          VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8) RETURNING *, \'CUSTOM\' AS type`,
+          [
+            customItemPayload.stall_id,
+            customItemPayload.table_id,
+            customItemPayload.user_id ?? null,
+            customItemPayload.order_item_name,
+            customItemPayload.status,
+            customItemPayload.quantity,
+            customItemPayload.price,
+            customItemPayload.remarks ?? null,
+          ]
+        );
       }
     } else {
       const p = request as CustomOrderItemPayload;
