@@ -146,24 +146,24 @@ export const OrderItemService = {
               [orderItemId, mod.option_id, mod.price, mod.name]
             );
           }
-        } else {
-          const customItemPayload = payload as CustomOrderItemPayload;
-          result = await queryRunner.query(
-            `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *, \'CUSTOM\' AS type`,
-            [
-              customItemPayload.stall_id,
-              customItemPayload.table_id,
-              customItemPayload.user_id ?? null,
-              customItemPayload.order_item_name,
-              customItemPayload.status,
-              customItemPayload.quantity,
-              customItemPayload.price,
-              customItemPayload.created_at,
-              customItemPayload.remarks ?? null,
-            ]
-          );
         }
+      } else {
+        const customItemPayload = payload as CustomOrderItemPayload;
+        result = await queryRunner.query(
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *, \'CUSTOM\' AS type`,
+          [
+            customItemPayload.stall_id,
+            customItemPayload.table_id,
+            customItemPayload.user_id ?? null,
+            customItemPayload.order_item_name,
+            customItemPayload.status,
+            customItemPayload.quantity,
+            customItemPayload.price,
+            customItemPayload.created_at,
+            customItemPayload.remarks ?? null,
+          ]
+        );
       }
       if (!result || !result.rows[0])
         return errorResponse(ErrorCodes.DATABASE_ERROR, 'Failed to create Order Item');
