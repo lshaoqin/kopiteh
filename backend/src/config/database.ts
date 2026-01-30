@@ -2,14 +2,17 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { Pool } from 'pg';
 
-//dotenv.config();
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-// Use SUPABASE_URL connection string if available, otherwise fall back to individual env vars
-const pool = process.env.SUPABASE_URL
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Use DATABASE_URL (Render standard) or SUPABASE_URL
+const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL;
+
+const pool = connectionString
   ? new Pool({
-      connectionString: process.env.SUPABASE_URL,
-      ssl: { rejectUnauthorized: false },
+      connectionString,
+      ssl: isProduction ? { rejectUnauthorized: false } : false,
     })
   : new Pool({
       user: process.env.DB_USER ?? process.env.POSTGRES_USER,
@@ -17,6 +20,12 @@ const pool = process.env.SUPABASE_URL
       database: process.env.DB_NAME ?? process.env.POSTGRES_DB,
       password: process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD,
       port: parseInt(process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432', 10),
+      ssl: isProduction ? { rejectUnauthorized: false } : false,
     });
+
+// Test connection on startup
+pool.query('SELECT NOW()')
+  .then(() => console.log('Database connected successfully'))
+  .catch((err) => console.error('Database connection error:', err.message));
 
 export default pool;
