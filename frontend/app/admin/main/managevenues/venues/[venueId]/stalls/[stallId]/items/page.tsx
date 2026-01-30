@@ -12,6 +12,21 @@ import { Stall } from "../../../../../../../../../../types/stall";
 import CategoryModal from "@/components/ui/admin/admincategoryitemmodal";
 import { AdminStallModal } from "@/components/ui/admin/adminstallmodal";
 
+type ModifierOptionDraft = {
+    option_id?: number;
+    name: string;
+    price_modifier: string; // input string
+    is_available: boolean;
+};
+
+type ModifierSectionDraft = {
+    section_id?: number;
+    name: string;
+    min_selections: string;
+    max_selections: string;
+    options: ModifierOptionDraft[];
+};
+
 export default function ManageItemsPage() {
     const { venueId, stallId } = useParams<{ venueId: string; stallId: string }>();
     const [stall, setStall] = useState<Stall>(null);
@@ -45,6 +60,10 @@ export default function ManageItemsPage() {
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [updatingItem, setUpdatingItem] = useState(false);
     const [updateItemError, setUpdateItemError] = useState<string | null>(null);
+
+    // edit variants
+    const [editingItemVariants, setEditingItemVariants] = useState<ModifierSectionDraft[]>([]);
+    const [initialEditingItemVariants, setInitialEditingItemVariants] = useState<ModifierSectionDraft[]>([]);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
     const stallIdNum = Number(stallId);
@@ -52,7 +71,43 @@ export default function ManageItemsPage() {
     const [deletingItem, setDeletingItem] = useState(false);
     const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
-    // group items by category
+    async function fetchJsonOrThrow(res: Response) {
+        const data = await res.json();
+        if (!res.ok || data?.success === false) {
+            throw new Error(data?.payload?.message ?? "Request failed");
+        }
+        return data;
+    }
+
+    // Fetch item variants (sections + options)
+    async function fetchItemVariants(API_URL: string, itemId: string): Promise<ModifierSectionDraft[]> {
+        const secRes = await fetch(`${API_URL}/item-sections/items/${itemId}`);
+        const secJson = await fetchJsonOrThrow(secRes);
+        const sections = secJson.payload?.data ?? [];
+
+        const sectionsWithOptions = await Promise.all(
+            sections.map(async (s: any) => {
+                const optRes = await fetch(`${API_URL}/modifiers/sections/${s.section_id}`);
+                const optJson = await fetchJsonOrThrow(optRes);
+                const options = optJson.payload?.data ?? [];
+
+                return {
+                    section_id: s.section_id,
+                    name: s.name ?? "",
+                    min_selections: String(s.min_selections ?? 0),
+                    max_selections: String(s.max_selections ?? 1),
+                    options: options.map((o: any) => ({
+                        option_id: o.option_id,
+                        name: o.name ?? "",
+                        price_modifier: String(o.price_modifier ?? 0),
+                        is_available: Boolean(o.is_available ?? true),
+                    })),
+                } as ModifierSectionDraft;
+            })
+        );
+
+        return sectionsWithOptions;
+    }
     const itemsByCategory = useMemo(() => {
         const map = new Map<number | null, MenuItem[]>();
         for (const it of items) {
@@ -264,6 +319,20 @@ export default function ManageItemsPage() {
             }
 
             setCreatingItem(true);
+            const sections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map(
+                (s: ModifierSectionDraft) => ({
+                    // no section_id on create
+                    name: s.name.trim(),
+                    min_selections: Number(s.min_selections),
+                    max_selections: Number(s.max_selections),
+                    options: (s.options ?? []).map((o) => ({
+                        // no option_id on create
+                        name: o.name.trim(),
+                        price_modifier: Number(o.price_modifier),
+                        is_available: Boolean(o.is_available),
+                    })),
+                })
+            );
 
             const res = await fetch(`${API_URL}/items/create`, {
                 method: "POST",
@@ -280,22 +349,18 @@ export default function ManageItemsPage() {
                     price: priceNum,
                     prep_time: prepNum,
                     is_available: true,
+                    modifier_sections: sections,
                 }),
             });
 
             const data = await res.json();
             if (!res.ok || data?.success === false) {
-                console.log("Create item error payload:", data); // <-- key
-                throw new Error(
-                    data?.payload?.message ??
-                    data?.payload?.data?.message ??
-                    JSON.stringify(data?.payload?.data ?? data)
-                );
+                throw new Error(data?.payload?.message ?? "Failed to create item");
             }
 
             const created: MenuItem = data.payload?.data;
-            setItems((curr) => [...curr, created]);
 
+            setItems((curr) => [...curr, created]);
             setShowCreateItem(false);
             setSelectedCategoryId(null);
         } catch (e: any) {
@@ -310,9 +375,25 @@ export default function ManageItemsPage() {
         setShowCreateItem(true);
     };
 
-    const handleOpenEditItem = (item: MenuItem) => {
+    const handleOpenEditItem = async (item: MenuItem) => {
+        console.log(item)
         setEditingItem(item);
-        setShowEditItem(true);
+        setUpdateItemError(null);
+
+        try {
+            if (!API_URL) throw new Error("Missing API URL");
+
+            const variants = await fetchItemVariants(API_URL, item.item_id);
+            setEditingItemVariants(variants);
+            setInitialEditingItemVariants(variants);
+            setShowEditItem(true);
+        } catch (e: any) {
+            setUpdateItemError(e?.message ?? "Failed to load item variants");
+            // still allow editing base fields even if variants fail
+            setEditingItemVariants([]);
+            setInitialEditingItemVariants([]);
+            setShowEditItem(true);
+        }
     };
 
     const handleUpdateItem = async (v: any) => {
@@ -322,23 +403,29 @@ export default function ManageItemsPage() {
             setUpdateItemError(null);
 
             const trimmedName = v.name.trim();
-            if (!trimmedName) {
-                setUpdateItemError("Item name is required.");
-                return;
-            }
+            if (!trimmedName) return setUpdateItemError("Item name is required.");
 
             const priceNum = Number(v.price);
             const prepNum = Number(v.prep_time);
-            if (Number.isNaN(priceNum) || priceNum < 0) {
-                setUpdateItemError("Price must be a non-negative number.");
-                return;
-            }
-            if (Number.isNaN(prepNum) || prepNum < 0) {
-                setUpdateItemError("Prep time must be a non-negative number.");
-                return;
-            }
+            if (Number.isNaN(priceNum) || priceNum < 0)
+                return setUpdateItemError("Price must be a non-negative number.");
+            if (Number.isNaN(prepNum) || prepNum < 0)
+                return setUpdateItemError("Prep time must be a non-negative number.");
 
             setUpdatingItem(true);
+
+            const nextSections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map((s: any) => ({
+                section_id: s.section_id, // keep if existing
+                name: s.name.trim(),
+                min_selections: Number(s.min_selections),
+                max_selections: Number(s.max_selections),
+                options: (s.options ?? []).map((o: any) => ({
+                    option_id: o.option_id, // keep if existing
+                    name: o.name.trim(),
+                    price_modifier: Number(o.price_modifier),
+                    is_available: Boolean(o.is_available),
+                })),
+            }));
 
             const res = await fetch(`${API_URL}/items/update/${editingItem.item_id}`, {
                 method: "PUT",
@@ -352,6 +439,7 @@ export default function ManageItemsPage() {
                     description: v.description?.trim() ? v.description.trim() : null,
                     price: priceNum,
                     prep_time: prepNum,
+                    modifier_sections: nextSections,
                 }),
             });
 
@@ -361,12 +449,15 @@ export default function ManageItemsPage() {
             }
 
             const updated: MenuItem = data.payload?.data;
+
             setItems((curr) =>
                 curr.map((it) => (it.item_id === updated.item_id ? { ...it, ...updated } : it))
             );
 
             setShowEditItem(false);
             setEditingItem(null);
+            setEditingItemVariants([]);
+            setInitialEditingItemVariants([]);
         } catch (e: any) {
             setUpdateItemError(e?.message ?? "Failed to update item");
         } finally {
@@ -559,10 +650,11 @@ export default function ManageItemsPage() {
                     editingItem
                         ? {
                             name: editingItem.name,
-                            imageUrl: editingItem.image_url ?? "",
+                            imageUrl: editingItem.item_image ?? "",
                             description: editingItem.description ?? "",
                             price: String(editingItem.price ?? ""),
                             prep_time: String(editingItem.prep_time ?? ""),
+                            modifier_sections: editingItemVariants,
                         }
                         : undefined
                 }
@@ -570,6 +662,8 @@ export default function ManageItemsPage() {
                     setShowEditItem(false);
                     setEditingItem(null);
                     setUpdateItemError(null);
+                    setEditingItemVariants([]);
+                    setInitialEditingItemVariants([]);
                 }}
                 onSubmit={handleUpdateItem}
                 onDelete={handleDeleteMenuItem}

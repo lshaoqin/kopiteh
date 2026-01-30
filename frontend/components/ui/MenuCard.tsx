@@ -30,9 +30,9 @@ export function PopularMenuCard({ item, href, rank, quantity = 0 }: MenuCardProp
       className="flex-shrink-0 w-28 flex flex-col items-center group cursor-pointer relative"
     >
       <div className="w-28 h-28 bg-white rounded-xl border-2 border-slate-500 flex items-center justify-center overflow-hidden mb-2 relative transition-colors group-hover:bg-slate-50">
-        {item.image_url ? (
+        {item.item_image ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+            <img src={item.item_image} alt={item.name} className="w-full h-full object-cover" />
         ) : (
             <ImageIcon className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
         )}
@@ -64,9 +64,9 @@ export function StandardMenuCard({ item, href, quantity = 0 }: MenuCardProps) {
       <div className="flex items-center gap-4 flex-1 overflow-hidden">
           {/* Image */}
           <div className="w-16 h-16 bg-white rounded-xl flex-shrink-0 flex items-center justify-center border-2 border-slate-500 overflow-hidden">
-              {item.image_url ? (
+              {item.item_image ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={item.item_image} alt={item.name} className="w-full h-full object-cover" />
               ) : (
                   <ImageIcon className="w-6 h-6 text-slate-400" strokeWidth={1.5} />
               )}
