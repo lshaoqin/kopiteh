@@ -6,7 +6,7 @@ import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
 import { OrderStatusCodes, OrderItemStatusCodes } from '../types/orderStatus';
 import { OrderItemService } from './orderItem.service';
-import pool from '../config/database'; 
+import pool from '../config/database';
 
 const ITEM_COLUMNS = new Set([
   'table_id',
@@ -22,7 +22,7 @@ export const OrderService = {
   async findByUser(user_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM Order WHERE user_id = $1 ORDER BY order_id',
+        'SELECT * FROM "order" WHERE user_id = $1 ORDER BY order_id',
         [user_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -108,7 +108,7 @@ export const OrderService = {
 
         // CALL THE SERVICE, PASSING THE CLIENT
         // This ensures the item is created inside this 'BEGIN' transaction
-        await OrderItemService.create(itemPayload, client);
+        await OrderItemService.create(itemPayload, 'STANDARD', client);
       }
 
       await client.query('COMMIT'); // Save everything
@@ -174,7 +174,7 @@ export const OrderService = {
       }
       if (result.rowCount === 0)
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order not found');
-      return successResponse<null>(SuccessCodes.OK, null);
+      return successResponse<any>(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

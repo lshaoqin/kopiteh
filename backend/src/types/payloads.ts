@@ -138,8 +138,10 @@ export interface CustomOrderItemPayload {
 }
 
 export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
-
-export interface FetchOrderItemsPayload extends CustomOrderItemPayload {}
+export interface FetchOrderItemResponsePayload extends CustomOrderItemPayload {
+  order_item_id: number;
+  type: 'STANDARD' | 'CUSTOM';
+}
 
 export interface OrderItemModifierPayload {
   order_item_id: number;

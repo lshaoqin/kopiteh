@@ -19,15 +19,21 @@ export interface Order {
   total_price: Decimal;
   created_at: string; // ISO
   remarks?: string | null;
+  type: 'STANDARD' | 'CUSTOM';
 }
 
 export interface OrderItem {
   order_item_id: ID;
-  order_id: ID;
-  item_id: ID;
+  stall_id: ID;
+  table_id: ID | null;
+  user_id?: ID | null;
+  order_item_name: string;
   status: OrderItemStatus;
   quantity: number;
   price: Decimal;
+  created_at: string;
+  remarks?: string | null;
+  type: 'STANDARD' | 'CUSTOM';
 }
 
 export interface OrderItemModifier {
