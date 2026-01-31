@@ -2,6 +2,7 @@
 
 import { BackButton, AddButton } from "@/components/ui/button";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
+import { OrderItemDetails } from "@/components/ui/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
@@ -26,6 +27,7 @@ export default function Home() {
 
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
+  const [selectedOrderItem, setSelectedOrderItem] = useState<OrderItem | null>(null);
   
 
   const filteredOrderItems = orderItems.filter(
@@ -204,7 +206,12 @@ export default function Home() {
               <div
                 key={`${item.order_item_id}`}
                 className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
-                onClick={() => setShowOrderItemDetails(true)}
+                onClick={
+                  () => {
+                    setSelectedOrderItem(item);
+                    setShowOrderItemDetails(true);
+                  }
+                }
               >
                 <div>
                   <p className="font-medium">
@@ -237,6 +244,16 @@ export default function Home() {
               console.error(err);
               setError(err instanceof Error ? err.message : String(err));
             }
+          }}
+        />
+        </div>
+        <div>
+        <OrderItemDetails
+          open={showOrderItemDetails}
+          orderItem={selectedOrderItem}
+          onClose={() => {
+            setShowOrderItemDetails(false);
+            setSelectedOrderItem(null);
           }}
         />
         </div>
