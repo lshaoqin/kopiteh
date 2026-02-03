@@ -111,69 +111,55 @@ export const OrderItemService = {
     }
   },
 
-  async create(
-    payload: OrderItemPayload | CustomOrderItemPayload, 
-    type: 'STANDARD' | 'CUSTOM',
-    client?: PoolClient | Pool
-  ): Promise<ServiceResult<any>> {
-    // 1. Determine which "Query Runner" to use
-    // If a transaction client is passed, use it. Otherwise, use the global pool.
-    const queryRunner = client? client : pool; 
+async create(
+  request: OrderItemPayload | CustomOrderItemPayload, 
+  type: 'STANDARD' | 'CUSTOM',
+  client?: PoolClient
+): Promise<ServiceResult<any>> {
+  
+  // 1. If a client is passed (from BaseService.tx), use it. 
+  // Otherwise, use BaseService.query (which uses the pool).
+  const executeQuery = (text: string, params: any[]) => 
+    client ? client.query(text, params) : BaseService.query(text, params);
 
-    try {
-      let result = null;
-      if (type === 'STANDARD') {
-        const standardItemPayload = payload as OrderItemPayload;
-        // 2. Insert the Item
-        result = await queryRunner.query(
-          'INSERT INTO order_item (order_id, item_id, quantity, price, status) VALUES ($1,$2,$3,$4,$5) RETURNING order_item_id',
-          [
-            standardItemPayload.order_id,
-            standardItemPayload.item_id,
-            standardItemPayload.quantity,
-            standardItemPayload.price,
-            standardItemPayload.status || 'INCOMING' 
-          ]
-        );
-        const orderItemId = result.rows[0].order_item_id;
+  try {
+    let result = null;
+    
+    if (type === 'STANDARD') {
+      const p = request as OrderItemPayload;
+      
+      // 2. Insert Item
+      result = await executeQuery(
+        `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
+         VALUES ($1, $2, $3, $4, $5) RETURNING order_item_id`,
+        [p.order_id, p.item_id, p.quantity, p.price, p.status || 'INCOMING']
+      );
+      const orderItemId = result.rows[0].order_item_id;
 
-        // 3. Insert Modifiers 
-        if (standardItemPayload.modifiers && standardItemPayload.modifiers.length > 0) {
-          for (const mod of standardItemPayload.modifiers) {
-            await queryRunner.query(
-              `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
-              VALUES ($1, $2, $3, $4)`,
-              [orderItemId, mod.option_id, mod.price, mod.name]
-            );
-          }
+      // 3. Insert Modifiers 
+      if (p.modifiers && p.modifiers.length > 0) {
+        for (const mod of p.modifiers) {
+          await executeQuery(
+            `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
+             VALUES ($1, $2, $3, $4)`,
+            [orderItemId, mod.option_id, mod.price, mod.name]
+          );
         }
-      } else {
-        const customItemPayload = payload as CustomOrderItemPayload;
-        result = await queryRunner.query(
-          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *, \'CUSTOM\' AS type`,
-          [
-            customItemPayload.stall_id,
-            customItemPayload.table_id,
-            customItemPayload.user_id ?? null,
-            customItemPayload.order_item_name,
-            customItemPayload.status,
-            customItemPayload.quantity,
-            customItemPayload.price,
-            customItemPayload.created_at,
-            customItemPayload.remarks ?? null,
-          ]
-        );
       }
-      if (!result || !result.rows[0])
-        return errorResponse(ErrorCodes.DATABASE_ERROR, 'Failed to create Order Item');
-      return successResponse(SuccessCodes.CREATED, result.rows[0]);
-    } catch (error) {
-      // If we are NOT in a shared transaction, we should log here. 
-      // If we ARE in a shared transaction, the caller (OrderService) will catch this.
-      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    } else {
+      const p = request as CustomOrderItemPayload;
+      result = await executeQuery(
+        `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *, 'CUSTOM' AS type`,
+        [p.stall_id, p.table_id, p.user_id ?? null, p.order_item_name, p.status, p.quantity, p.price, p.created_at, p.remarks ?? null]
+      );
     }
-  },
+
+    return successResponse(SuccessCodes.CREATED, result.rows[0]);
+  } catch (error) {
+    return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+  }
+},
 
   async update(
     id: number, 
