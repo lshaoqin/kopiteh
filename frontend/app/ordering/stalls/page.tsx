@@ -18,7 +18,7 @@ function StallSelectionContent() {
   const searchParams = useSearchParams();
   
   // Store actions and state
-  const { venueId, setVenueId, setTableNumber } = useCartStore();
+  const { venueId, tableNumber, setVenueId, setTableNumber } = useCartStore();
 
   const [stalls, setStalls] = useState<Stall[]>([]); 
   const [loading, setLoading] = useState(true); 
@@ -56,6 +56,19 @@ function StallSelectionContent() {
     fetchStalls();
   }, [venueId]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    // Check for Venue first
+    if (!venueId && !searchParams.get("venue")) {
+      router.push("/ordering/venue");
+    } 
+    // If venue exists but table is missing, redirect to table selection
+    else if (!tableNumber && !searchParams.get("table")) {
+      router.push("/ordering/table");
+    }
+  }, [loading, venueId, tableNumber, searchParams, router]);
+
   const filteredStalls = stalls
     .filter((stall) => stall.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
@@ -65,9 +78,8 @@ function StallSelectionContent() {
       return 0;
     });
 
-  // If no venue is selected and not in URL, redirect back to venue selection
-  if (!loading && !venueId && !searchParams.get("venue")) {
-    router.push("/ordering/venue");
+  // Prevent flash of content if redirecting
+  if (!loading && (!venueId || !tableNumber) && !searchParams.get("venue")) {
     return null;
   }
 

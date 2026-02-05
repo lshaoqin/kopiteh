@@ -144,7 +144,7 @@ export const api = {
     items: CartItem[];
   }) => {
     // Transform frontend CartItems to backend payload structure
-    const payload = {
+    const request = {
       table_number: orderData.table_number,
       total_price: orderData.total_price,
       items: orderData.items.map((item) => ({
@@ -162,7 +162,7 @@ export const api = {
 
     const response = await fetchClient<any>("/order/create", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(request),
     });
     
     return response;
