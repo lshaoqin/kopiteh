@@ -23,6 +23,9 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
     networks:
       - backend_network
 

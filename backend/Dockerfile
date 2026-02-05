@@ -17,5 +17,5 @@ RUN npx tsc
 # Expose backend port
 EXPOSE 4000
 
-# Start the server
-CMD ["node", "dist/index.js"]
+# Start the server with ts-node-dev for hot reload in development
+CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]
