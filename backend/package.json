@@ -1,6 +1,6 @@
 {
   "name": "kopiteh-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "KopiTeh Backend API",
   "main": "dist/index.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "ts-node src/scripts/migrate.ts",
+    "rollback": "ts-node src/scripts/rollback.ts",
     "seed": "ts-node src/seed.ts",
     "typecheck": "tsc --noEmit"
   },
