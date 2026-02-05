@@ -1,17 +1,16 @@
 "use client";
 
+import { api } from "@/lib/api";
 import { BackButton, AddButton } from "@/components/ui/button";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
+import { OrderItemDetails } from "@/components/ui/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
 import { Stall } from "../../../../../../../../types/stall";
-import { get } from "http";
 import { useWebSocket } from "@/context/WebSocketContext";
 
 export default function Home() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
   const params = useParams();
   const venueId = params.venueId;
   const stallId = params.stallId[0];
@@ -22,10 +21,11 @@ export default function Home() {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<Stall | null>(null);
-  const [defaultItem, setDefaultItem] = useState<OrderItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
 
   const [showAddOrder, setShowAddOrder] = useState(false);
+  const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
+  const [selectedOrderItem, setSelectedOrderItem] = useState<OrderItem | null>(null);
   
 
   const filteredOrderItems = orderItems.filter(
@@ -35,13 +35,12 @@ export default function Home() {
   // -- FETCHING STALL AND ORDER ITEMS --
   const getStall = async () => {
     try{
-      const res = await fetch(`${API_URL}/stalls/${stallId}`);
-      const json = await res.json();
+      const response = await api.getStallById(Number(stallId));
 
-      if (!res.ok || !json.success) {
+      if (!response) {
         throw new Error("Failed to fetch stall");
       }
-      setStall(json.payload.data);
+      setStall(response);
     } catch (error: any) {
       setError(error.message);
     }
@@ -49,28 +48,13 @@ export default function Home() {
 
   const getOrderItemsByStall = async () => {
     try {
-      const res = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
-      const json = await res.json();
+      const response = await api.getOrderItemsByStall(Number(stallId));
 
-      if (!res.ok || !json.success) {
+      if (!response) {
         throw new Error("Failed to fetch order items");
       }
-      console.log("Fetched order items:", json.payload.data);
-      setOrderItems(json.payload.data);
-    } catch (error: any) {
-      setError(error.message);
-    }
-  };
-
-  const getDefaultItem = async () => {
-    try {
-      const res = await fetch(`${API_URL}/items/default/${stallId}`);
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        throw new Error("Failed to fetch default item");
-      }
-      setDefaultItem(json.payload.data);
+      console.log("Fetched order items:", response);
+      setOrderItems(response);
     } catch (error: any) {
       setError(error.message);
     }
@@ -109,65 +93,32 @@ export default function Home() {
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
-  const createOrder = async (data: {
-    quantity: string;
-    unitPrice: string;
-    notes?: string;
-    table: string;
-  }) => {
-    const res = await fetch(`${API_URL}/order/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        table_id: data.table,
-        status: "PENDING",
-        total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
-        created_at: new Date().toISOString(),
-        remarks: data.notes,
-      }),
-    });
-    const json = await res.json();
-
-    console.log("Create Order response:", json);
-
-    if (!res.ok || !json.success) {
-      throw new Error(json?.message || "Failed to create order");
-    }
-
-    return json.payload.data;
-  };
 
   const createOrderItem = async (
-    orderId: number,
     data: {
       itemName: string;
       quantity: string;
       unitPrice: string;
+      notes?: string;
+      table: string;
     }
   ) => {
     try {
-      const res = await fetch(`${API_URL}/orderItem/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          order_id: orderId,
-          item_id: defaultItem?.item_id,
-          status: "INCOMING",
-          quantity: parseInt(data.quantity),
-          price: parseInt(data.quantity) * parseFloat(data.unitPrice),
-        }),
-      });
-      
-      const json = await res.json();
+      const payload = {
+        stall_id: Number(stallId),
+        table_id: Number(data.table),
+        order_item_name: data.itemName,
+        status: "INCOMING" as const,
+        quantity: Number(data.quantity),
+        price: Number(data.unitPrice),
+        remarks: data.notes || "",
+      };
+      const json = await api.createCustomOrder(payload);
 
       console.log("Create Order Item response:", json);
     
-      if (!res.ok || !json.success) {
-        throw new Error(json?.message || "Failed to create order item");
+      if (!json) {
+        throw new Error("Failed to create order item");
       } else {
         getOrderItemsByStall();
       }
@@ -179,10 +130,9 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     getStall();
-    getDefaultItem();
     getOrderItemsByStall();
     setLoading(false);
-  }, [API_URL, stallId]);
+  }, [stallId]);
 
 
   return (
@@ -243,21 +193,27 @@ export default function Home() {
 
             {filteredOrderItems.map((item) => (
               <div
-                key={`${item.order_id}-${item.item_id}`}
-                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
+                key={`${item.order_item_id}`}
+                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
+                onClick={
+                  () => {
+                    setSelectedOrderItem(item);
+                    setShowOrderItemDetails(true);
+                  }
+                }
               >
                 <div>
-                  <p className="font-medium">Order #{item.order_id}</p>
-                  <p className="text-sm text-gray-600">
-                    Item ID: {item.item_id}
+                  <p className="font-medium">
+                    {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
+                  <p className="text-sm text-gray-600">
+                    Item ID: {item.order_item_id}
+                  </p>
+                  {/* Display modifiers here in the future */}
                 </div>
 
                 <div className="text-right">
-                  <p className="font-medium">x{item.quantity}</p>
-                  <p className="text-sm text-gray-600">
-                    ${item.price}
-                  </p>
+                  <p className="font-medium">Table {item.table_id}</p>
                 </div>
               </div>
             ))}
@@ -272,14 +228,22 @@ export default function Home() {
             console.log("AddOrderPanel data:", data);
 
             try {
-              const order = await createOrder(data);
-
-              await createOrderItem(order.order_id, data);
-        
+              await createOrderItem(data);
             } catch (err) {
               console.error(err);
               setError(err instanceof Error ? err.message : String(err));
             }
+          }}
+        />
+        </div>
+        <div>
+        <OrderItemDetails
+          open={showOrderItemDetails}
+          orderItem={selectedOrderItem}
+          onClose={() => {
+            setShowOrderItemDetails(false);
+            setSelectedOrderItem(null);
+            getOrderItemsByStall();
           }}
         />
         </div>

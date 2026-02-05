@@ -1,4 +1,4 @@
-import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue, OrderItem } from "../../types";
 import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -138,6 +138,12 @@ export const api = {
     }));
   },
 
+  // --- ORDERS AND ORDER ITEMS ---
+  getOrderItemsByStall: async (stallId: number): Promise<OrderItem[]> => {
+    const response = await fetchClient<any>(`/orderItem/stall/${stallId}`);
+    return response;
+  },
+
   createOrder: async (orderData: {
     table_number: number;
     total_price: number;
@@ -165,6 +171,30 @@ export const api = {
       body: JSON.stringify(request),
     });
     
+    return response;
+  },
+
+  createCustomOrder: async (customOrderData: {
+    stall_id: number,
+    table_id: number,
+    order_item_name: string,
+    status: "INCOMING",
+    quantity: number,
+    price: number,
+    remarks?: string,
+  }): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/create/CUSTOM`, {
+      method: "POST",
+      body: JSON.stringify(customOrderData),
+    });
+    
+    return response;
+  },
+
+  updateOrderItemStatus: async (orderItemId: number, type: string): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/updateStatus/${type}/${orderItemId}`, {
+      method: "PUT"
+    });
     return response;
   }
 };

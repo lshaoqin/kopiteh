@@ -14,8 +14,6 @@ import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStat
 import {MenuItemService} from "./menuItem.service";
 import { OrderService } from './order.service';
 import { PoolClient, Pool } from 'pg';
-import pool from '../config/database';
-import { query } from 'express-validator';
 
 const STANDARD_ITEM_COLUMNS = new Set([
   'order_id',
@@ -126,25 +124,41 @@ async create(
     let result = null;
     
     if (type === 'STANDARD') {
-      const p = request as OrderItemPayload;
+      const standardItemPayload = request as OrderItemPayload;
       
       // 2. Insert Item
       result = await executeQuery(
         `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
          VALUES ($1, $2, $3, $4, $5) RETURNING order_item_id`,
-        [p.order_id, p.item_id, p.quantity, p.price, p.status || 'INCOMING']
+        [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price, standardItemPayload.status || 'INCOMING']
       );
       const orderItemId = result.rows[0].order_item_id;
 
       // 3. Insert Modifiers 
-      if (p.modifiers && p.modifiers.length > 0) {
-        for (const mod of p.modifiers) {
+      if (standardItemPayload.modifiers && standardItemPayload.modifiers.length > 0) {
+        for (const mod of standardItemPayload.modifiers) {
           await executeQuery(
             `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
              VALUES ($1, $2, $3, $4)`,
             [orderItemId, mod.option_id, mod.price, mod.name]
           );
         }
+      } else {
+        const customItemPayload = request as CustomOrderItemPayload;
+        result = await executeQuery(
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+          VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8) RETURNING *, \'CUSTOM\' AS type`,
+          [
+            customItemPayload.stall_id,
+            customItemPayload.table_id,
+            customItemPayload.user_id ?? null,
+            customItemPayload.order_item_name,
+            customItemPayload.status,
+            customItemPayload.quantity,
+            customItemPayload.price,
+            customItemPayload.remarks ?? null,
+          ]
+        );
       }
     } else {
       const p = request as CustomOrderItemPayload;
@@ -211,7 +225,7 @@ async create(
       );
     } else {
       orderItemInfo = await BaseService.query(
-        'SELECT status, custom_order_id FROM custom_order_item WHERE order_item_id = $1', [id]
+        'SELECT status, order_item_id FROM custom_order_item WHERE order_item_id = $1', [id]
       );
     }
     if (!orderItemInfo.rows[0])
