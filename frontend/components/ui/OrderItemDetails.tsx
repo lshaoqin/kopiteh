@@ -6,19 +6,36 @@ import { TextInput } from "./input";
 import { Button } from "./button";
 
 import { OrderItem, OrderItemModifier } from "../../../types/order";
+import { api } from "@/lib/api";
 
 type OrderItemDetailsProps = {
   open: boolean;
   onClose: () => void;
   orderItem: OrderItem;
   modifiers?: Array<OrderItemModifier>;
+  onOrderItemUpdated?: () => void;
 };
 
-function OrderItemDetails({ open, onClose, orderItem, modifiers }: OrderItemDetailsProps) {
+function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpdated }: OrderItemDetailsProps) {
 
   if (!open) return null;
 
-  
+  const [error, setError] = useState<string | null>(null);
+
+  const updateOrderItemStatus = async (order_item_id: number, status: string) => {
+    try {
+      const response = await api.updateOrderItemStatus(order_item_id, status);
+    
+      if (!response) {
+        throw new Error("Failed to fetch stall");
+      }
+      onOrderItemUpdated?.();
+      onClose();
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
 
   return (
     <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-9/10 h-2/3 bg-white rounded-lg shadow-lg border">
@@ -83,6 +100,7 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers }: OrderItemDeta
           <p className="text-sm text-gray-700 whitespace-pre-line">
             {orderItem.remarks}
           </p>
+          {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
         )}
       </div>
@@ -90,18 +108,20 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers }: OrderItemDeta
     
       {/* Actions */}
       <div className="p-3 h-3/10 box-border flex flex-col">
-        <Button 
-          className="w-full h-1/2 bg-green-600 cursor-pointer"
-          onClick={()=>{}}
-        >
-          Mark as preparing
-        </Button>
-      
-      
-        <div className="h-1/2 mt-3 grid grid-cols-2 gap-3">
-        <Button variant="secondary">Delete</Button>
-        <Button variant="secondary">Edit</Button>
-        </div>
+        {orderItem.status === "INCOMING" || orderItem.status === "PREPARING" ? (
+        <>
+          <Button 
+            className="w-full h-1/2 bg-green-600 cursor-pointer"
+            onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+          >
+            {orderItem.status === "INCOMING" ? "Mark as Preparing" : "Mark as Served"}
+          </Button>
+          <div className="h-1/2 mt-3 grid grid-cols-2 gap-3">
+            <Button variant="secondary">Delete</Button>
+            <Button variant="secondary">Edit</Button>
+          </div>
+        </>
+        ) : null}
       </div>
     </div>
   );
