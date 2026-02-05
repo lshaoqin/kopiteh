@@ -227,7 +227,7 @@ async create(
       );
     } else {
       orderItemInfo = await BaseService.query(
-        'SELECT status, custom_order_id FROM custom_order_item WHERE order_item_id = $1', [id]
+        'SELECT status, order_item_id FROM custom_order_item WHERE order_item_id = $1', [id]
       );
     }
     if (!orderItemInfo.rows[0])
