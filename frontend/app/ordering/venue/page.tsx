@@ -29,8 +29,8 @@ export default function VenueSelectionPage() {
     fetchVenues();
   }, []);
 
-  const handleSelectVenue = (id: string) => {
-    setVenueId(Number(id));
+  const handleSelectVenue = (id: number) => {
+    setVenueId(id);
     setTableNumber(null); 
     router.push("/ordering/table");
   };

@@ -58,7 +58,7 @@ export default function Home() {
         ) : (
           <DisplayGrid
             items={venues.map((venue) => ({
-              id: venue.venue_id,
+              id: String(venue.venue_id),
               name: venue.name,
               img: venue.image_url,
             }))}

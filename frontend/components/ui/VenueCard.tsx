@@ -3,7 +3,7 @@ import { Venue } from "@/../types";
 
 interface VenueCardProps {
   venue: Venue;
-  onClick: (id: string) => void;
+  onClick: (id: number) => void;
 }
 
 export function VenueCard({ venue, onClick }: VenueCardProps) {

@@ -21,6 +21,10 @@ export default function TableSelectionPage() {
 
   useEffect(() => {
     async function loadTables() {
+      if (!venueId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const data = await api.getTablesByVenue(venueId); 
@@ -32,7 +36,7 @@ export default function TableSelectionPage() {
       }
     }
     loadTables();
-  }, []);
+  }, [venueId]);
 
   const handleSelectOption = (table: number) => {
     setTableNumber(table);
