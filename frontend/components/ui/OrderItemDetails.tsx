@@ -18,8 +18,6 @@ type OrderItemDetailsProps = {
 
 function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpdated }: OrderItemDetailsProps) {
 
-  if (!open) return null;
-
   const [error, setError] = useState<string | null>(null);
 
   const updateOrderItemStatus = async (order_item_id: number, status: string) => {
@@ -36,7 +34,8 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
     }
   };
 
-
+  if (!open) return null;
+  
   return (
     <>
       <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50"></div>

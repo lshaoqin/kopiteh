@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Image as ImageIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Stall } from "@/../types";
+import Image from "next/image";
 
 interface StallGridCardProps {
   stall: Stall;
@@ -25,7 +26,7 @@ export function StallGridCard({ stall }: StallGridCardProps) {
         
         {/* Image Zoom Effect on Hover */}
         {stall.stall_image ? (
-           <img 
+           <Image 
             src={stall.stall_image} 
             alt={stall.name} 
             className={cn(
