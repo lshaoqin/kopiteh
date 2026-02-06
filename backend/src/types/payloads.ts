@@ -143,13 +143,6 @@ export interface FetchOrderItemResponsePayload extends CustomOrderItemPayload {
   type: 'STANDARD' | 'CUSTOM';
 }
 
-export interface OrderItemModifierPayload {
-  order_item_id: number;
-  option_id: number;
-  price_modifier: number;
-  option_name: string;
-}
-
 export interface CreateAccountPayload {
   name: string;
   email: string;

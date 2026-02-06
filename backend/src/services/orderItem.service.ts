@@ -56,13 +56,11 @@ async function findStandardById(id: number, client?: PoolClient | Pool): Promise
     const modifiersResult = await query(
       `
       SELECT 
-        mim.option_id,
-        mim.name,
-        mim.price_modifier AS price
-      FROM order_item_modifiers oim
-      JOIN menu_item_modifier mim 
-        ON oim.option_id = mim.option_id
-      WHERE oim.order_item_id = $1
+        option_id,
+        option_name AS name,
+        price_modifier AS price
+      FROM order_item_modifiers
+      WHERE order_item_id = $1
       `,
       [id]
     )
@@ -84,10 +82,9 @@ async function attachModifiers(
 
   const mods = await BaseService.query(
     `
-    SELECT oim.order_item_id, mim.option_id, mim.name, mim.price_modifier AS price
-    FROM order_item_modifiers oim
-    JOIN menu_item_modifier mim ON oim.option_id = mim.option_id
-    WHERE oim.order_item_id = ANY($1)
+    SELECT option_id, option_name AS name, price_modifier AS price
+    FROM order_item_modifiers
+    WHERE order_item_id = ANY($1)
     `,
     [ids]
   );

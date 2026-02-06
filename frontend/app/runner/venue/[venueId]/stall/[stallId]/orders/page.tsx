@@ -191,9 +191,8 @@ export default function Home() {
               </p>
             )}
 
-            {filteredOrderItems.map((item) => (
-              <div
-                key={`${item.order_item_id}`}
+            {filteredOrderItems.map((item, index) => (
+              <div key={index}
                 className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
                 onClick={
                   () => {
@@ -206,9 +205,12 @@ export default function Home() {
                   <p className="font-medium">
                     {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Item ID: {item.order_item_id}
-                  </p>
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    console.log("Modifiers:", item.modifiers),
+                    <p className="text-sm text-gray-600">
+                      {item.modifiers.map(modifier => modifier.name).join(", ")}
+                    </p>
+                  )}
                   {/* Display modifiers here in the future */}
                 </div>
 
