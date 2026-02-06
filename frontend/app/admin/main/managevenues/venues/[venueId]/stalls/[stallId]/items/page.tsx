@@ -80,7 +80,7 @@ export default function ManageItemsPage() {
     }
 
     // Fetch item variants (sections + options)
-    async function fetchItemVariants(API_URL: string, itemId: string): Promise<ModifierSectionDraft[]> {
+    async function fetchItemVariants(API_URL: string, itemId: number): Promise<ModifierSectionDraft[]> {
         const secRes = await fetch(`${API_URL}/item-sections/items/${itemId}`);
         const secJson = await fetchJsonOrThrow(secRes);
         const sections = secJson.payload?.data ?? [];
