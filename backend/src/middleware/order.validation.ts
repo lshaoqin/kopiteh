@@ -2,7 +2,7 @@ import { body, param, query } from 'express-validator';
 import { OrderStatusCodes } from '../types/orderStatus';
 import { enforceKnownFields, requireAtLeastOneField, optionalTextField, optionalNonNegativeNum } from './base.validation';
 
-const ITEM_FIELDS = ['table_number', 'items', 'user_id', 'status', 'total_price', 'created_at', 'remarks'] as const;
+const ITEM_FIELDS = ['table_number', 'items', 'user_id', 'total_price', 'remarks'] as const;
 
 export const orderIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
@@ -25,9 +25,18 @@ export const createOrderValidation = [
   enforceKnownFields(ITEM_FIELDS as readonly string[]),
   body('table_number').exists().withMessage('Table number is required'),
   optionalNonNegativeNum('user_id'),
-  body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
   body('total_price').exists().isFloat({ min: 0 }),
   optionalTextField('remarks', 1000),
+
+  body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
+  body('items.*.item_id').isInt({ gt: 0 }),
+  body('items.*.quantity').isInt({ gt: 0 }),
+  body('items.*.price').isFloat({ min: 0 }),
+  body('items.*.notes').optional().isString(),
+  body('items.*.modifiers').optional().isArray(),
+  body('items.*.modifiers.*.option_id').isInt({ gt: 0 }),
+  body('items.*.modifiers.*.name').isString(),
+  body('items.*.modifiers.*.price').isFloat({ min: 0 }),
 ];
 
 export const updateOrderValidation = [

@@ -33,20 +33,105 @@ const CUSTOM_ITEM_COLUMNS = new Set([
   'remarks',
 ]);
 
+// --- Helper Fuction ---
+async function findStandardById(id: number, client?: PoolClient | Pool): Promise<FetchOrderItemResponsePayload> {
+  try {
+    const query = client ? client.query.bind(client) : BaseService.query;
+    
+    const result = await query(
+      `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
+      oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
+      FROM order_item oi 
+      JOIN menu_item m ON oi.item_id = m.item_id 
+      JOIN "order" o ON oi.order_id = o.order_id 
+      JOIN "table" t ON o.table_id = t.table_id 
+      WHERE oi.order_item_id = $1 ORDER BY oi.order_item_id`,
+      [id]
+    );
+    if (!result.rows[0]) {
+      throw new Error('Order Item not found');
+    }
+
+    // 🔹 Fetch modifiers
+    const modifiersResult = await query(
+      `
+      SELECT 
+        mim.option_id,
+        mim.name,
+        mim.price_modifier AS price
+      FROM order_item_modifiers oim
+      JOIN menu_item_modifier mim 
+        ON oim.option_id = mim.option_id
+      WHERE oim.order_item_id = $1
+      `,
+      [id]
+    )
+    return {
+      ...result.rows[0],
+      modifiers: modifiersResult.rows, // OrderModifierPayload[]
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function attachModifiers(
+  items: FetchOrderItemResponsePayload[]
+): Promise<FetchOrderItemResponsePayload[]> {
+  if (items.length === 0) return items;
+
+  const ids = items.map(i => i.order_item_id);
+
+  const mods = await BaseService.query(
+    `
+    SELECT oim.order_item_id, mim.option_id, mim.name, mim.price_modifier AS price
+    FROM order_item_modifiers oim
+    JOIN menu_item_modifier mim ON oim.option_id = mim.option_id
+    WHERE oim.order_item_id = ANY($1)
+    `,
+    [ids]
+  );
+
+  const map = new Map<number, any[]>();
+  for (const row of mods.rows) {
+    if (!map.has(row.order_item_id)) {
+      map.set(row.order_item_id, []);
+    }
+    map.get(row.order_item_id)!.push({
+      option_id: row.option_id,
+      name: row.name,
+      price: row.price,
+    });
+  }
+
+  return items.map(item => ({
+    ...item,
+    modifiers: map.get(item.order_item_id) ?? [],
+  }));
+}
+
+
+// --- Service Object ---
 export const OrderItemService = {
   async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemResponsePayload[]>> {
     try {
-      const result = await BaseService.query(
-        `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
-        FROM order_item oi 
-        JOIN menu_item m ON oi.item_id = m.item_id 
-        JOIN "order" o ON oi.order_id = o.order_id 
-        JOIN "table" t ON o.table_id = t.table_id 
-        WHERE oi.order_id = $1 ORDER BY oi.order_item_id`,
+      const baseItems = await BaseService.query(
+        `
+        SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name AS order_item_name,
+              oi.status, oi.quantity, oi.price, o.created_at, o.remarks, 'STANDARD' AS type
+        FROM order_item oi
+        JOIN menu_item m ON oi.item_id = m.item_id
+        JOIN "order" o ON oi.order_id = o.order_id
+        JOIN "table" t ON o.table_id = t.table_id
+        WHERE oi.order_id = $1
+        ORDER BY oi.order_item_id
+        `,
         [order_id]
       );
-      return successResponse(SuccessCodes.OK, result.rows);
+
+      const result = await attachModifiers(baseItems.rows);
+      return successResponse(SuccessCodes.OK, result);
+
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
@@ -60,16 +145,20 @@ export const OrderItemService = {
       } else if (stallItems.payload.data === null) {
         return successResponse(SuccessCodes.OK, []); 
       }
-      const standardResult = await BaseService.query(
-        `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
-        FROM order_item oi 
-        JOIN menu_item m ON oi.item_id = m.item_id 
-        JOIN "order" o ON oi.order_id = o.order_id 
-        JOIN "table" t ON o.table_id = t.table_id 
+      const standardOrderItemIds = await BaseService.query(
+        `SELECT oi.order_item_id FROM order_item oi
+        JOIN menu_item m ON oi.item_id = m.item_id
         WHERE m.stall_id = $1 ORDER BY oi.order_item_id`,
         [stall_id]
       );
+
+      const standardResult = { rows: [] as FetchOrderItemResponsePayload[] };
+      for (const row of standardOrderItemIds.rows) {
+        const itemResult = await findStandardById(row.order_item_id);
+        if (itemResult) {
+          standardResult.rows.push(itemResult);
+        }
+      }
 
       const customResult = await BaseService.query(
         'SELECT *, \'CUSTOM\' AS type FROM custom_order_item WHERE stall_id = $1 ORDER BY order_item_id',
@@ -85,88 +174,89 @@ export const OrderItemService = {
     try {
       let result;
       if (type === 'STANDARD') {
-        result = await BaseService.query(
-          `SELECT m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-          oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
-          FROM order_item oi 
-          JOIN menu_item m ON oi.item_id = m.item_id 
-          JOIN "order" o ON oi.order_id = o.order_id 
-          JOIN "table" t ON o.table_id = t.table_id 
-          WHERE oi.order_item_id = $1 ORDER BY oi.order_item_id`,
-          [id]
-        );
+
+        result = await findStandardById(id);
+
+        if (!result) {
+          return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+        }
+
+        return successResponse(SuccessCodes.OK, {...result});
       } else {
         result = await BaseService.query(
           'SELECT *, \'CUSTOM\' AS type FROM custom_order_item WHERE order_item_id = $1', 
           [id]
         );
+
+        if (!result.rows[0]) {
+          return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
+        }
+        return successResponse(SuccessCodes.OK, result.rows[0]);
       }
-      if (!result.rows[0]) 
-        return errorResponse(ErrorCodes.NOT_FOUND, type=='STANDARD' ? 'Order Item not found' : 'Custom Order Item not found');
-      return successResponse(SuccessCodes.OK, result.rows[0]);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
 
-async create(
-  request: OrderItemPayload | CustomOrderItemPayload, 
-  type: 'STANDARD' | 'CUSTOM',
-  client?: PoolClient
-): Promise<ServiceResult<any>> {
-  
-  // 1. If a client is passed (from BaseService.tx), use it. 
-  // Otherwise, use BaseService.query (which uses the pool).
-  const executeQuery = (text: string, params: any[]) => 
-    client ? client.query(text, params) : BaseService.query(text, params);
-
-  try {
-    let result = null;
+  async create(
+    request: OrderItemPayload | CustomOrderItemPayload, 
+    type: 'STANDARD' | 'CUSTOM',
+    client?: PoolClient
+  ): Promise<ServiceResult<any>> {
     
-    if (type === 'STANDARD') {
-      const standardItemPayload = request as OrderItemPayload;
+    // 1. If a client is passed (from BaseService.tx), use it. 
+    // Otherwise, use BaseService.query (which uses the pool).
+    const executeQuery = (text: string, params: any[]) => 
+      client ? client.query(text, params) : BaseService.query(text, params);
+
+    try {
+      let result = null;
       
-      // 2. Insert Item
-      result = await executeQuery(
-        `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
-         VALUES ($1, $2, $3, $4, $5) RETURNING order_item_id`,
-        [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price, standardItemPayload.status || 'INCOMING']
-      );
-      const orderItemId = result.rows[0].order_item_id;
+      if (type === 'STANDARD') {
+        const standardItemPayload = request as OrderItemPayload;
+        
+        // 2. Insert Item
+        const orderItemRes  = await executeQuery(
+          `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
+          VALUES ($1, $2, $3, $4, 'INCOMING') RETURNING order_item_id`,
+          [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price]
+        );
+        const orderItemId = orderItemRes.rows[0].order_item_id;
 
-      // 3. Insert Modifiers 
-      if (standardItemPayload.modifiers && standardItemPayload.modifiers.length > 0) {
-        for (const mod of standardItemPayload.modifiers) {
-          await executeQuery(
-            `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
-             VALUES ($1, $2, $3, $4)`,
-            [orderItemId, mod.option_id, mod.price, mod.name]
-          );
-        }
-      } 
-    } else {
-      const customItemPayload = request as CustomOrderItemPayload;
-      result = await executeQuery(
-        `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-        VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8) RETURNING *, \'CUSTOM\' AS type`,
-        [
-          customItemPayload.stall_id,
-          customItemPayload.table_id,
-          customItemPayload.user_id ?? null,
-          customItemPayload.order_item_name,
-          customItemPayload.status,
-          customItemPayload.quantity,
-          customItemPayload.price,
-          customItemPayload.remarks ?? null,
-        ]
-      );
+        // 3. Insert Modifiers 
+        if (standardItemPayload.modifiers && standardItemPayload.modifiers.length > 0) {
+          for (const mod of standardItemPayload.modifiers) {
+            await executeQuery(
+              `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
+              VALUES ($1, $2, $3, $4)`,
+              [orderItemId, mod.option_id, mod.price, mod.name]
+            );
+          }
+        } 
+        result = await findStandardById(orderItemId, client);
+        return successResponse(SuccessCodes.CREATED, result);
+        
+      } else {
+        const customItemPayload = request as CustomOrderItemPayload;
+        result = await executeQuery(
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
+          VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7) RETURNING *, \'CUSTOM\' AS type`,
+          [
+            customItemPayload.stall_id,
+            customItemPayload.table_id,
+            customItemPayload.user_id ?? null,
+            customItemPayload.order_item_name,
+            customItemPayload.quantity,
+            customItemPayload.price,
+            customItemPayload.remarks ?? null,
+          ]
+        );
+        return successResponse(SuccessCodes.CREATED, result.rows[0]);
+      }
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
-
-    return successResponse(SuccessCodes.CREATED, result.rows[0]);
-  } catch (error) {
-    return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
-  }
-},
+  },
 
   async update(
     id: number, 
@@ -193,8 +283,8 @@ async create(
         const orderItemId = await BaseService.query(query, [...values, id]);
         if (!orderItemId.rows[0])
           return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
-        const result = await this.findById(orderItemId.rows[0].order_item_id, 'STANDARD');
-        return result;
+        const result = await findStandardById(orderItemId.rows[0].order_item_id);
+        return successResponse(SuccessCodes.OK, result);
       } else {
         const query = `UPDATE custom_order_item SET ${setClause} WHERE order_item_id = $${
           entries.length + 1
@@ -211,37 +301,35 @@ async create(
 
   async updateStatus(id: number, type: 'STANDARD' | 'CUSTOM'): Promise<ServiceResult<FetchOrderItemResponsePayload>> {
     // Get status and order_id of the OrderItem
-    let orderItemInfo;
+    let currStatus;
     if (type === 'STANDARD') {
-      orderItemInfo = await BaseService.query(
-        'SELECT status, order_id FROM order_item WHERE order_item_id = $1', [id]
+      currStatus = await BaseService.query(
+        'SELECT status FROM order_item WHERE order_item_id = $1', [id]
       );
     } else {
-      orderItemInfo = await BaseService.query(
-        'SELECT status, order_item_id FROM custom_order_item WHERE order_item_id = $1', [id]
+      currStatus = await BaseService.query(
+        'SELECT status FROM custom_order_item WHERE order_item_id = $1', [id]
       );
     }
-    if (!orderItemInfo.rows[0])
+    if (!currStatus.rows[0])
       return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
-    const currStatus = orderItemInfo.rows[0].status;
-    const orderId = orderItemInfo.rows[0].order_id;
 
     // Determine next status
-    const nextStatus = NextOrderItemStatusMap[currStatus as OrderItemStatusCodes];
+    const nextStatus = NextOrderItemStatusMap[currStatus.rows[0].status as OrderItemStatusCodes];
     if (!nextStatus)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Order Item is already in final status');
 
     try {
-      let result;
       if (type === 'STANDARD') {
-        const orderItemId = await BaseService.query(
-          'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING order_item_id',
+        const updateResult = await BaseService.query(
+          'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING order_item_id, order_id',
           [nextStatus, id]
         );
-        OrderService.updateStatus(orderId); // Try to update order status as well
-        return await this.findById(orderItemId.rows[0].order_item_id, 'STANDARD');
+        OrderService.updateStatus(updateResult.rows[0].order_id); // Try to update order status as well
+        const result = await findStandardById(updateResult.rows[0].order_item_id);
+        return successResponse(SuccessCodes.OK, result);
       } else {
-        result = await BaseService.query(
+        const result = await BaseService.query(
           'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, \'CUSTOM\' AS type',
           [nextStatus, id]
         );
@@ -254,17 +342,16 @@ async create(
 
   async cancel(id: number, type: 'STANDARD' | 'CUSTOM'): Promise<ServiceResult<FetchOrderItemResponsePayload>> {
     try {
-      let result;
       if (type === 'STANDARD') {
         const ids = await BaseService.query(
           'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING order_item_id, order_id', 
           [OrderItemStatusCodes.CANCELLED, id]
         );
         OrderService.updateStatus(ids.rows[0].order_id); // Try to update order status as well
-        result = await this.findById(ids.rows[0].order_item_id, 'STANDARD');
-        return result;
+        const result = await findStandardById(ids.rows[0].order_item_id);
+        return successResponse(SuccessCodes.OK, result);
       } else {
-        result = await BaseService.query(
+        const result = await BaseService.query(
           'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, \'CUSTOM\' AS type',
           [OrderItemStatusCodes.CANCELLED, id]
         );

@@ -119,7 +119,6 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
 
   } catch (error: any) {
     // BaseService.tx has already handled the ROLLBACK and release() by this point
-    console.error("Order Create Error:", error);
     return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
   }
 },
