@@ -190,10 +190,13 @@ export default function Home() {
                 No order item {selectedStatus.toLowerCase()}
               </p>
             )}
-
-            {filteredOrderItems.map((item, index) => (
+            {/* Sort the order items by created_at in descending order */}
+            {filteredOrderItems
+              .slice()
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((item, index) => (
               <div key={index}
-                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
+                className="flex h-16 justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
                 onClick={
                   () => {
                     setSelectedOrderItem(item);
