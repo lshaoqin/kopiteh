@@ -248,8 +248,21 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
     tableNumber?: string;
     venueId?: number;
     stallId?: number;
-  }): Promise<ServiceResult<any[]>> {
+    page?: number;
+    limit?: number;
+  }): Promise<ServiceResult<any>> {
     try {
+      const page = filters.page || 1;
+      const limit = filters.limit || 15;
+      const offset = (page - 1) * limit;
+
+      let countQuery = `
+        SELECT COUNT(DISTINCT o.order_id)::int as total
+        FROM "order" o
+        LEFT JOIN "table" t ON o.table_id = t.table_id
+        LEFT JOIN venue v ON t.venue_id = v.venue_id
+      `;
+
       let query = `
         SELECT DISTINCT
           o.order_id,
@@ -297,18 +310,39 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           LEFT JOIN order_item oi ON o.order_id = oi.order_id
           LEFT JOIN menu_item mi ON oi.item_id = mi.item_id
         `;
+        countQuery += `
+          LEFT JOIN order_item oi ON o.order_id = oi.order_id
+          LEFT JOIN menu_item mi ON oi.item_id = mi.item_id
+        `;
         conditions.push(`mi.stall_id = $${paramIndex++}`);
         params.push(filters.stallId);
       }
 
       if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
+        const whereClause = ` WHERE ${conditions.join(' AND ')}`;
+        query += whereClause;
+        countQuery += whereClause;
       }
 
-      query += ` ORDER BY o.created_at ASC`;
+      // Get total count
+      const countResult = await BaseService.query(countQuery, params);
+      const total = countResult.rows[0].total;
+
+      // Add ordering and pagination
+      query += ` ORDER BY o.created_at ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+      params.push(limit, offset);
 
       const result = await BaseService.query(query, params);
-      return successResponse(SuccessCodes.OK, result.rows);
+      
+      return successResponse(SuccessCodes.OK, {
+        orders: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

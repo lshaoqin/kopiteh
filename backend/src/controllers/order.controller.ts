@@ -142,6 +142,8 @@ export const OrderController = {
       tableNumber: req.query.tableNumber as string | undefined,
       venueId: req.query.venueId ? Number(req.query.venueId) : undefined,
       stallId: req.query.stallId ? Number(req.query.stallId) : undefined,
+      page: req.query.page ? Number(req.query.page) : 1,
+      limit: req.query.limit ? Number(req.query.limit) : 15,
     };
 
     const result = await OrderService.getAllWithFilters(filters);

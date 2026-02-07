@@ -57,6 +57,12 @@ export default function ViewOrders() {
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set())
   const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set())
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalOrders, setTotalOrders] = useState(0)
+  const ordersPerPage = 15
+  
   // Filters
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -78,7 +84,7 @@ export default function ViewOrders() {
       fetchVenues()
       fetchOrders()
     }
-  }, [isHydrated, user, accessToken])
+  }, [isHydrated, user, accessToken, currentPage])
 
   useEffect(() => {
     if (venueId && accessToken) {
@@ -137,6 +143,8 @@ export default function ViewOrders() {
       if (tableNumber) params.append('tableNumber', tableNumber)
       if (venueId) params.append('venueId', venueId)
       if (stallId) params.append('stallId', stallId)
+      params.append('page', currentPage.toString())
+      params.append('limit', ordersPerPage.toString())
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/order?${params.toString()}`,
@@ -154,7 +162,11 @@ export default function ViewOrders() {
       }
 
       if (data.success && data.payload?.data) {
-        setOrders(data.payload.data)
+        setOrders(data.payload.data.orders || [])
+        if (data.payload.data.pagination) {
+          setTotalPages(data.payload.data.pagination.totalPages)
+          setTotalOrders(data.payload.data.pagination.total)
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -257,6 +269,7 @@ export default function ViewOrders() {
   }
 
   const handleApplyFilters = () => {
+    setCurrentPage(1) // Reset to first page when applying filters
     fetchOrders()
   }
 
@@ -266,7 +279,24 @@ export default function ViewOrders() {
     setTableNumber("")
     setVenueId("")
     setStallId("")
+    setCurrentPage(1) // Reset to first page
     fetchOrders()
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1)
+    }
+  }
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page)
   }
 
   if (!isHydrated || !user) {
@@ -373,8 +403,13 @@ export default function ViewOrders() {
 
       {!loading && !error && (
         <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold">Orders ({orders.length})</h2>
+          <div className="p-6 border-b flex justify-between items-center">
+            <h2 className="text-xl font-semibold">
+              Orders (Showing {orders.length} of {totalOrders})
+            </h2>
+            <div className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -518,6 +553,61 @@ export default function ViewOrders() {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {((currentPage - 1) * ordersPerPage) + 1} to {Math.min(currentPage * ordersPerPage, totalOrders)} of {totalOrders} orders
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  variant="outline"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        onClick={() => handlePageClick(pageNum)}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        className="w-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  variant="outline"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>
