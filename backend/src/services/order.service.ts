@@ -305,7 +305,7 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
         query += ` WHERE ${conditions.join(' AND ')}`;
       }
 
-      query += ` ORDER BY o.created_at DESC`;
+      query += ` ORDER BY o.created_at ASC`;
 
       const result = await BaseService.query(query, params);
       return successResponse(SuccessCodes.OK, result.rows);
