@@ -230,9 +230,11 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           GROUP BY order_item_id
         ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
         LEFT JOIN "order" o ON oi.order_id = o.order_id
-          AND o.created_at >= $1 
+        WHERE (o.order_id IS NULL OR (
+          o.created_at >= $1 
           AND o.created_at < $2
           AND o.status != 'CANCELLED'
+        ))
         GROUP BY s.stall_id, s.name
         ORDER BY s.name`,
         [startDate.toISOString(), endDate.toISOString()]
