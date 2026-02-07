@@ -34,11 +34,9 @@ const CUSTOM_ITEM_COLUMNS = new Set([
 ]);
 
 // --- Helper Fuction ---
-async function findStandardById(id: number, client?: PoolClient | Pool): Promise<FetchOrderItemResponsePayload> {
-  try {
-    const query = client ? client.query.bind(client) : BaseService.query;
-    
-    const result = await query(
+async function findStandardById(id: number): Promise<FetchOrderItemResponsePayload> {
+  try {    
+    const result = await BaseService.query(
       `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
       oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
       FROM order_item oi 
@@ -53,7 +51,7 @@ async function findStandardById(id: number, client?: PoolClient | Pool): Promise
     }
 
     // 🔹 Fetch modifiers
-    const modifiersResult = await query(
+    const modifiersResult = await BaseService.query(
       `
       SELECT 
         option_id,
@@ -197,14 +195,8 @@ export const OrderItemService = {
 
   async create(
     request: OrderItemPayload | CustomOrderItemPayload, 
-    type: 'STANDARD' | 'CUSTOM',
-    client?: PoolClient
+    type: 'STANDARD' | 'CUSTOM'
   ): Promise<ServiceResult<any>> {
-    
-    // 1. If a client is passed (from BaseService.tx), use it. 
-    // Otherwise, use BaseService.query (which uses the pool).
-    const executeQuery = (text: string, params: any[]) => 
-      client ? client.query(text, params) : BaseService.query(text, params);
 
     try {
       let result = null;
@@ -213,7 +205,7 @@ export const OrderItemService = {
         const standardItemPayload = request as OrderItemPayload;
         
         // 2. Insert Item
-        const orderItemRes  = await executeQuery(
+        const orderItemRes  = await BaseService.query(
           `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
           VALUES ($1, $2, $3, $4, 'INCOMING') RETURNING order_item_id`,
           [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price]
@@ -223,19 +215,19 @@ export const OrderItemService = {
         // 3. Insert Modifiers 
         if (standardItemPayload.modifiers && standardItemPayload.modifiers.length > 0) {
           for (const mod of standardItemPayload.modifiers) {
-            await executeQuery(
+            await BaseService.query(
               `INSERT INTO order_item_modifiers (order_item_id, option_id, price_modifier, option_name)
               VALUES ($1, $2, $3, $4)`,
               [orderItemId, mod.option_id, mod.price, mod.name]
             );
           }
         } 
-        result = await findStandardById(orderItemId, client);
+        result = await findStandardById(orderItemId);
         return successResponse(SuccessCodes.CREATED, result);
         
       } else {
         const customItemPayload = request as CustomOrderItemPayload;
-        result = await executeQuery(
+        result = await BaseService.query(
           `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
           VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7) RETURNING *, \'CUSTOM\' AS type`,
           [

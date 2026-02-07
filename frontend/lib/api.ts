@@ -141,7 +141,6 @@ export const api = {
   // --- ORDERS AND ORDER ITEMS ---
   getOrderItemsByStall: async (stallId: number): Promise<OrderItem[]> => {
     const response = await fetchClient<any>(`/orderItem/stall/${stallId}`);
-    console.log("API Response for Order Items:", response);
     return response.map((item: any) => ({
       order_item_id: item.order_item_id,
       stall_id: item.stall_id,
