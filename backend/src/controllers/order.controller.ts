@@ -134,4 +134,17 @@ export const OrderController = {
     const result = await OrderService.getMonthlyAnalytics(year, month);
     return res.status(result.payload.status).json(result);
   },
+
+  async getAllWithFilters(req: Request, res: Response) {
+    const filters = {
+      startDate: req.query.startDate as string | undefined,
+      endDate: req.query.endDate as string | undefined,
+      tableNumber: req.query.tableNumber as string | undefined,
+      venueId: req.query.venueId ? Number(req.query.venueId) : undefined,
+      stallId: req.query.stallId ? Number(req.query.stallId) : undefined,
+    };
+
+    const result = await OrderService.getAllWithFilters(filters);
+    return res.status(result.payload.status).json(result);
+  },
 };
