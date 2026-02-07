@@ -171,7 +171,7 @@ export default function ViewOrders() {
     try {
       // Fetch order items
       const itemsRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/order-item/order/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/orderItem/order/${orderId}`,
         {
           headers: {
             "Authorization": `Bearer ${accessToken}`,
@@ -186,10 +186,10 @@ export default function ViewOrders() {
 
         // Fetch modifiers for each item
         const itemsWithModifiers = await Promise.all(
-          items.map(async (item: OrderItem) => {
+          items.map(async (item: any) => {
             try {
               const modRes = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/order-item-modifier/${item.order_item_id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/orderItem/modifiers/${item.order_item_id}`,
                 {
                   headers: {
                     "Authorization": `Bearer ${accessToken}`,
@@ -200,11 +200,24 @@ export default function ViewOrders() {
               const modData = await modRes.json()
 
               return {
-                ...item,
+                order_item_id: item.order_item_id,
+                item_id: item.item_id,
+                item_name: item.order_item_name,
+                quantity: item.quantity,
+                price: item.price,
+                status: item.status,
                 modifiers: modData.success && modData.payload?.data ? modData.payload.data : [],
               }
             } catch {
-              return { ...item, modifiers: [] }
+              return {
+                order_item_id: item.order_item_id,
+                item_id: item.item_id,
+                item_name: item.order_item_name,
+                quantity: item.quantity,
+                price: item.price,
+                status: item.status,
+                modifiers: [],
+              }
             }
           })
         )

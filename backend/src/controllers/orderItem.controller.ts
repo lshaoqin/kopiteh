@@ -117,4 +117,10 @@ export const OrderItemController = {
     //const result = successResponse(SuccessCodes.OK, data);
     return res.status(result.payload.status).json(result);
   },
+
+  async getModifiers(req: Request, res: Response) {
+    const orderItemId = Number(req.params.order_item_id);
+    const result = await OrderItemService.findModifiersByOrderItem(orderItemId);
+    return res.status(result.payload.status).json(result);
+  },
 };
