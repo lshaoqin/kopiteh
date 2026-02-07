@@ -215,10 +215,20 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           s.stall_id,
           s.name as stall_name,
           COUNT(DISTINCT o.order_id)::int as total_orders,
-          COALESCE(SUM(oi.price * oi.quantity), 0) as total_amount
+          COALESCE(
+            SUM(
+              (oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity
+            ), 
+            0
+          ) as total_amount
         FROM stall s
         LEFT JOIN menu_item mi ON s.stall_id = mi.stall_id
         LEFT JOIN order_item oi ON mi.item_id = oi.item_id
+        LEFT JOIN (
+          SELECT order_item_id, SUM(price_modifier) as modifier_total
+          FROM order_item_modifiers
+          GROUP BY order_item_id
+        ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
         LEFT JOIN "order" o ON oi.order_id = o.order_id
           AND o.created_at >= $1 
           AND o.created_at < $2
