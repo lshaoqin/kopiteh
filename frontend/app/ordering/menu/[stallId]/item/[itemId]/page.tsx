@@ -31,7 +31,7 @@ function ItemCustomizationContent() {
   const [error, setError] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedMods, setSelectedMods] = useState<string[]>([]);
+  const [selectedMods, setSelectedMods] = useState<number[]>([]);
   
   const { addItem, updateItem, removeItem, items: cartItems } = useCartStore();
 
@@ -55,7 +55,7 @@ function ItemCustomizationContent() {
             
             // Auto-select defaults if NOT editing
             if (!cartIdToEdit) {
-                const defaultSelections: string[] = [];
+                const defaultSelections: number[] = [];
                 (sectionData || []).forEach(sec => {
                     if ((sec.min_selections ?? 0) > 0) {
                         const firstMod = (modifierData || []).find(m => m.section_id === sec.section_id);
@@ -87,7 +87,7 @@ function ItemCustomizationContent() {
 
   // --- LOGIC ---
 
-  const handleToggle = (modId: string, sectionId: string, maxSelections: number) => {
+  const handleToggle = (modId: number, sectionId: number, maxSelections: number) => {
     setSelectedMods(prev => {
         const isSelected = prev.includes(modId);
         
@@ -190,7 +190,7 @@ function ItemCustomizationContent() {
                                     price={Number(mod.price_modifier)}
                                     isSelected={selectedMods.includes(mod.option_id)}
                                     isRadio={section.max_selections === 1}
-                                    onClick={() => handleToggle(mod.option_id, section.section_id!, section.max_selections ?? 0)}
+                                    onClick={() => handleToggle(mod.option_id, section.section_id, section.max_selections ?? 0)}
                                 />
                             ))
                         }

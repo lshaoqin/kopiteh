@@ -45,7 +45,7 @@ export default function Stalls() {
         if (venueId) loadStall();
     }, [API_URL, venueId]);
 
-    const handleToggle = async (stallId: string, next: boolean) => {
+    const handleToggle = async (stallId: number, next: boolean) => { // changed stallId type to number
         const prev = stalls;
         setStalls(curr =>
             curr.map(s => (s.stall_id === stallId ? { ...s, is_open: next } : s))

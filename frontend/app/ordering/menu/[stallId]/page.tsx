@@ -24,7 +24,7 @@ export default function MenuListPage() {
 
   const cartItems = useCartStore((state) => state.items);
   
-  const getItemQty = (itemId: string) => {
+  const getItemQty = (itemId: number) => {
     return cartItems
       .filter((cartItem) => cartItem.menuItem.item_id === itemId)
       .reduce((total, cartItem) => total + cartItem.quantity, 0);
