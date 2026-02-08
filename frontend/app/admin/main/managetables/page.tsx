@@ -80,7 +80,6 @@ export default function ManageTables() {
             setCreating(true)
             setCreateError(null)
 
-            const qrCode = `qr-${selectedVenueId}-${trimmedName}-${Date.now()}`
             const res = await fetch(`${API_URL}/tables/create`, {
                 method: "POST",
                 headers: {
@@ -90,7 +89,6 @@ export default function ManageTables() {
                 body: JSON.stringify({
                     venue_id: selectedVenueId,
                     table_number: trimmedName,
-                    qr_code: qrCode,
                 }),
             })
 
@@ -275,7 +273,7 @@ export default function ManageTables() {
                                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
                                             value={customTableName}
                                             onChange={(e) => setCustomTableName(e.target.value)}
-                                            placeholder="e.g., A1, VIP-1, Table-A"
+                                            placeholder="e.g. A1, 456B"
                                         />
                                     </div>
                                     <Button
@@ -310,7 +308,7 @@ export default function ManageTables() {
                                             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
                                             value={startNum}
                                             onChange={(e) => setStartNum(e.target.value)}
-                                            placeholder="e.g., 1"
+                                            placeholder="e.g. 1"
                                         />
                                     </div>
                                     <div>
@@ -320,7 +318,7 @@ export default function ManageTables() {
                                             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
                                             value={endNum}
                                             onChange={(e) => setEndNum(e.target.value)}
-                                            placeholder="e.g., 10"
+                                            placeholder="e.g. 10"
                                         />
                                     </div>
                                     <Button
@@ -396,9 +394,6 @@ export default function ManageTables() {
                                                         <h3 className="font-semibold text-lg">
                                                             Table {table.table_number}
                                                         </h3>
-                                                        <p className="text-sm text-gray-500 truncate">
-                                                            QR: {table.qr_code}
-                                                        </p>
                                                         <Button
                                                             onClick={() => handleCopyLink(table)}
                                                             variant="outline"

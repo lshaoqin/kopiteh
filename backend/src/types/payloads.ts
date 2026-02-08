@@ -75,7 +75,7 @@ export interface MenuItemModifierPayload {
 export interface TablePayload {
   venue_id: number;
   table_number: string;
-  qr_code: string;
+  is_active?: boolean;
 }
 
 // 1. Nested Modifier Payload

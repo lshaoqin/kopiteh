@@ -9,7 +9,7 @@ export const TableService = {
   async findAllByVenue(venue_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM "table" WHERE venue_id = $1 ORDER BY table_number::INTEGER ASC',
+        'SELECT * FROM "table" WHERE venue_id = $1 AND is_active = TRUE ORDER BY table_number ASC',
         [venue_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
@@ -38,14 +38,14 @@ export const TableService = {
   async create(payload: TablePayload): Promise<ServiceResult<any>> {
     try {
       const query = `
-        INSERT INTO "table" (venue_id, table_number, qr_code)
+        INSERT INTO "table" (venue_id, table_number, is_active)
         VALUES ($1, $2, $3)
         RETURNING *
       `;
       const result = await BaseService.query(query, [
         payload.venue_id,
         payload.table_number,
-        payload.qr_code,
+        payload.is_active ?? true,
       ]);
       return successResponse(SuccessCodes.CREATED, result.rows[0]);
     } catch (error) {
@@ -60,14 +60,13 @@ export const TableService = {
       
       for (let i = startNum; i <= endNum; i++) {
         const tableNumber = String(i);
-        const qrCode = `qr-${venue_id}-${tableNumber}-${Date.now()}`;
         
         const query = `
-          INSERT INTO "table" (venue_id, table_number, qr_code)
+          INSERT INTO "table" (venue_id, table_number, is_active)
           VALUES ($1, $2, $3)
           RETURNING *
         `;
-        const result = await BaseService.query(query, [venue_id, tableNumber, qrCode]);
+        const result = await BaseService.query(query, [venue_id, tableNumber, true]);
         tables.push(result.rows[0]);
       }
       
@@ -81,7 +80,7 @@ export const TableService = {
   async delete(id: number): Promise<ServiceResult<null>> {
     try {
       const result = await BaseService.query(
-        'DELETE FROM "table" WHERE table_id = $1',
+        'UPDATE "table" SET is_active = FALSE WHERE table_id = $1',
         [id]
       );
       if (result.rowCount === 0) {
@@ -97,7 +96,8 @@ export const TableService = {
   async deleteBulk(venue_id: number, tableNumbers: string[]): Promise<ServiceResult<null>> {
     try {
       const query = `
-        DELETE FROM "table" 
+        UPDATE "table" 
+        SET is_active = FALSE
         WHERE venue_id = $1 AND table_number = ANY($2)
       `;
       await BaseService.query(query, [venue_id, tableNumbers]);
