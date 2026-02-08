@@ -1,32 +1,6 @@
 import { OrderRow } from "./OrderRow"
 import { PaginationControls } from "./PaginationControls"
-
-interface OrderItemModifier {
-  order_item_option_id: number
-  option_name: string
-  price_modifier: string
-}
-
-interface OrderItem {
-  order_item_id: number
-  item_id: number
-  item_name: string
-  quantity: number
-  price: string
-  status: string
-  modifiers: OrderItemModifier[]
-}
-
-interface Order {
-  order_id: number
-  table_number: string
-  venue_name: string
-  status: string
-  total_price: string
-  created_at: string
-  remarks: string | null
-  items?: OrderItem[]
-}
+import type { Order, OrderItem } from "../page"
 
 interface OrdersTableProps {
   orders: Order[]

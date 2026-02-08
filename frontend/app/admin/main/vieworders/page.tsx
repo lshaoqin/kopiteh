@@ -6,46 +6,20 @@ import { useRouter } from "next/navigation"
 import { FilterSection } from "./components/FilterSection"
 import { OrdersTable } from "./components/OrdersTable"
 import { PaginationControls } from "./components/PaginationControls"
+import type { Order as BaseOrder, OrderItem as BaseOrderItem, OrderItemModifier, Venue, Stall } from "../../../../../types"
 
-interface OrderItemModifier {
-  order_item_option_id: number
-  option_name: string
-  price_modifier: string
-}
-
-interface OrderItem {
-  order_item_id: number
+// Extended types for admin view with additional fields
+export interface OrderItem extends BaseOrderItem {
   item_id: number
   item_name: string
-  quantity: number
-  price: string
-  status: string
-  modifiers: OrderItemModifier[]
 }
 
-interface Order {
-  order_id: number
+export interface Order extends Omit<BaseOrder, 'table_id'> {
   table_id: number
   table_number: string
   venue_id: number
   venue_name: string
-  user_id: number
-  status: string
-  total_price: string
-  created_at: string
-  remarks: string | null
   items?: OrderItem[]
-}
-
-interface Venue {
-  venue_id: number
-  name: string
-}
-
-interface Stall {
-  stall_id: number
-  name: string
-  venue_id: number
 }
 
 export default function ViewOrders() {
@@ -219,6 +193,7 @@ export default function ViewOrders() {
                 quantity: item.quantity,
                 price: item.price,
                 status: item.status,
+                remarks: item.remarks,
                 modifiers: modData.success && modData.payload?.data ? modData.payload.data : [],
               }
             } catch {
@@ -229,6 +204,7 @@ export default function ViewOrders() {
                 quantity: item.quantity,
                 price: item.price,
                 status: item.status,
+                remarks: item.remarks,
                 modifiers: [],
               }
             }

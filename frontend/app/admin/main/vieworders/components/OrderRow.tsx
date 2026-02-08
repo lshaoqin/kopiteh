@@ -1,32 +1,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { OrderItemsList } from "./OrderItemsList"
-
-interface OrderItemModifier {
-  order_item_option_id: number
-  option_name: string
-  price_modifier: string
-}
-
-interface OrderItem {
-  order_item_id: number
-  item_id: number
-  item_name: string
-  quantity: number
-  price: string
-  status: string
-  modifiers: OrderItemModifier[]
-}
-
-interface Order {
-  order_id: number
-  table_number: string
-  venue_name: string
-  status: string
-  total_price: string
-  created_at: string
-  remarks: string | null
-  items?: OrderItem[]
-}
+import type { Order, OrderItem } from "../page"
 
 interface OrderRowProps {
   order: Order
@@ -89,7 +63,7 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
             {isLoadingItems ? (
               <p className="text-gray-600 text-center">Loading items...</p>
             ) : order.items && order.items.length > 0 ? (
-              <OrderItemsList items={order.items} remarks={order.remarks} />
+              <OrderItemsList items={order.items} />
             ) : (
               <p className="text-gray-600 text-center">No items found for this order</p>
             )}

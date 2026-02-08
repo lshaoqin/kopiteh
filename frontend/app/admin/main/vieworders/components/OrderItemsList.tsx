@@ -1,33 +1,12 @@
-interface OrderItemModifier {
-  order_item_option_id: number
-  option_name: string
-  price_modifier: string
-}
-
-interface OrderItem {
-  order_item_id: number
-  item_id: number
-  item_name: string
-  quantity: number
-  price: string
-  status: string
-  modifiers: OrderItemModifier[]
-}
+import type { OrderItem } from "../page"
 
 interface OrderItemsListProps {
   items: OrderItem[]
-  remarks: string | null
 }
 
-export function OrderItemsList({ items, remarks }: OrderItemsListProps) {
+export function OrderItemsList({ items }: OrderItemsListProps) {
   return (
     <div className="space-y-4">
-      {remarks && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm font-medium text-yellow-900">Order Remarks:</p>
-          <p className="text-sm text-yellow-800">{remarks}</p>
-        </div>
-      )}
       <div className="space-y-3">
         {items.map((item) => (
           <div key={item.order_item_id} className="border border-gray-200 rounded p-4">
@@ -60,6 +39,12 @@ export function OrderItemsList({ items, remarks }: OrderItemsListProps) {
                     <span>+${parseFloat(mod.price_modifier).toFixed(2)}</span>
                   </div>
                 ))}
+              </div>
+            )}
+            {item.remarks && (
+              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-xs font-medium text-yellow-900">Additional Comments:</p>
+                <p className="text-xs text-yellow-800">{item.remarks}</p>
               </div>
             )}
           </div>
