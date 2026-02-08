@@ -72,54 +72,46 @@ export const OrderService = {
 
 async create(request: OrderPayload): Promise<ServiceResult<any>> {
   try {
-    // The 'tx' wrapper provides a 'client' that is already in a transaction
-    return await BaseService.tx(async (client) => {
+    const tableRes = await BaseService.query(
+      'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
+      [String(request.table_number)]
+    );
+
+    if (tableRes.rows.length === 0) {
+      throw new Error(`Table ${request.table_number} does not exist`);
+    }
+    const tableId = tableRes.rows[0].table_id;
+    
+    // 2. Create Order Header
+    const userId = (request as any).user_id || 1; 
+    const orderRes = await BaseService.query(
+      `INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) 
+        VALUES ($1, $2, $3, $4, NOW(), $5) 
+        RETURNING order_id`,
+      [tableId, userId, 'pending', request.total_price, request.remarks || null]
+    );
+    const orderId = orderRes.rows[0].order_id;
+
+    // 3. Loop through items and call the Sub-Service
+    for (const item of request.items) {
+      const itemPayload = {
+        ...item,
+        order_id: orderId,
+        status: OrderItemStatusCodes.INCOMING
+      };
+
+      const itemResult = await OrderItemService.create(itemPayload, 'STANDARD');
       
-      // 1. Get Table ID (Use client.query to stay in transaction)
-      const tableRes = await client.query(
-        'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
-        [String(request.table_number)]
-      );
-
-      if (tableRes.rows.length === 0) {
-        throw new Error(`Table ${request.table_number} does not exist`);
+      // If an item fails, throw error to trigger the automatic ROLLBACK in BaseService.tx
+      if (!itemResult.success) {
+        throw new Error(itemResult.payload.message);
       }
-      const tableId = tableRes.rows[0].table_id;
-      
-      // 2. Create Order Header
-      const userId = (request as any).user_id || 1; 
-      const orderRes = await client.query(
-        `INSERT INTO "order" (table_id, user_id, status, total_price, created_at, remarks) 
-         VALUES ($1, $2, $3, $4, NOW(), $5) 
-         RETURNING order_id`,
-        [tableId, userId, 'pending', request.total_price, request.remarks || null]
-      );
-      const orderId = orderRes.rows[0].order_id;
+    }
 
-      // 3. Loop through items and call the Sub-Service
-      for (const item of request.items) {
-        const itemPayload = {
-          ...item,
-          order_id: orderId,
-          status: OrderItemStatusCodes.INCOMING
-        };
-
-        // Pass the transaction client to OrderItemService
-        const itemResult = await OrderItemService.create(itemPayload, 'STANDARD', client);
-        
-        // If an item fails, throw error to trigger the automatic ROLLBACK in BaseService.tx
-        if (!itemResult.success) {
-          throw new Error(itemResult.payload.message);
-        }
-      }
-
-      // Return the final success response. BaseService.tx will handle the COMMIT.
-      return successResponse(SuccessCodes.CREATED, { order_id: orderId });
-    });
-
+    // Return the final success response. BaseService.tx will handle the COMMIT.
+    return successResponse(SuccessCodes.CREATED, { order_id: orderId });
   } catch (error: any) {
     // BaseService.tx has already handled the ROLLBACK and release() by this point
-    console.error("Order Create Error:", error);
     return errorResponse(ErrorCodes.DATABASE_ERROR, error.message || String(error));
   }
 },

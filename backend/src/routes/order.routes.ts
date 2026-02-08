@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { OrderController } from '../controllers/order.controller';
 import {
   createOrderValidation,

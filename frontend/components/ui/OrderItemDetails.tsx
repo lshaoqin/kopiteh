@@ -17,8 +17,9 @@ type OrderItemDetailsProps = {
 };
 
 function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpdated }: OrderItemDetailsProps) {
-
   const [error, setError] = useState<string | null>(null);
+
+  if (!open) return null; 
 
   const updateOrderItemStatus = async (order_item_id: number, status: string) => {
     try {

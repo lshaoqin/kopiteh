@@ -141,7 +141,24 @@ export const api = {
   // --- ORDERS AND ORDER ITEMS ---
   getOrderItemsByStall: async (stallId: number): Promise<OrderItem[]> => {
     const response = await fetchClient<any>(`/orderItem/stall/${stallId}`);
-    return response;
+    return response.map((item: any) => ({
+      order_item_id: item.order_item_id,
+      stall_id: item.stall_id,
+      table_id: item.table_id,
+      user_id: item.user_id,
+      order_item_name: item.order_item_name,
+      status: item.status,
+      quantity: item.quantity,
+      price: item.price,
+      created_at: item.created_at,
+      remarks: item.remarks,
+      modifiers: item.modifiers ? item.modifiers.map((mod: any) => ({
+        option_id: mod.option_id,
+        price: mod.price,
+        name: mod.name,
+      })) : [],
+      type: item.type,
+    }));
   },
 
   createOrder: async (orderData: {

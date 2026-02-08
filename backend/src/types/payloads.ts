@@ -130,7 +130,6 @@ export interface CustomOrderItemPayload {
   table_id: number;
   user_id?: number;
   order_item_name: string;
-  status: OrderItemStatusCodes;
   quantity: number;
   price: number;
   created_at: string;
@@ -140,14 +139,8 @@ export interface CustomOrderItemPayload {
 export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
 export interface FetchOrderItemResponsePayload extends CustomOrderItemPayload {
   order_item_id: number;
+  modifiers?: OrderModifierPayload[];
   type: 'STANDARD' | 'CUSTOM';
-}
-
-export interface OrderItemModifierPayload {
-  order_item_id: number;
-  option_id: number;
-  price_modifier: number;
-  option_name: string;
 }
 
 export interface CreateAccountPayload {

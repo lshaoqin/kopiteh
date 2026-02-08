@@ -190,11 +190,13 @@ export default function Home() {
                 No order item {selectedStatus.toLowerCase()}
               </p>
             )}
-
-            {filteredOrderItems.map((item) => (
-              <div
-                key={`${item.order_item_id}`}
-                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
+            {/* Sort the order items by created_at in descending order */}
+            {filteredOrderItems
+              .slice()
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((item, index) => (
+              <div key={index}
+                className="flex h-16 justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
                 onClick={
                   () => {
                     setSelectedOrderItem(item);
@@ -206,9 +208,12 @@ export default function Home() {
                   <p className="font-medium">
                     {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Item ID: {item.order_item_id}
-                  </p>
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    console.log("Modifiers:", item.modifiers),
+                    <p className="text-sm text-gray-600">
+                      {item.modifiers.map(modifier => modifier.name).join(", ")}
+                    </p>
+                  )}
                   {/* Display modifiers here in the future */}
                 </div>
 
