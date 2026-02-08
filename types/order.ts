@@ -40,7 +40,8 @@ export interface OrderItem {
 export interface OrderItemModifier {
   order_item_option_id: ID;
   order_item_id: ID;
+  option_name?: string;
   option_id: ID;
-  price: Decimal;
+  price_modifier: Decimal;
   name: string;
 }

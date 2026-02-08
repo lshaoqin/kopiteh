@@ -13,7 +13,7 @@ export default function VenueSelectionPage() {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
-  const { setVenueId, setTableNumber } = useCartStore(); 
+  const { setVenueId, setTableId } = useCartStore(); 
 
   useEffect(() => {
     async function fetchVenues() {

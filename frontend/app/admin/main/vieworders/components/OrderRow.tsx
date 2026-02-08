@@ -31,14 +31,14 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
             order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
             order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
             'bg-blue-100 text-blue-800'
           }`}>
             {order.status}
           </span>
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-          ${parseFloat(order.total_price).toFixed(2)}
+          ${parseFloat(order.total_price.toString()).toFixed(2)}
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
           <button
@@ -73,10 +73,10 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
                   <span className="font-semibold">Quantity:</span> {order.quantity}
                 </div>
                 <div className="text-sm">
-                  <span className="font-semibold">Unit Price:</span> ${parseFloat(order.unit_price || '0').toFixed(2)}
+                  <span className="font-semibold">Unit Price:</span> ${parseFloat(order.unit_price.toString() || '0').toFixed(2)}
                 </div>
                 <div className="text-sm">
-                  <span className="font-semibold">Total:</span> ${parseFloat(order.total_price).toFixed(2)}
+                  <span className="font-semibold">Total:</span> ${parseFloat(order.total_price.toString()).toFixed(2)}
                 </div>
               </div>
             ) : order.items && order.items.length > 0 ? (

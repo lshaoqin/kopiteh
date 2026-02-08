@@ -155,7 +155,7 @@ export const api = {
       remarks: item.remarks,
       modifiers: item.modifiers ? item.modifiers.map((mod: any) => ({
         option_id: mod.option_id,
-        price: mod.price,
+        price_modifier: mod.price,
         name: mod.name,
       })) : [],
       type: item.type,

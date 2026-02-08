@@ -14,15 +14,15 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
               <div>
                 <p className="font-medium text-gray-900">{item.item_name}</p>
                 <p className="text-sm text-gray-600">
-                  Quantity: {item.quantity} × ${parseFloat(item.price).toFixed(2)}
+                  Quantity: {item.quantity} × ${parseFloat(item.price.toString()).toFixed(2)}
                 </p>
               </div>
               <div className="text-right">
                 <p className="font-medium text-gray-900">
-                  ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                  ${(parseFloat(item.price.toString()) * item.quantity).toFixed(2)}
                 </p>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  item.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                  item.status === 'SERVED' ? 'bg-green-100 text-green-800' :
                   item.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
                   'bg-blue-100 text-blue-800'
                 }`}>
@@ -36,7 +36,7 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
                 {item.modifiers.map((mod) => (
                   <div key={mod.order_item_option_id} className="flex justify-between text-xs text-gray-600">
                     <span>• {mod.option_name}</span>
-                    <span>+${parseFloat(mod.price_modifier).toFixed(2)}</span>
+                    <span>+${parseFloat(mod.price_modifier.toString()).toFixed(2)}</span>
                   </div>
                 ))}
               </div>

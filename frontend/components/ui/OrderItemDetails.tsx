@@ -104,18 +104,18 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
               {orderItem.modifiers && orderItem.modifiers.length > 0 && orderItem.modifiers.map((m, index) => (
                 <div key={index} className="flex justify-between text-gray-600">
                   <span className="ml-2">+ {m.name}:</span>
-                  <span>${Number(m.price).toFixed(2)}</span>
+                  <span>${Number(m.price_modifier).toFixed(2)}</span>
                 </div>
               ))}
               {orderItem.modifiers && orderItem.modifiers.length > 0 && (
                 <div className="flex justify-between pt-2 mt-2 border-t font-semibold">
                   <span>Subtotal (per item):</span>
-                  <span>${(Number(orderItem.price) + orderItem.modifiers.reduce((sum, m) => sum + Number(m.price), 0)).toFixed(2)}</span>
+                  <span>${(Number(orderItem.price) + orderItem.modifiers.reduce((sum, m) => sum + Number(m.price_modifier), 0)).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between pt-2 mt-2 border-t font-bold text-base">
                 <span>Total ({orderItem.quantity}x):</span>
-                <span>${((Number(orderItem.price) + (orderItem.modifiers?.reduce((sum, m) => sum + Number(m.price), 0) || 0)) * Number(orderItem.quantity)).toFixed(2)}</span>
+                <span>${((Number(orderItem.price) + (orderItem.modifiers?.reduce((sum, m) => sum + Number(m.price_modifier), 0) || 0)) * Number(orderItem.quantity)).toFixed(2)}</span>
               </div>
             </div>
           </div>

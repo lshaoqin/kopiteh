@@ -192,7 +192,7 @@ export default function ViewAnalytics() {
             <div className="bg-green-50 rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-green-900 mb-2">Total Expenditure</h3>
               <p className="text-4xl font-bold text-green-700">
-                ${parseFloat(analytics.total_amount).toFixed(2)}
+                ${parseFloat(analytics.total_amount.toString()).toFixed(2)}
               </p>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function ViewAnalytics() {
                         {stall.total_orders}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        ${parseFloat(stall.total_amount).toFixed(2)}
+                        ${parseFloat(stall.total_amount.toString()).toFixed(2)}
                       </td>
                     </tr>
                   ))}
