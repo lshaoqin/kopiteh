@@ -36,7 +36,7 @@ export default function Home() {
   );
 
   // -- FETCHING STALL AND ORDER ITEMS --
-  const getStall = async () => {
+  const getStall = useCallback(async () => {
     try{
       const response = await api.getStallById(Number(stallId));
 
@@ -47,9 +47,9 @@ export default function Home() {
     } catch (error: any) {
       setError(error.message);
     }
-  };
+  }, [stallId]);
 
-  const getOrderItemsByStall = async () => {
+  const getOrderItemsByStall = useCallback(async () => {
     try {
       const response = await api.getOrderItemsByStall(Number(stallId));
 
@@ -61,7 +61,7 @@ export default function Home() {
     } catch (error: any) {
       setError(error.message);
     }
-  };
+  }, [stallId]);
 
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
@@ -194,7 +194,7 @@ export default function Home() {
     getStall();
     getOrderItemsByStall();
     setLoading(false);
-  }, [stallId]);
+  }, [stallId, getStall, getOrderItemsByStall]);
 
 
   return (
@@ -257,7 +257,7 @@ export default function Home() {
               .slice()
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((item, index) => {
-                const swipe = swipeState[item.order_item_id] || { x: 0 };
+                const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
                 const opacity = 1 - (swipe.x / 150) * 0.3;
                 
                 return (
