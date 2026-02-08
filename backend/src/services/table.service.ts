@@ -9,7 +9,12 @@ export const TableService = {
   async findAllByVenue(venue_id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM "table" WHERE venue_id = $1 AND is_active = TRUE ORDER BY table_number ASC',
+        `SELECT * FROM "table" 
+         WHERE venue_id = $1 AND is_active = TRUE 
+         ORDER BY 
+           CASE WHEN table_number ~ '^[0-9]+$' THEN 1 ELSE 2 END,
+           CASE WHEN table_number ~ '^[0-9]+$' THEN table_number::INTEGER ELSE 0 END,
+           table_number ASC`,
         [venue_id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
