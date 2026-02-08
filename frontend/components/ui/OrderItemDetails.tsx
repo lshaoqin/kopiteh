@@ -86,7 +86,7 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
               key={m.order_item_option_id}
               className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
               >
-              {m.option_id} / {m.option_name}
+              {m.option_id} / {m.name}
             </span>
             ))}
           </div>
