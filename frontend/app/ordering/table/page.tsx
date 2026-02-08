@@ -16,8 +16,9 @@ export default function TableSelectionPage() {
 
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);
 
-  const { venueId, tableNumber, setTableNumber } = useCartStore();
+  const { venueId, tableId, setTableId } = useCartStore();
 
   useEffect(() => {
     async function loadTables() {
@@ -38,14 +39,15 @@ export default function TableSelectionPage() {
     loadTables();
   }, [venueId]);
 
-  const handleSelectOption = (table: number) => {
-    setTableNumber(table);
+  const handleSelectOption = (id: number, number: string) => {
+    setTableId(id);
+    setSelectedTableNumber(number);
     setIsOpen(false);
   };
 
   const handleConfirm = () => {
-    if (!tableNumber) return;
-    router.push(`/ordering/stalls?venue=${venueId}&table=${tableNumber}`);
+    if (!tableId) return;
+    router.push(`/ordering/stalls?venue=${venueId}&table=${tableId}`);
   };
 
   return (
@@ -77,8 +79,8 @@ export default function TableSelectionPage() {
               loading && "opacity-60 cursor-not-allowed"
             )}
           >
-            <span className={tableNumber ? "text-slate-700" : "text-slate-300"}>
-              {loading ? "Loading tables..." : (tableNumber ? `Table ${tableNumber}` : "Select Table")}
+            <span className={selectedTableNumber ? "text-slate-700" : "text-slate-300"}>
+              {loading ? "Loading tables..." : (selectedTableNumber ? `Table ${selectedTableNumber}` : "Select Table")}
             </span>
             {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
@@ -93,8 +95,8 @@ export default function TableSelectionPage() {
             <div className="absolute top-full left-0 w-full bg-white border border-t-0 border-slate-400 rounded-b-lg overflow-hidden max-h-60 overflow-y-auto z-50 shadow-lg">
               {tables.map((table) => (
                 <button
-                  key={table.table_id} // Use the DB ID as the React key
-                  onClick={() => handleSelectOption(table.table_number)} // Pass the number to the store
+                  key={table.table_id}
+                  onClick={() => handleSelectOption(table.table_id, table.table_number.toString())}
                   className="w-full text-left px-5 py-3 text-lg text-slate-600 hover:bg-slate-50 border-b border-slate-100 last:border-none transition-colors"
                 >
                   Table {table.table_number}
@@ -110,7 +112,7 @@ export default function TableSelectionPage() {
                 variant="confirm" 
                 size="xl"
                 onClick={handleConfirm} 
-                disabled={!tableNumber || loading}
+                disabled={!tableId || loading}
             >
                 Confirm
             </Button>

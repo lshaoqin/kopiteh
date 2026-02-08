@@ -71,15 +71,15 @@ export const OrderService = {
 
 async create(request: OrderPayload): Promise<ServiceResult<any>> {
   try {
+    // Verify table exists and is active
     const tableRes = await BaseService.query(
-      'SELECT table_id FROM "table" WHERE table_number = $1 LIMIT 1',
-      [String(request.table_number)]
+      'SELECT table_id FROM "table" WHERE table_id = $1 AND is_active = TRUE LIMIT 1',
+      [request.table_id]
     );
 
     if (tableRes.rows.length === 0) {
-      throw new Error(`Table ${request.table_number} does not exist`);
+      throw new Error(`Table ID ${request.table_id} does not exist or is inactive`);
     }
-    const tableId = tableRes.rows[0].table_id;
     
     // 2. Create Order Header
     const userId = (request as any).user_id || 1; 
@@ -87,7 +87,7 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       `INSERT INTO "order" (table_id, user_id, status, total_price, created_at) 
         VALUES ($1, $2, $3, $4, NOW()) 
         RETURNING order_id`,
-      [tableId, userId, 'pending', request.total_price]
+      [request.table_id, userId, 'pending', request.total_price]
     );
     const orderId = orderRes.rows[0].order_id;
 

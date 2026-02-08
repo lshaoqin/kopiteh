@@ -10,12 +10,12 @@ import { api } from "@/lib/api";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, clearCart, totalPrice, tableNumber } = useCartStore();
+  const { items, updateQuantity, clearCart, totalPrice, tableId } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceOrder = async () => {
-    if (!tableNumber) {
-        alert("Table number missing. Redirecting to selection...");
+    if (!tableId) {
+        alert("Table missing. Redirecting to selection...");
         router.push("/ordering/table");
         return;
     }
@@ -24,7 +24,7 @@ export default function CartPage() {
         setIsSubmitting(true);
         
         await api.createOrder({
-            table_number: tableNumber,
+            table_id: tableId,
             total_price: totalPrice(),
             items: items,
         });

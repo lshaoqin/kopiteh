@@ -145,6 +145,7 @@ export const api = {
       order_item_id: item.order_item_id,
       stall_id: item.stall_id,
       table_id: item.table_id,
+      table_number: item.table_number,
       user_id: item.user_id,
       order_item_name: item.order_item_name,
       status: item.status,
@@ -162,13 +163,13 @@ export const api = {
   },
 
   createOrder: async (orderData: {
-    table_number: number;
+    table_id: number;
     total_price: number;
     items: CartItem[];
   }) => {
     // Transform frontend CartItems to backend payload structure
     const request = {
-      table_number: orderData.table_number,
+      table_id: orderData.table_id,
       total_price: orderData.total_price,
       items: orderData.items.map((item) => ({
         item_id: Number(item.menuItem.item_id),

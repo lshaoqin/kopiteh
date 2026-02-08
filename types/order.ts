@@ -25,6 +25,7 @@ export interface OrderItem {
   order_item_id: ID;
   stall_id: ID;
   table_id: ID | null;
+  table_number?: string | null;
   user_id?: ID | null;
   order_item_name: string;
   status: OrderItemStatus;

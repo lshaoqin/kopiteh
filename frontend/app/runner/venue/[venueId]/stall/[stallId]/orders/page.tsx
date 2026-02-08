@@ -56,7 +56,6 @@ export default function Home() {
       if (!response) {
         throw new Error("Failed to fetch order items");
       }
-      console.log("Fetched order items:", response);
       setOrderItems(response);
     } catch (error: any) {
       setError(error.message);
@@ -66,12 +65,10 @@ export default function Home() {
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
-    console.log('New order item received:', data.orderItem);
     setOrderItems((prev) => [...prev, data.orderItem]);
   }, []);
 
   const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
-    console.log('Order item updated:', data.orderItem);
     setOrderItems((prev) =>
       prev.map((item) =>
         item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
@@ -118,8 +115,6 @@ export default function Home() {
       };
       const json = await api.createCustomOrder(payload);
 
-      console.log("Create Order Item response:", json);
-    
       if (!json) {
         throw new Error("Failed to create order item");
       } else {
@@ -302,16 +297,14 @@ export default function Home() {
                     {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
                   {item.modifiers && item.modifiers.length > 0 && (
-                    console.log("Modifiers:", item.modifiers),
                     <p className="text-sm text-gray-600">
                       {item.modifiers.map(modifier => modifier.name).join(", ")}
                     </p>
                   )}
-                  {/* Display modifiers here in the future */}
                 </div>
 
                 <div className="text-right">
-                  <p className="font-medium">Table {item.table_id}</p>
+                  <p className="font-medium">Table {item.table_number}</p>
                 </div>
               </div>
               </div>
@@ -324,8 +317,6 @@ export default function Home() {
           open={showAddOrder}
           onClose={() => setShowAddOrder(false)}
           onSubmit={async (data) => {
-            console.log("AddOrderPanel data:", data);
-
             try {
               await createOrderItem(data);
             } catch (err) {

@@ -69,7 +69,7 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
           <div className="w-1/10 text-xs text-gray-500">
             <div>Table</div>
             <div className="truncate font-medium text-gray-800">
-              {orderItem.table_id}
+              {orderItem.table_number}
             </div>
           </div>
           

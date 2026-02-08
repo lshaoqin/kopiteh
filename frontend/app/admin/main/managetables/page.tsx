@@ -1,6 +1,7 @@
 'use client'
 
-import type { Venue, Table } from "../../../../../../../types"
+import type { Venue } from "../../../../../types/venue"
+import type { Table } from "../../../../../types/table"
 import { useState, useEffect } from "react"
 import { useAuthStore } from "@/stores/auth.store"
 import { Button } from "@/components/ui/button"
@@ -197,7 +198,7 @@ export default function ManageTables() {
     }
 
     const handleCopyLink = (table: Table) => {
-        const orderingLink = `${window.location.origin}/ordering/stalls?venue=${table.venue_id}&table=${table.table_number}`
+        const orderingLink = `${window.location.origin}/ordering/stalls?venue=${table.venue_id}&table=${table.table_id}`
         navigator.clipboard.writeText(orderingLink)
         setShowToast(true)
         setTimeout(() => setShowToast(false), 3000)

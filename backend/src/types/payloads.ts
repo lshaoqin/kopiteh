@@ -103,12 +103,11 @@ export interface OrderItemPayload {
 
 // 3. Main Order Payload (Matches Frontend Request)
 export interface OrderPayload {
-  table_number: number; // Changed from table_id to number
+  table_id: number;
   total_price: number;
   items: OrderItemPayload[]; // Nested array
   
   // Optional/Backend generated
-  table_id?: number; 
   user_id?: number;
   status?: OrderStatusCodes;
   created_at?: string;
