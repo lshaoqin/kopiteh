@@ -38,6 +38,6 @@ export interface MenuCategory {
 export interface DiningTable {
   table_id: ID;
   venue_id: ID;
-  table_number: number;
+  table_number: string;
   qr_code?: string | null;
 }

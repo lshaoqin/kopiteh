@@ -41,7 +41,7 @@ export const api = {
     return rawData.map((t) => ({
       table_id: Number(t.table_id),
       venue_id: Number(t.venue_id),
-      table_number: Number(t.table_number),
+      table_number: String(t.table_number),
       qr_code: t.qr_code || null,
     }));
   },
@@ -169,13 +169,13 @@ export const api = {
   }) => {
     // Transform frontend CartItems to backend payload structure
     const request = {
-      table_id: orderData.table_id,
-      total_price: orderData.total_price,
+      table_id: Number(orderData.table_id),
+      total_price: Number(orderData.total_price),
       items: orderData.items.map((item) => ({
         item_id: Number(item.menuItem.item_id),
-        quantity: item.quantity,
+        quantity: Number(item.quantity),
         price: Number(item.menuItem.price),
-        notes: item.remarks,
+        notes: item.remarks || "",
         modifiers: item.modifiers.map((mod) => ({
           option_id: Number(mod.option_id),
           name: mod.name,

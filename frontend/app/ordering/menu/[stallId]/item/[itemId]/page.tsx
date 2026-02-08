@@ -132,7 +132,7 @@ function ItemCustomizationContent() {
     } else {
         addItem(item, selectedModifierObjects, quantity, stall?.name || "Unknown Stall", remarks);
     }
-    router.back();
+    router.push("/ordering/cart");
   };
 
   const handleRemove = () => {
