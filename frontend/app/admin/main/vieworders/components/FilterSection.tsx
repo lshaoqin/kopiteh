@@ -84,7 +84,6 @@ export function FilterSection({
             onChange={(e) => onVenueIdChange(e.target.value)}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All Venues</option>
             {venues.map((venue) => (
               <option key={venue.venue_id} value={venue.venue_id}>
                 {venue.name}

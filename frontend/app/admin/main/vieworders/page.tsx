@@ -87,6 +87,10 @@ export default function ViewOrders() {
       const data = await res.json()
       if (data.success && data.payload?.data) {
         setVenues(data.payload.data)
+        // Set first venue as default if no venue is selected
+        if (!venueId && data.payload.data.length > 0) {
+          setVenueId(data.payload.data[0].venue_id.toString())
+        }
       }
     } catch (err) {
       console.error("Failed to fetch venues:", err)
@@ -261,7 +265,7 @@ export default function ViewOrders() {
     setStartDate("")
     setEndDate("")
     setTableNumber("")
-    setVenueId("")
+    // Don't clear venueId - keep the currently selected venue
     setStallId("")
     setCurrentPage(1) // Reset to first page
     fetchOrders()
