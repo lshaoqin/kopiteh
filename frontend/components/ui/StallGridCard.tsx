@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Image as ImageIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Stall } from "@/../types";
-import Image from "next/image";
 
 interface StallGridCardProps {
   stall: Stall;
@@ -26,9 +25,9 @@ export function StallGridCard({ stall }: StallGridCardProps) {
         
         {/* Image Zoom Effect on Hover */}
         {stall.stall_image ? (
-           <Image 
+           <img 
             src={stall.stall_image} 
-            alt={stall.name} 
+            alt={stall.name}
             className={cn(
                 "w-full h-full object-cover transition-transform duration-500 ease-in-out",
                 stall.is_open && "group-hover:scale-105", // Zoom only if open
