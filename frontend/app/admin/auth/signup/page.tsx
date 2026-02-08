@@ -104,7 +104,7 @@ export default function Home() {
             setUser(user);
 
             setTimeout(() => {
-                router.push("/admin/main/home");
+                router.push("/admin/main/viewanalytics");
             }, 2000);
         } catch (err: any) {
             console.log(err)

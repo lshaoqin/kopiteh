@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     if (isAuthRoute || isAdminRoot || isMainRoot) {
-      router.replace("/admin/main/home");
+      router.replace("/admin/main/viewanalytics");
       return;
     }
 

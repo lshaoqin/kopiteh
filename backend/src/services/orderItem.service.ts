@@ -111,14 +111,14 @@ async function attachModifiers(
 export const OrderItemService = {
   async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemResponsePayload[]>> {
     try {
-      const result = await BaseService.query(
+      const baseItems = await BaseService.query(
         `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
         oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, o.remarks, 'STANDARD' AS type
         FROM order_item oi 
         JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
         JOIN "table" t ON o.table_id = t.table_id 
-        WHERE oi.order_id = $1 ORDER BY oi.order_item_id
+        WHERE oi.order_id = $1
         ORDER BY oi.order_item_id`,
         [order_id]
       );
