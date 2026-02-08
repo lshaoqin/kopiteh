@@ -72,13 +72,6 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
               {orderItem.table_id}
             </div>
           </div>
-          <div className="w-8/10 text-xs text-gray-500">
-            <div>Volunteer</div>
-            <div className="truncate font-medium text-gray-800">
-              Volunteer Name
-              {/* Volunteer Name */}
-            </div>
-          </div>
           
           <button 
             onClick={() => {onClose();}}
@@ -92,7 +85,7 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
           {/* Item title */}
           <div className="">
             <div className="flex items-center justify-between">
-              <h2 className="text-4xl font-semibold text-gray-900 items-center flex ">
+              <h2 className="text-2xl font-semibold text-gray-900 items-center flex ">
                 {orderItem.order_item_name}
                 <span className="ml-2 rounded-md text-white px-2 py-0.5 text-sm font-medium bg-green-600">
                   x{orderItem.quantity}
@@ -101,24 +94,57 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
             </div>
           </div>
         
+          {/* Price */}
+          <div>
+            <div className="mb-2 text-sm font-semibold text-gray-900">
+              Price
+            </div>
+            <div className="text-sm text-gray-700">
+              <div className="flex justify-between">
+                <span>Item Price:</span>
+                <span className="font-medium">${Number(orderItem.price).toFixed(2)}</span>
+              </div>
+              {orderItem.modifiers && orderItem.modifiers.length > 0 && orderItem.modifiers.map((m, index) => (
+                <div key={index} className="flex justify-between text-gray-600">
+                  <span className="ml-2">+ {m.name}:</span>
+                  <span>${Number(m.price).toFixed(2)}</span>
+                </div>
+              ))}
+              {orderItem.modifiers && orderItem.modifiers.length > 0 && (
+                <div className="flex justify-between pt-2 mt-2 border-t font-semibold">
+                  <span>Subtotal (per item):</span>
+                  <span>${(Number(orderItem.price) + orderItem.modifiers.reduce((sum, m) => sum + Number(m.price), 0)).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 mt-2 border-t font-bold text-base">
+                <span>Total ({orderItem.quantity}x):</span>
+                <span>${((Number(orderItem.price) + (orderItem.modifiers?.reduce((sum, m) => sum + Number(m.price), 0) || 0)) * Number(orderItem.quantity)).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
         
           {/* Modifiers */}
-          {modifiers && (
-          <div className="flex flex-wrap gap-2">
-            {modifiers.map((m) => (
-            <span
-              key={m.order_item_option_id}
-              className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
-              >
-              {m.option_id} / {m.name}
-            </span>
-            ))}
+          {orderItem.modifiers && orderItem.modifiers.length > 0 && (
+          <div>
+            <div className="mb-2 text-sm font-semibold text-gray-900">
+              Modifiers
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {orderItem.modifiers.map((m, index) => (
+              <span
+                key={index}
+                className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                >
+                {m.name}
+              </span>
+              ))}
+            </div>
           </div>
           )}
         
         
           {/* Notes */}
-          {orderItem.status && (
+          {orderItem.remarks && (
           <div className="">
             <div className="mb-1 text-sm font-semibold text-gray-900">
               Additional Notes
@@ -126,9 +152,9 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
             <p className="text-sm text-gray-700 whitespace-pre-line">
               {orderItem.remarks}
             </p>
-            {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
           )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
       
       

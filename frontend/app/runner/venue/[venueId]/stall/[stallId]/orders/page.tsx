@@ -268,7 +268,7 @@ export default function Home() {
                 {/* Background indicator */}
                 {swipe.x > 0 && (
                   <div 
-                    className="absolute inset-0 bg-green-500 flex items-center px-4 rounded-lg"
+                    className="absolute inset-0 bg-green-600 flex items-center px-4 rounded-lg"
                     style={{ opacity: Math.min(swipe.x / 100, 1) }}
                   >
                     <span className="text-white font-semibold">
