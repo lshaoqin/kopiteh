@@ -49,6 +49,16 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
     }
   };
 
+  const deleteOrderItem = async (order_item_id: number, type: string) => {
+    try {
+      await api.deleteOrderItem(order_item_id, type);
+      onOrderItemUpdated?.();
+      onClose();
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
   if (!open) return null;
   
   return (
@@ -123,42 +133,61 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
       
       
         {/* Actions */}
-        <div className="p-3 h-3/10 box-border flex flex-col">
-          {orderItem.status === "INCOMING" || orderItem.status === "PREPARING" ? (
+        <div className="p-3 h-3/10 box-border flex flex-col gap-3">
+          {orderItem.status === "INCOMING" && (
           <>
             <Button 
-              className="w-full h-1/2 bg-green-600 cursor-pointer"
+              className="w-full h-14 bg-green-600 cursor-pointer"
               onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
             >
-              {orderItem.status === "INCOMING" ? "Mark as Preparing" : "Mark as Served"}
+              Mark as Preparing
             </Button>
-            <div className="h-1/2 mt-3 grid grid-cols-2 gap-3">
-              {orderItem.status === "PREPARING" || orderItem.status === "SERVED" ? (
-                <Button 
-                  variant="secondary"
-                  onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
-                >
-                  {orderItem.status === "PREPARING" ? "Mark as Incoming" : "Mark as Preparing"}
-                </Button>
-              ) : (
-                <Button variant="secondary">Delete</Button>
-              )}
-              <Button variant="secondary">Edit</Button>
-            </div>
+            <Button 
+              variant="destructive"
+              className="w-full h-14"
+              onClick={() => deleteOrderItem(Number(orderItem.order_item_id), orderItem.type)}
+            >
+              Delete
+            </Button>
           </>
-          ) : orderItem.status === "SERVED" ? (
+          )}
+          
+          {orderItem.status === "PREPARING" && (
           <>
-            <div className="h-1/2 grid grid-cols-2 gap-3">
+            <Button 
+              className="w-full h-14 bg-green-600 cursor-pointer"
+              onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+            >
+              Mark as Served
+            </Button>
+            <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="secondary"
+                className="h-14"
                 onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
               >
-                Mark as Preparing
+                Mark as Incoming
               </Button>
-              <Button variant="secondary">Edit</Button>
+              <Button 
+                variant="destructive"
+                className="h-14"
+                onClick={() => deleteOrderItem(Number(orderItem.order_item_id), orderItem.type)}
+              >
+                Delete
+              </Button>
             </div>
           </>
-          ) : null}
+          )}
+          
+          {orderItem.status === "SERVED" && (
+            <Button 
+              variant="secondary"
+              className="w-full h-14"
+              onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+            >
+              Mark as Preparing
+            </Button>
+          )}
         </div>
       </div>
     </>

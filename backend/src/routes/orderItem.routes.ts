@@ -23,6 +23,7 @@ router.put('/orderItem/update/:type/:id', typeParamValidation, ...updateOrderIte
 router.put('/orderItem/updateStatus/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.updateStatus);
 router.put('/orderItem/revertStatus/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.revertStatus);
 router.put('/orderItem/cancel/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
+router.delete('/orderItem/delete/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.remove);
 router.post('/orderItem/create/:type', typeParamValidation, createOrderItemValidation, runValidation, OrderItemController.create);
 
 export default router;

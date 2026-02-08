@@ -220,5 +220,11 @@ export const api = {
       method: "PUT"
     });
     return response;
+  },
+
+  deleteOrderItem: async (orderItemId: number, type: string): Promise<void> => {
+    await fetchClient<any>(`/orderItem/delete/${type}/${orderItemId}`, {
+      method: "DELETE"
+    });
   }
 };
