@@ -27,6 +27,9 @@ export default function Home() {
   const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
   const [selectedOrderItem, setSelectedOrderItem] = useState<OrderItem | null>(null);
   
+  // Swipe state
+  const [swipeState, setSwipeState] = useState<{ [key: number]: { x: number; startX: number; isSwiping: boolean } }>({});
+  
 
   const filteredOrderItems = orderItems.filter(
     (item) => item.status === selectedStatus
@@ -127,6 +130,65 @@ export default function Home() {
     }
   };
 
+  // Update order item status
+  const updateOrderItemStatus = async (orderItemId: number, type: "STANDARD" | "CUSTOM") => {
+    try {
+      await api.updateOrderItemStatus(orderItemId, type);
+      // The WebSocket will handle the state update
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent, orderItemId: number) => {
+    const touch = e.touches[0];
+    setSwipeState(prev => ({
+      ...prev,
+      [orderItemId]: {
+        x: 0,
+        startX: touch.clientX,
+        isSwiping: true
+      }
+    }));
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, orderItemId: number) => {
+    const state = swipeState[orderItemId];
+    if (!state?.isSwiping) return;
+
+    const touch = e.touches[0];
+    const diff = touch.clientX - state.startX;
+    
+    // Only allow right swipe (positive diff)
+    if (diff > 0) {
+      setSwipeState(prev => ({
+        ...prev,
+        [orderItemId]: {
+          ...state,
+          x: Math.min(diff, 150) // Cap at 150px
+        }
+      }));
+    }
+  };
+
+  const handleTouchEnd = async (orderItemId: number, type: "STANDARD" | "CUSTOM") => {
+    const state = swipeState[orderItemId];
+    if (!state) return;
+
+    // If swiped more than 100px, trigger status update
+    if (state.x > 100) {
+      await updateOrderItemStatus(orderItemId, type);
+    }
+
+    // Reset swipe state
+    setSwipeState(prev => {
+      const newState = { ...prev };
+      delete newState[orderItemId];
+      return newState;
+    });
+  };
+
   useEffect(() => {
     setLoading(true);
     getStall();
@@ -194,16 +256,47 @@ export default function Home() {
             {filteredOrderItems
               .slice()
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-              .map((item, index) => (
-              <div key={index}
-                className="flex h-16 justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer"
-                onClick={
-                  () => {
-                    setSelectedOrderItem(item);
-                    setShowOrderItemDetails(true);
-                  }
-                }
+              .map((item, index) => {
+                const swipe = swipeState[item.order_item_id] || { x: 0 };
+                const opacity = 1 - (swipe.x / 150) * 0.3;
+                
+                return (
+              <div 
+                key={index}
+                className="relative overflow-hidden"
               >
+                {/* Background indicator */}
+                {swipe.x > 0 && (
+                  <div 
+                    className="absolute inset-0 bg-green-500 flex items-center px-4 rounded-lg"
+                    style={{ opacity: Math.min(swipe.x / 100, 1) }}
+                  >
+                    <span className="text-white font-semibold">
+                      {swipe.x > 100 ? '✓ Release to update' : 'Swipe to next status →'}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Card */}
+                <div
+                  className="flex h-16 justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer relative"
+                  style={{
+                    transform: `translateX(${swipe.x}px)`,
+                    transition: swipe.isSwiping ? 'none' : 'transform 0.3s ease-out',
+                    opacity
+                  }}
+                  onTouchStart={(e) => handleTouchStart(e, item.order_item_id)}
+                  onTouchMove={(e) => handleTouchMove(e, item.order_item_id)}
+                  onTouchEnd={() => handleTouchEnd(item.order_item_id, item.type)}
+                  onClick={
+                    () => {
+                      if (!swipe.isSwiping) {
+                        setSelectedOrderItem(item);
+                        setShowOrderItemDetails(true);
+                      }
+                    }
+                  }
+                >
                 <div>
                   <p className="font-medium">
                     {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
@@ -221,7 +314,8 @@ export default function Home() {
                   <p className="font-medium">Table {item.table_id}</p>
                 </div>
               </div>
-            ))}
+              </div>
+            )})}
           </div>
         )}
         </div>
