@@ -85,6 +85,23 @@ export const OrderItemController = {
     }
   },
 
+  async revertStatus(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      const type = req.params.type as 'STANDARD' | 'CUSTOM';
+      const result = await OrderItemService.revertStatus(id, type);
+      
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
+      }
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
+    }
+  },
+
   async cancel(req: Request, res: Response) {
     const id = Number(req.params.id);
     const type = req.params.type as 'STANDARD' | 'CUSTOM';

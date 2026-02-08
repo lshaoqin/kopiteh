@@ -21,12 +21,26 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
 
   if (!open) return null; 
 
-  const updateOrderItemStatus = async (order_item_id: number, status: string) => {
+  const updateOrderItemStatus = async (order_item_id: number, type: string) => {
     try {
-      const response = await api.updateOrderItemStatus(order_item_id, status);
+      const response = await api.updateOrderItemStatus(order_item_id, type);
     
       if (!response) {
-        throw new Error("Failed to fetch stall");
+        throw new Error("Failed to update order item status");
+      }
+      onOrderItemUpdated?.();
+      onClose();
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const revertOrderItemStatus = async (order_item_id: number, type: string) => {
+    try {
+      const response = await api.revertOrderItemStatus(order_item_id, type);
+    
+      if (!response) {
+        throw new Error("Failed to revert order item status");
       }
       onOrderItemUpdated?.();
       onClose();
@@ -119,7 +133,28 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
               {orderItem.status === "INCOMING" ? "Mark as Preparing" : "Mark as Served"}
             </Button>
             <div className="h-1/2 mt-3 grid grid-cols-2 gap-3">
-              <Button variant="secondary">Delete</Button>
+              {orderItem.status === "PREPARING" || orderItem.status === "SERVED" ? (
+                <Button 
+                  variant="secondary"
+                  onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+                >
+                  {orderItem.status === "PREPARING" ? "Mark as Incoming" : "Mark as Preparing"}
+                </Button>
+              ) : (
+                <Button variant="secondary">Delete</Button>
+              )}
+              <Button variant="secondary">Edit</Button>
+            </div>
+          </>
+          ) : orderItem.status === "SERVED" ? (
+          <>
+            <div className="h-1/2 grid grid-cols-2 gap-3">
+              <Button 
+                variant="secondary"
+                onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+              >
+                Mark as Preparing
+              </Button>
               <Button variant="secondary">Edit</Button>
             </div>
           </>

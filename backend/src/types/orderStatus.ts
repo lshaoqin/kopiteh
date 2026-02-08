@@ -17,6 +17,12 @@ export const NextOrderItemStatusMap: { [key in OrderItemStatusCodes]?: OrderItem
   [OrderItemStatusCodes.PREPARING]: OrderItemStatusCodes.SERVED,
 };
 
+// For updating to the previous status
+export const PreviousOrderItemStatusMap: { [key in OrderItemStatusCodes]?: OrderItemStatusCodes } = {
+  [OrderItemStatusCodes.PREPARING]: OrderItemStatusCodes.INCOMING,
+  [OrderItemStatusCodes.SERVED]: OrderItemStatusCodes.PREPARING,
+};
+
 // Map OrderItem status to corresponding Order status
 export const OrderItemToOrderStatusMap = {
   [OrderItemStatusCodes.INCOMING]: [OrderStatusCodes.PENDING],

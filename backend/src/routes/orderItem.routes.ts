@@ -21,6 +21,7 @@ router.get('/orderItem/stall/:stall_id', stallIdParamValidation, runValidation, 
 // Public writes
 router.put('/orderItem/update/:type/:id', typeParamValidation, ...updateOrderItemValidation, runValidation, OrderItemController.update);
 router.put('/orderItem/updateStatus/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.updateStatus);
+router.put('/orderItem/revertStatus/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.revertStatus);
 router.put('/orderItem/cancel/:type/:id', typeParamValidation, orderItemIdParamValidation, runValidation, OrderItemController.cancel);
 router.post('/orderItem/create/:type', typeParamValidation, createOrderItemValidation, runValidation, OrderItemController.create);
 

@@ -213,5 +213,12 @@ export const api = {
       method: "PUT"
     });
     return response;
+  },
+
+  revertOrderItemStatus: async (orderItemId: number, type: string): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/revertStatus/${type}/${orderItemId}`, {
+      method: "PUT"
+    });
+    return response;
   }
 };

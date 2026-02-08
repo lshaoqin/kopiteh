@@ -10,7 +10,7 @@ import { BaseService } from './base.service';
 import { successResponse, errorResponse } from '../types/responses';
 import { ErrorCodes } from '../types/errors';
 import { SuccessCodes } from '../types/success';
-import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
+import { OrderItemStatusCodes, NextOrderItemStatusMap, PreviousOrderItemStatusMap } from '../types/orderStatus';
 import {MenuItemService} from "./menuItem.service";
 import { OrderService } from './order.service';
 import { WebSocketService } from './websocket.service';
@@ -342,6 +342,52 @@ export const OrderItemService = {
         const result = await BaseService.query(
           'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, \'CUSTOM\' AS type',
           [nextStatus, id]
+        );
+        
+        // Send WebSocket notification
+        const customItem = result.rows[0];
+        WebSocketService.notifyStallOrderItemUpdated(customItem.stall_id, customItem);
+        
+        return successResponse<FetchOrderItemResponsePayload>(SuccessCodes.OK, customItem);
+      }
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async revertStatus(id: number, type: 'STANDARD' | 'CUSTOM'): Promise<ServiceResult<FetchOrderItemResponsePayload>> {
+    try {
+      if (type === 'STANDARD') {
+        const currStatus = await BaseService.query(
+          'SELECT status FROM order_item WHERE order_item_id = $1',
+          [id]
+        );
+        const prevStatus = PreviousOrderItemStatusMap[currStatus.rows[0].status as OrderItemStatusCodes];
+        if (!prevStatus) {
+          return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Cannot revert from current status');
+        }
+        const updateResult = await BaseService.query(
+          'UPDATE order_item SET status = $1 WHERE order_item_id = $2 RETURNING order_item_id, order_id',
+          [prevStatus, id]
+        );
+        const result = await findStandardById(updateResult.rows[0].order_item_id);
+        
+        // Send WebSocket notification
+        WebSocketService.notifyStallOrderItemUpdated(result.stall_id, result);
+        
+        return successResponse(SuccessCodes.OK, result);
+      } else {
+        const currStatus = await BaseService.query(
+          'SELECT status FROM custom_order_item WHERE order_item_id = $1',
+          [id]
+        );
+        const prevStatus = PreviousOrderItemStatusMap[currStatus.rows[0].status as OrderItemStatusCodes];
+        if (!prevStatus) {
+          return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Cannot revert from current status');
+        }
+        const result = await BaseService.query(
+          'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, \'CUSTOM\' AS type',
+          [prevStatus, id]
         );
         
         // Send WebSocket notification
