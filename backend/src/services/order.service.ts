@@ -183,21 +183,31 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
     }
   },
 
-  async getMonthlyAnalytics(year: number, month: number): Promise<ServiceResult<any>> {
+  async getMonthlyAnalytics(year: number, month: number, venueId?: number): Promise<ServiceResult<any>> {
     try {
       // Get the start and end dates for the month
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 1);
+
+      // Build venue filter condition
+      let venueCondition = '';
+      const params: any[] = [startDate.toISOString(), endDate.toISOString()];
+      
+      if (venueId) {
+        venueCondition = ' AND t.venue_id = $3';
+        params.push(venueId);
+      }
 
       // Get total orders and total amount for the month
       const totalResult = await BaseService.query(
         `SELECT 
           COUNT(*)::int as total_orders,
           COALESCE(SUM(total_price), 0) as total_amount
-        FROM "order"
-        WHERE created_at >= $1 AND created_at < $2
-          AND status != 'CANCELLED'`,
-        [startDate.toISOString(), endDate.toISOString()]
+        FROM "order" o
+        LEFT JOIN "table" t ON o.table_id = t.table_id
+        WHERE o.created_at >= $1 AND o.created_at < $2
+          AND o.status != 'CANCELLED'${venueCondition}`,
+        params
       );
 
       // Get analytics per stall
@@ -221,14 +231,15 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           GROUP BY order_item_id
         ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
         LEFT JOIN "order" o ON oi.order_id = o.order_id
-        WHERE (o.order_id IS NULL OR (
+        LEFT JOIN "table" t ON o.table_id = t.table_id
+        WHERE ${venueId ? 's.venue_id = $3 AND ' : ''}(o.order_id IS NULL OR (
           o.created_at >= $1 
           AND o.created_at < $2
           AND o.status != 'CANCELLED'
         ))
         GROUP BY s.stall_id, s.name
         ORDER BY s.name`,
-        [startDate.toISOString(), endDate.toISOString()]
+        params
       );
 
       return successResponse(SuccessCodes.OK, {

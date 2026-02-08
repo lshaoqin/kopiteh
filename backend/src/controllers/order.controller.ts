@@ -125,13 +125,14 @@ export const OrderController = {
   async getMonthlyAnalytics(req: Request, res: Response) {
     const year = Number(req.query.year);
     const month = Number(req.query.month);
+    const venueId = req.query.venueId ? Number(req.query.venueId) : undefined;
 
     if (!year || !month || month < 1 || month > 12) {
       const result = errorResponse(ErrorCodes.VALIDATION_ERROR, 'Invalid year or month');
       return res.status(result.payload.status).json(result);
     }
 
-    const result = await OrderService.getMonthlyAnalytics(year, month);
+    const result = await OrderService.getMonthlyAnalytics(year, month, venueId);
     return res.status(result.payload.status).json(result);
   },
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/stores/auth.store"
 import { useRouter } from "next/navigation"
+import type { Venue } from "../../../../../types"
 
 interface StallAnalytics {
   stall_id: number
@@ -22,6 +23,8 @@ export default function ViewAnalytics() {
   const currentDate = new Date()
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1)
+  const [selectedVenueId, setSelectedVenueId] = useState<number | null>(null)
+  const [venues, setVenues] = useState<Venue[]>([])
   const [analytics, setAnalytics] = useState<MonthlyAnalytics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,17 +40,49 @@ export default function ViewAnalytics() {
 
   useEffect(() => {
     if (isHydrated && user && accessToken) {
+      fetchVenues()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, user, accessToken])
+
+  useEffect(() => {
+    if (selectedVenueId && accessToken) {
       fetchAnalytics()
     }
-  }, [selectedYear, selectedMonth, isHydrated, user, accessToken])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, selectedMonth, selectedVenueId, accessToken])
+
+  const fetchVenues = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/venue`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      })
+
+      const data = await res.json()
+      if (data.success && data.payload?.data) {
+        const venueList = data.payload.data
+        setVenues(venueList)
+        // Set first venue as default
+        if (venueList.length > 0 && !selectedVenueId) {
+          setSelectedVenueId(venueList[0].venue_id)
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch venues:", err)
+    }
+  }
 
   const fetchAnalytics = async () => {
+    if (!selectedVenueId) return
+    
     setLoading(true)
     setError(null)
     
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/order/analytics/monthly?year=${selectedYear}&month=${selectedMonth}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/order/analytics/monthly?year=${selectedYear}&month=${selectedMonth}&venueId=${selectedVenueId}`,
         {
           headers: {
             "Authorization": `Bearer ${accessToken}`,
@@ -80,19 +115,29 @@ export default function ViewAnalytics() {
     "July", "August", "September", "October", "November", "December"
   ]
 
-  const years = Array.from({ length: 10 }, (_, i) => currentDate.getFullYear() - i)
+  const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i)
 
   return (
     <main className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-      </div>
-
-      {/* Month/Year Picker */}
+      <h1 className="text-3xl font-bold mb-6">View Analytics</h1>
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Select Period</h2>
-        <div className="flex gap-4">
-          <div className="flex-1">
+        <h2 className="text-xl font-semibold mb-4">Filters</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Venue</label>
+            <select
+              value={selectedVenueId ?? ""}
+              onChange={(e) => setSelectedVenueId(Number(e.target.value))}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {venues.map((venue) => (
+                <option key={venue.venue_id} value={venue.venue_id}>
+                  {venue.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-2">Month</label>
             <select
               value={selectedMonth}
@@ -106,7 +151,7 @@ export default function ViewAnalytics() {
               ))}
             </select>
           </div>
-          <div className="flex-1">
+          <div>
             <label className="block text-sm font-medium mb-2">Year</label>
             <select
               value={selectedYear}

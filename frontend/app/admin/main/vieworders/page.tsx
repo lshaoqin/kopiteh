@@ -59,6 +59,7 @@ export default function ViewOrders() {
       fetchVenues()
       fetchOrders()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, user, accessToken, currentPage])
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function ViewOrders() {
       setStalls([])
       setStallId("")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venueId, accessToken])
 
   const fetchVenues = async () => {
