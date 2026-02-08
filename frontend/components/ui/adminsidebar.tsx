@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStore } from "@/stores/auth.store"
-import { HomeIcon, ChartNoAxesCombined, SettingsIcon, LogOut } from "lucide-react";
+import { HomeIcon, ChartNoAxesCombined, SettingsIcon, LogOut, ClipboardList } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import React from "react";
@@ -26,6 +26,11 @@ function AdminSideBar() {
             name: "View Analytics",
             href: "/admin/main/viewanalytics",
             icon: <ChartNoAxesCombined className="w-6 h-6" />,
+        },
+        {
+            name: "View Orders",
+            href: "/admin/main/vieworders",
+            icon: <ClipboardList className="w-6 h-6" />,
         },
         {
             name: "Manage Venues",

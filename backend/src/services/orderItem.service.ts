@@ -111,17 +111,15 @@ async function attachModifiers(
 export const OrderItemService = {
   async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemResponsePayload[]>> {
     try {
-      const baseItems = await BaseService.query(
-        `
-        SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name AS order_item_name,
-              oi.status, oi.quantity, oi.price, o.created_at, o.remarks, 'STANDARD' AS type
-        FROM order_item oi
-        JOIN menu_item m ON oi.item_id = m.item_id
-        JOIN "order" o ON oi.order_id = o.order_id
-        JOIN "table" t ON o.table_id = t.table_id
-        WHERE oi.order_id = $1
-        ORDER BY oi.order_item_id
-        `,
+      const result = await BaseService.query(
+        `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
+        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, o.remarks, 'STANDARD' AS type
+        FROM order_item oi 
+        JOIN menu_item m ON oi.item_id = m.item_id 
+        JOIN "order" o ON oi.order_id = o.order_id 
+        JOIN "table" t ON o.table_id = t.table_id 
+        WHERE oi.order_id = $1 ORDER BY oi.order_item_id
+        ORDER BY oi.order_item_id`,
         [order_id]
       );
 
@@ -442,6 +440,20 @@ export const OrderItemService = {
       if (result.rowCount === 0)
         return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
       return successResponse<null>(SuccessCodes.OK, null);
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
+
+  async findModifiersByOrderItem(orderItemId: number): Promise<ServiceResult<any[]>> {
+    try {
+      const result = await BaseService.query(
+        `SELECT order_item_option_id, option_id, price_modifier, option_name
+         FROM order_item_modifiers
+         WHERE order_item_id = $1`,
+        [orderItemId]
+      );
+      return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }

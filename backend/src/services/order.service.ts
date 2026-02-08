@@ -241,4 +241,110 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
     }
   },
+
+  async getAllWithFilters(filters: {
+    startDate?: string;
+    endDate?: string;
+    tableNumber?: string;
+    venueId?: number;
+    stallId?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<ServiceResult<any>> {
+    try {
+      const page = filters.page || 1;
+      const limit = filters.limit || 15;
+      const offset = (page - 1) * limit;
+
+      let countQuery = `
+        SELECT COUNT(DISTINCT o.order_id)::int as total
+        FROM "order" o
+        LEFT JOIN "table" t ON o.table_id = t.table_id
+        LEFT JOIN venue v ON t.venue_id = v.venue_id
+      `;
+
+      let query = `
+        SELECT DISTINCT
+          o.order_id,
+          o.table_id,
+          o.user_id,
+          o.status,
+          o.total_price,
+          o.created_at,
+          o.remarks,
+          t.table_number,
+          t.venue_id,
+          v.name as venue_name
+        FROM "order" o
+        LEFT JOIN "table" t ON o.table_id = t.table_id
+        LEFT JOIN venue v ON t.venue_id = v.venue_id
+      `;
+
+      const conditions: string[] = [];
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      // Add filters
+      if (filters.startDate) {
+        conditions.push(`o.created_at >= $${paramIndex++}`);
+        params.push(filters.startDate);
+      }
+
+      if (filters.endDate) {
+        conditions.push(`o.created_at <= $${paramIndex++}`);
+        params.push(filters.endDate);
+      }
+
+      if (filters.tableNumber) {
+        conditions.push(`t.table_number = $${paramIndex++}`);
+        params.push(filters.tableNumber);
+      }
+
+      if (filters.venueId) {
+        conditions.push(`t.venue_id = $${paramIndex++}`);
+        params.push(filters.venueId);
+      }
+
+      if (filters.stallId) {
+        query += `
+          LEFT JOIN order_item oi ON o.order_id = oi.order_id
+          LEFT JOIN menu_item mi ON oi.item_id = mi.item_id
+        `;
+        countQuery += `
+          LEFT JOIN order_item oi ON o.order_id = oi.order_id
+          LEFT JOIN menu_item mi ON oi.item_id = mi.item_id
+        `;
+        conditions.push(`mi.stall_id = $${paramIndex++}`);
+        params.push(filters.stallId);
+      }
+
+      if (conditions.length > 0) {
+        const whereClause = ` WHERE ${conditions.join(' AND ')}`;
+        query += whereClause;
+        countQuery += whereClause;
+      }
+
+      // Get total count
+      const countResult = await BaseService.query(countQuery, params);
+      const total = countResult.rows[0].total;
+
+      // Add ordering and pagination
+      query += ` ORDER BY o.created_at ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+      params.push(limit, offset);
+
+      const result = await BaseService.query(query, params);
+      
+      return successResponse(SuccessCodes.OK, {
+        orders: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
+    }
+  },
 };

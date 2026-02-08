@@ -16,6 +16,7 @@ const router = Router();
 router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.getById);
 router.get('/order/user/:user_id', userIdParamValidation, runValidation, OrderController.getByUser);
 router.get('/order/analytics/monthly', authenticateToken, analyticsQueryValidation, runValidation, OrderController.getMonthlyAnalytics);
+router.get('/order', authenticateToken, OrderController.getAllWithFilters);
 
 // Public writes
 interface RequestWithTraceId extends Request {
