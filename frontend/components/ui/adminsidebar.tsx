@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStore } from "@/stores/auth.store"
-import { ChartNoAxesCombined, SettingsIcon, LogOut, ClipboardList } from "lucide-react";
+import { ChartNoAxesCombined, SettingsIcon, LogOut, ClipboardList, LayoutGrid } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import React from "react";
@@ -31,6 +31,11 @@ function AdminSideBar() {
             name: "Manage Venues",
             href: "/admin/main/managevenues",
             icon: <SettingsIcon className="w-6 h-6" />,
+        },
+        {
+            name: "Manage Tables",
+            href: "/admin/main/managetables",
+            icon: <LayoutGrid className="w-6 h-6" />,
         },
     ];
 
