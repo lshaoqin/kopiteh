@@ -18,7 +18,6 @@ export interface Order {
   status: OrderStatus;
   total_price: Decimal;
   created_at: string; // ISO
-  remarks?: string | null;
   type: 'STANDARD' | 'CUSTOM';
 }
 

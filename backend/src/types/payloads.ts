@@ -98,6 +98,7 @@ export interface OrderItemPayload {
   status?: OrderItemStatusCodes;
   unit_price?: number;
   line_subtotal?: number;
+  remarks?: string;
 }
 
 // 3. Main Order Payload (Matches Frontend Request)
@@ -111,14 +112,12 @@ export interface OrderPayload {
   user_id?: number;
   status?: OrderStatusCodes;
   created_at?: string;
-  remarks?: string;
 }
 
 // 4. Update Payload (Decoupled from OrderPayload to avoid nested items issues)
 export interface UpdateOrderPayload {
   status?: OrderStatusCodes;
   total_price?: number;
-  remarks?: string;
   created_at?: string;
 }
 

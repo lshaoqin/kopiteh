@@ -21,6 +21,7 @@ const STANDARD_ITEM_COLUMNS = new Set([
   'item_id',
   'quantity',
   'price',
+  'remarks',
 ]);
 
 const CUSTOM_ITEM_COLUMNS = new Set([
@@ -39,7 +40,7 @@ async function findStandardById(id: number): Promise<FetchOrderItemResponsePaylo
   try {    
     const result = await BaseService.query(
       `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-      oi.status, oi.quantity, oi.price, o.created_at, o.remarks, \'STANDARD\' AS type
+      oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, \'STANDARD\' AS type
       FROM order_item oi 
       JOIN menu_item m ON oi.item_id = m.item_id 
       JOIN "order" o ON oi.order_id = o.order_id 
@@ -113,7 +114,7 @@ export const OrderItemService = {
     try {
       const baseItems = await BaseService.query(
         `SELECT oi.order_item_id, m.stall_id, t.table_id, o.user_id, m.name as order_item_name, 
-        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, o.remarks, 'STANDARD' AS type
+        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, 'STANDARD' AS type
         FROM order_item oi 
         JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN "order" o ON oi.order_id = o.order_id 
@@ -205,9 +206,9 @@ export const OrderItemService = {
         
         // 2. Insert Item
         const orderItemRes  = await BaseService.query(
-          `INSERT INTO order_item (order_id, item_id, quantity, price, status) 
-          VALUES ($1, $2, $3, $4, 'INCOMING') RETURNING order_item_id`,
-          [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price]
+          `INSERT INTO order_item (order_id, item_id, quantity, price, status, remarks) 
+          VALUES ($1, $2, $3, $4, 'INCOMING', $5) RETURNING order_item_id`,
+          [standardItemPayload.order_id, standardItemPayload.item_id, standardItemPayload.quantity, standardItemPayload.price, standardItemPayload.notes || null]
         );
         const orderItemId = orderItemRes.rows[0].order_item_id;
 
