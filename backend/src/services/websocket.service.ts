@@ -82,6 +82,7 @@ export const WebSocketService = {
         console.warn('Socket.IO not initialized');
         return;
       }
+      console.log('🔔 WebSocket emitting order_item_created to stall_' + stallId + ':', JSON.stringify({ orderItem }, null, 2));
       io.to(`stall_${stallId}`).emit('order_item_created', { orderItem });
       console.log(`Notified stall_${stallId} of new order item:`, orderItem.order_item_id);
     } catch (err) {

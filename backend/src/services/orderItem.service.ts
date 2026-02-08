@@ -13,6 +13,7 @@ import { SuccessCodes } from '../types/success';
 import { OrderItemStatusCodes, NextOrderItemStatusMap } from '../types/orderStatus';
 import {MenuItemService} from "./menuItem.service";
 import { OrderService } from './order.service';
+import { WebSocketService } from './websocket.service';
 import { PoolClient, Pool } from 'pg';
 
 const STANDARD_ITEM_COLUMNS = new Set([
@@ -222,8 +223,10 @@ export const OrderItemService = {
             );
           }
         } 
-        result = await findStandardById(orderItemId);
-        return successResponse(SuccessCodes.CREATED, result);
+        result = await findStandardById(orderItemId);        
+        // Send WebSocket notification
+        WebSocketService.notifyStallOrderItemCreated(result.stall_id, result);
+                return successResponse(SuccessCodes.CREATED, result);
         
       } else {
         const customItemPayload = request as CustomOrderItemPayload;
@@ -240,7 +243,12 @@ export const OrderItemService = {
             customItemPayload.remarks ?? null,
           ]
         );
-        return successResponse(SuccessCodes.CREATED, result.rows[0]);
+        
+        // Send WebSocket notification
+        const customItem = result.rows[0];
+        WebSocketService.notifyStallOrderItemCreated(customItem.stall_id, customItem);
+        
+        return successResponse(SuccessCodes.CREATED, customItem);
       }
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
@@ -273,6 +281,10 @@ export const OrderItemService = {
         if (!orderItemId.rows[0])
           return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
         const result = await findStandardById(orderItemId.rows[0].order_item_id);
+        
+        // Send WebSocket notification
+        WebSocketService.notifyStallOrderItemUpdated(result.stall_id, result);
+        
         return successResponse(SuccessCodes.OK, result);
       } else {
         const query = `UPDATE custom_order_item SET ${setClause} WHERE order_item_id = $${
@@ -281,7 +293,12 @@ export const OrderItemService = {
         const result = await BaseService.query(query, [...values, id]);
         if (!result.rows[0])
           return errorResponse(ErrorCodes.NOT_FOUND, 'Custom Order Item not found');
-        return successResponse(SuccessCodes.OK, result.rows[0]);
+        
+        // Send WebSocket notification
+        const customItem = result.rows[0];
+        WebSocketService.notifyStallOrderItemUpdated(customItem.stall_id, customItem);
+        
+        return successResponse(SuccessCodes.OK, customItem);
       }
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
@@ -316,13 +333,22 @@ export const OrderItemService = {
         );
         OrderService.updateStatus(updateResult.rows[0].order_id); // Try to update order status as well
         const result = await findStandardById(updateResult.rows[0].order_item_id);
+        
+        // Send WebSocket notification
+        WebSocketService.notifyStallOrderItemUpdated(result.stall_id, result);
+        
         return successResponse(SuccessCodes.OK, result);
       } else {
         const result = await BaseService.query(
           'UPDATE custom_order_item SET status = $1 WHERE order_item_id = $2 RETURNING *, \'CUSTOM\' AS type',
           [nextStatus, id]
         );
-        return successResponse<FetchOrderItemResponsePayload>(SuccessCodes.OK, result.rows[0]);
+        
+        // Send WebSocket notification
+        const customItem = result.rows[0];
+        WebSocketService.notifyStallOrderItemUpdated(customItem.stall_id, customItem);
+        
+        return successResponse<FetchOrderItemResponsePayload>(SuccessCodes.OK, customItem);
       }
     } catch (error) {
       return errorResponse(ErrorCodes.DATABASE_ERROR, String(error));
