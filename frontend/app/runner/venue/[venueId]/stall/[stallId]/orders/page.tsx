@@ -198,13 +198,13 @@ export default function Home() {
 
 
   return (
-    <main className="p-2">
+    <main className="p-2 px-4">
       <div>
         <div>
-          <h1 className="text-3xl font-bold">
+          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
+          <h1 className="text-2xl font-bold">
             {stall?.name}
           </h1>
-          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
         </div>
 
         {/* Status Filter Row */}
