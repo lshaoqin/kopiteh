@@ -16,20 +16,25 @@ const STALL_COLUMNS = new Set([
 export const StallService = {
   async findAllByVenue(venue_id: number): Promise<ServiceResult<any[]>> {
     try {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
       const result = await BaseService.query(
         `SELECT 
           s.*,
           COALESCE(SUM(CASE 
-            WHEN oi.status IN ('INCOMING', 'PREPARING') THEN m.prep_time 
+            WHEN oi.status IN ('INCOMING', 'PREPARING') 
+            AND o.created_at >= $2
+            THEN m.prep_time 
             ELSE 0 
           END), 0) as waiting_time
         FROM stall s
         LEFT JOIN menu_item m ON s.stall_id = m.stall_id
         LEFT JOIN order_item oi ON m.item_id = oi.item_id
+        LEFT JOIN "order" o ON oi.order_id = o.order_id
         WHERE s.venue_id = $1
         GROUP BY s.stall_id
         ORDER BY s.stall_id`,
-        [venue_id]
+        [venue_id, oneDayAgo]
       );
       return successResponse(SuccessCodes.OK, result.rows);
     } catch (error) {
@@ -40,19 +45,24 @@ export const StallService = {
 
   async findById(id: number): Promise<ServiceResult<any>> {
     try {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
       const result = await BaseService.query(
         `SELECT 
           s.*,
           COALESCE(SUM(CASE 
-            WHEN oi.status IN ('INCOMING', 'PREPARING') THEN m.prep_time 
+            WHEN oi.status IN ('INCOMING', 'PREPARING') 
+            AND o.created_at >= $2
+            THEN m.prep_time 
             ELSE 0 
           END), 0) as waiting_time
         FROM stall s
         LEFT JOIN menu_item m ON s.stall_id = m.stall_id
         LEFT JOIN order_item oi ON m.item_id = oi.item_id
+        LEFT JOIN "order" o ON oi.order_id = o.order_id
         WHERE s.stall_id = $1
         GROUP BY s.stall_id`,
-        [id]
+        [id, oneDayAgo]
       );
 
       const stall = result.rows[0];
