@@ -16,7 +16,6 @@ export interface StallPayload {
   description?: string;
   stall_image?: string;
   is_open?: boolean;
-  waiting_time?: number;
 }
 
 export interface UpdateStallPayload extends Partial<StallPayload> {}

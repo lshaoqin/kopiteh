@@ -17,7 +17,6 @@ const venuesToSeed = [
         name: 'Hong Kee Beef Noodle',
         description: 'Famous Cuppage Centre Beef Noodles',
         stall_image: 'https://i.pinimg.com/736x/32/b6/f0/32b6f024a935bc4263c5813cdbecbd1f.jpg',
-        waiting_time: 5,
         categories: [
           {
             name: "Signatures",
@@ -55,7 +54,6 @@ const venuesToSeed = [
         name: 'Central Drink Stall',
         description: 'Traditional coffee and tea',
         stall_image: 'https://cache-wak-wak-hawker-com.s3-ap-southeast-1.amazonaws.com/data/images/stall/66/966/block/K8j1sy0mi7BlqZYa_ogp.jpg?v=1612187094',
-        waiting_time: 2,
         categories: [
           {
             name: "Hot Drinks",
@@ -94,7 +92,6 @@ const venuesToSeed = [
         name: 'Ah Ma Chi Mian',
         description: 'Traditional Minced Meat Noodles',
         stall_image: 'https://static.smartlocal.com/images/lp/2023/10/ah-ma-chi-mian-1.JPG',
-        waiting_time: 8,
         categories: [
           {
             name: "Mains",
@@ -128,7 +125,6 @@ const venuesToSeed = [
         name: 'Coastal Seafood',
         description: 'Fresh catch daily',
         stall_image: 'https://sethlui.com/wp-content/uploads/2022/03/White-Restaurant-Sun-Plaza-Seafood.jpg',
-        waiting_time: 15,
         categories: [
           {
             name: "Seafood",
@@ -180,8 +176,8 @@ async function seed() {
       // 5. SEED STALLS for this venue 
       for (const stallData of venueData.stalls) {
         const stallRes = await pool.query(
-          `INSERT INTO stall (venue_id, name, description, stall_image, is_open, waiting_time) VALUES ($1, $2, $3, $4, true, $5) RETURNING stall_id`, 
-          [venueId, stallData.name, stallData.description, stallData.stall_image, stallData.waiting_time]
+          `INSERT INTO stall (venue_id, name, description, stall_image, is_open) VALUES ($1, $2, $3, $4, true) RETURNING stall_id`, 
+          [venueId, stallData.name, stallData.description, stallData.stall_image]
         );
         const stallId = stallRes.rows[0].stall_id;
 
