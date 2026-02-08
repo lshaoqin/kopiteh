@@ -19,6 +19,10 @@ export interface Order extends Omit<BaseOrder, 'table_id'> {
   table_number: string
   venue_id: number
   venue_name: string
+  order_type?: 'STANDARD' | 'CUSTOM'
+  order_item_name?: string  // For custom orders
+  quantity?: number         // For custom orders
+  unit_price?: string       // For custom orders
   items?: OrderItem[]
 }
 
@@ -29,8 +33,8 @@ export default function ViewOrders() {
   const [loading, setLoading] = useState(false)
   const [loadingStalls, setLoadingStalls] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set())
-  const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set())
+  const [expandedOrders, setExpandedOrders] = useState<Set<number | string>>(new Set())
+  const [loadingItems, setLoadingItems] = useState<Set<number | string>>(new Set())
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -230,18 +234,19 @@ export default function ViewOrders() {
     }
   }
 
-  const toggleOrderExpansion = (orderId: number) => {
+  const toggleOrderExpansion = (orderId: number | string) => {
     const newExpanded = new Set(expandedOrders)
     
     if (newExpanded.has(orderId)) {
       newExpanded.delete(orderId)
     } else {
       newExpanded.add(orderId)
-      // Fetch items if not already loaded
+      // Only fetch items for standard orders that haven't been loaded yet
       const order = orders.find(o => o.order_id === orderId)
-      if (order && !order.items) {
-        fetchOrderItems(orderId)
+      if (order && order.order_type === 'STANDARD' && !order.items) {
+        fetchOrderItems(Number(orderId))
       }
+      // For custom orders, the data is already in the order object
     }
     
     setExpandedOrders(newExpanded)

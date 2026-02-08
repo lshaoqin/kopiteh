@@ -198,30 +198,33 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
         params.push(venueId);
       }
 
-      // Get total orders and total amount for the month
+      // Get total orders and total amount for the month (including custom orders)
       const totalResult = await BaseService.query(
         `SELECT 
-          COUNT(*)::int as total_orders,
-          COALESCE(SUM(total_price), 0) as total_amount
+          (COUNT(DISTINCT o.order_id) + COUNT(DISTINCT coi.order_item_id))::int as total_orders,
+          COALESCE(SUM(o.total_price), 0) + COALESCE(SUM(coi.price * coi.quantity), 0) as total_amount
         FROM "order" o
         LEFT JOIN "table" t ON o.table_id = t.table_id
-        WHERE o.created_at >= $1 AND o.created_at < $2
-          AND o.status != 'CANCELLED'${venueCondition}`,
+        FULL OUTER JOIN custom_order_item coi ON coi.table_id = t.table_id 
+          AND coi.created_at >= $1 AND coi.created_at < $2
+          AND coi.status != 'CANCELLED'
+        WHERE (o.order_id IS NULL OR (o.created_at >= $1 AND o.created_at < $2
+          AND o.status != 'CANCELLED'))${venueCondition}`,
         params
       );
 
-      // Get analytics per stall
+      // Get analytics per stall (including custom orders)
       const stallResult = await BaseService.query(
         `SELECT 
           s.stall_id,
           s.name as stall_name,
-          COUNT(DISTINCT o.order_id)::int as total_orders,
+          (COUNT(DISTINCT o.order_id) + COUNT(DISTINCT coi.order_item_id))::int as total_orders,
           COALESCE(
             SUM(
               (oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity
             ), 
             0
-          ) as total_amount
+          ) + COALESCE(SUM(coi.price * coi.quantity), 0) as total_amount
         FROM stall s
         LEFT JOIN menu_item mi ON s.stall_id = mi.stall_id
         LEFT JOIN order_item oi ON mi.item_id = oi.item_id
@@ -232,6 +235,9 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
         ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
         LEFT JOIN "order" o ON oi.order_id = o.order_id
         LEFT JOIN "table" t ON o.table_id = t.table_id
+        LEFT JOIN custom_order_item coi ON s.stall_id = coi.stall_id
+          AND coi.created_at >= $1 AND coi.created_at < $2
+          AND coi.status != 'CANCELLED'
         WHERE ${venueId ? 's.venue_id = $3 AND ' : ''}(o.order_id IS NULL OR (
           o.created_at >= $1 
           AND o.created_at < $2
@@ -267,25 +273,31 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       const offset = (page - 1) * limit;
 
       let countQuery = `
-        SELECT COUNT(DISTINCT o.order_id)::int as total
+        SELECT (COUNT(DISTINCT o.order_id) + COUNT(DISTINCT coi.order_item_id))::int as total
         FROM "order" o
         LEFT JOIN "table" t ON o.table_id = t.table_id
         LEFT JOIN venue v ON t.venue_id = v.venue_id
+        FULL OUTER JOIN custom_order_item coi ON TRUE
       `;
 
       let query = `
         SELECT DISTINCT
-          o.order_id,
-          o.table_id,
-          o.user_id,
-          o.status,
-          o.total_price,
-          o.created_at,
+          COALESCE(o.order_id::text, 'CUSTOM-' || coi.order_item_id::text) as order_id,
+          COALESCE(o.table_id, coi.table_id) as table_id,
+          COALESCE(o.user_id, coi.user_id) as user_id,
+          COALESCE(o.status, coi.status) as status,
+          COALESCE(o.total_price, coi.price * coi.quantity) as total_price,
+          COALESCE(o.created_at, coi.created_at) as created_at,
           t.table_number,
           t.venue_id,
-          v.name as venue_name
+          v.name as venue_name,
+          CASE WHEN o.order_id IS NULL THEN 'CUSTOM' ELSE 'STANDARD' END as order_type,
+          coi.order_item_name,
+          coi.quantity,
+          coi.price as unit_price
         FROM "order" o
-        LEFT JOIN "table" t ON o.table_id = t.table_id
+        FULL OUTER JOIN custom_order_item coi ON FALSE
+        LEFT JOIN "table" t ON COALESCE(o.table_id, coi.table_id) = t.table_id
         LEFT JOIN venue v ON t.venue_id = v.venue_id
       `;
 
@@ -293,14 +305,16 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       const params: any[] = [];
       let paramIndex = 1;
 
-      // Add filters
+      // Add filters (apply to both standard and custom orders)
       if (filters.startDate) {
-        conditions.push(`o.created_at >= $${paramIndex++}`);
+        conditions.push(`(o.created_at >= $${paramIndex} OR coi.created_at >= $${paramIndex})`);
+        paramIndex++;
         params.push(filters.startDate);
       }
 
       if (filters.endDate) {
-        conditions.push(`o.created_at <= $${paramIndex++}`);
+        conditions.push(`(o.created_at <= $${paramIndex} OR coi.created_at <= $${paramIndex})`);
+        paramIndex++;
         params.push(filters.endDate);
       }
 
@@ -323,7 +337,8 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           LEFT JOIN order_item oi ON o.order_id = oi.order_id
           LEFT JOIN menu_item mi ON oi.item_id = mi.item_id
         `;
-        conditions.push(`mi.stall_id = $${paramIndex++}`);
+        conditions.push(`(mi.stall_id = $${paramIndex} OR coi.stall_id = $${paramIndex})`);
+        paramIndex++;
         params.push(filters.stallId);
       }
 
@@ -337,8 +352,8 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       const countResult = await BaseService.query(countQuery, params);
       const total = countResult.rows[0].total;
 
-      // Add ordering and pagination
-      query += ` ORDER BY o.created_at ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+      // Add ordering and pagination (using COALESCE for created_at)
+      query += ` ORDER BY COALESCE(o.created_at, coi.created_at) ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
       params.push(limit, offset);
 
       const result = await BaseService.query(query, params);

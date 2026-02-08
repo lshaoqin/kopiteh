@@ -4,13 +4,13 @@ import type { Order, OrderItem } from "../page"
 
 interface OrdersTableProps {
   orders: Order[]
-  expandedOrders: Set<number>
-  loadingItems: Set<number>
+  expandedOrders: Set<number | string>
+  loadingItems: Set<number | string>
   currentPage: number
   totalPages: number
   totalOrders: number
   ordersPerPage: number
-  onToggleOrderExpansion: (orderId: number) => void
+  onToggleOrderExpansion: (orderId: number | string) => void
   onPrevPage: () => void
   onNextPage: () => void
   onPageClick: (page: number) => void

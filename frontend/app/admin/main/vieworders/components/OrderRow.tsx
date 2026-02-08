@@ -10,6 +10,8 @@ interface OrderRowProps {
 }
 
 export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: OrderRowProps) {
+  const isCustomOrder = order.order_type === 'CUSTOM'
+  
   return (
     <>
       <tr className="hover:bg-gray-50">
@@ -62,6 +64,21 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
           <td colSpan={7} className="px-6 py-4 bg-gray-50">
             {isLoadingItems ? (
               <p className="text-gray-600 text-center">Loading items...</p>
+            ) : isCustomOrder ? (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-semibold">Item:</span> {order.order_item_name}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Quantity:</span> {order.quantity}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Unit Price:</span> ${parseFloat(order.unit_price || '0').toFixed(2)}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Total:</span> ${parseFloat(order.total_price).toFixed(2)}
+                </div>
+              </div>
             ) : order.items && order.items.length > 0 ? (
               <OrderItemsList items={order.items} />
             ) : (
