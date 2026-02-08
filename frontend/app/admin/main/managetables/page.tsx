@@ -17,6 +17,7 @@ export default function ManageTables() {
 
     const [startNum, setStartNum] = useState<string>("")
     const [endNum, setEndNum] = useState<string>("")
+    const [customTableName, setCustomTableName] = useState<string>("")
     const [creating, setCreating] = useState(false)
     const [createError, setCreateError] = useState<string | null>(null)
     const [selectedTables, setSelectedTables] = useState<Set<number>>(new Set())
@@ -65,6 +66,49 @@ export default function ManageTables() {
         }
         loadTables()
     }, [API_URL, selectedVenueId])
+
+    const handleCreateIndividual = async () => {
+        if (!selectedVenueId) return
+
+        const trimmedName = customTableName.trim()
+        if (!trimmedName) {
+            setCreateError("Please enter a table name")
+            return
+        }
+
+        try {
+            setCreating(true)
+            setCreateError(null)
+
+            const qrCode = `qr-${selectedVenueId}-${trimmedName}-${Date.now()}`
+            const res = await fetch(`${API_URL}/tables/create`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    venue_id: selectedVenueId,
+                    table_number: trimmedName,
+                    qr_code: qrCode,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                throw new Error(data?.payload?.message ?? "Failed to create table")
+            }
+
+            const newTable = data.payload?.data
+            setTables((curr) => [...curr, newTable])
+            setCustomTableName("")
+        } catch (err: any) {
+            setCreateError(err.message ?? "Failed to create table")
+        } finally {
+            setCreating(false)
+        }
+    }
 
     const handleCreateRange = async () => {
         if (!selectedVenueId) return
@@ -216,41 +260,82 @@ export default function ManageTables() {
 
                 {selectedVenueId && (
                     <>
-                        {/* Add Tables Range */}
+                        {/* Add Tables */}
                         <div className="bg-white p-6 rounded-lg shadow mb-8">
                             <h2 className="text-xl font-semibold mb-4">Add Tables</h2>
-                            <div className="flex gap-4 items-end">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Start Number</label>
-                                    <input
-                                        type="number"
-                                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
-                                        value={startNum}
-                                        onChange={(e) => setStartNum(e.target.value)}
-                                        placeholder="e.g., 1"
-                                    />
+                            
+                            {/* Individual Table */}
+                            <div className="mb-6">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Add Individual Table</h3>
+                                <div className="flex gap-4 items-end">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-2">Table Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
+                                            value={customTableName}
+                                            onChange={(e) => setCustomTableName(e.target.value)}
+                                            placeholder="e.g., A1, VIP-1, Table-A"
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={handleCreateIndividual}
+                                        disabled={creating || !customTableName.trim()}
+                                        className="bg-primary1 hover:bg-primary1/90 text-white h-10"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        {creating ? "Creating..." : "Add Table"}
+                                    </Button>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">End Number</label>
-                                    <input
-                                        type="number"
-                                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
-                                        value={endNum}
-                                        onChange={(e) => setEndNum(e.target.value)}
-                                        placeholder="e.g., 10"
-                                    />
-                                </div>
-                                <Button
-                                    onClick={handleCreateRange}
-                                    disabled={creating || !startNum || !endNum}
-                                    className="bg-primary1 hover:bg-primary1/90 text-white"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {creating ? "Creating..." : "Add Tables"}
-                                </Button>
                             </div>
+
+                            {/* Divider */}
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">OR</span>
+                                </div>
+                            </div>
+
+                            {/* Range of Tables */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Add Tables by Range</h3>
+                                <div className="flex gap-4 items-end">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Start Number</label>
+                                        <input
+                                            type="number"
+                                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
+                                            value={startNum}
+                                            onChange={(e) => setStartNum(e.target.value)}
+                                            placeholder="e.g., 1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">End Number</label>
+                                        <input
+                                            type="number"
+                                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary1"
+                                            value={endNum}
+                                            onChange={(e) => setEndNum(e.target.value)}
+                                            placeholder="e.g., 10"
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={handleCreateRange}
+                                        disabled={creating || !startNum || !endNum}
+                                        className="bg-primary1 hover:bg-primary1/90 text-white h-10"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        {creating ? "Creating..." : "Add Range"}
+                                    </Button>
+                                </div>
+                            </div>
+
                             {createError && (
-                                <p className="text-red-500 text-sm mt-2">{createError}</p>
+                                <p className="text-red-500 text-sm mt-4">{createError}</p>
                             )}
                         </div>
 
@@ -264,7 +349,7 @@ export default function ManageTables() {
                                         variant="destructive"
                                         className="bg-red-500 hover:bg-red-600"
                                     >
-                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        <Trash2 className="w-4 h-10 mr-2" />
                                         Delete Selected ({selectedTables.size})
                                     </Button>
                                 )}
