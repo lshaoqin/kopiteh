@@ -301,6 +301,11 @@ export default function Home() {
                       {item.modifiers.map(modifier => modifier.name).join(", ")}
                     </p>
                   )}
+                  {item.remarks && (
+                    <p className="text-sm text-gray-500 italic truncate">
+                      {item.remarks}
+                    </p>
+                  )}
                 </div>
 
                 <div className="text-right">
