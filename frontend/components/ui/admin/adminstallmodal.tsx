@@ -5,6 +5,8 @@ import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/formfield";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import { useAuthStore } from "@/stores/auth.store";
+import { useRef } from "react";
 
 type AdminStallModal = {
   open: boolean;
@@ -61,20 +63,82 @@ export function AdminStallModal({
   const [description, setDescription] = useState("");
   const [openingHours, setOpeningHours] = useState("");
 
-  useEffect(() => {
-    if (open) {
-      setName(initialName ?? "");
-      setImageUrl(initialImageUrl ?? "");
-      setError(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const { accessToken } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-      if (isVenue) {
-        setAddress(initialAddress ?? "");
-        setDescription(initialDescription ?? "");
-        setOpeningHours(initialOpeningHours ?? "");
-      }
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploaded, setIsUploaded] = useState(false);
+
+  const uploadSelectedImage = async (file: File) => {
+    if (!API_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+
+    const form = new FormData();
+    form.append("image", file);
+    form.append("folder", isVenue ? "venues" : "stalls");
+
+    const res = await fetch(`${API_URL}/upload/single`, {
+      method: "POST",
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      body: form,
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!json) {
+      throw new Error(`Upload failed (HTTP ${res.status})`);
     }
-  }, [open, initialName, initialImageUrl, isVenue, initialAddress, initialDescription, initialOpeningHours]);
 
+    if (!res.ok || json?.success === false) {
+      throw new Error(json?.payload?.message ?? `Upload failed (HTTP ${res.status})`);
+    }
+
+    const imageUrl = json?.payload?.data?.imageUrl as string | undefined;
+
+    if (!imageUrl) {
+      throw new Error("Upload succeeded but no imageUrl returned");
+    }
+
+    return imageUrl;
+  };
+
+
+  useEffect(() => {
+    if (!open) {
+      setIsUploaded(false);
+      return;
+    }
+
+
+    setName(initialName ?? "");
+    setImageUrl(initialImageUrl ?? "");
+    setError(null);
+    setUploadError(null);
+
+    if (isVenue) {
+      setAddress(initialAddress ?? "");
+      setDescription(initialDescription ?? "");
+      setOpeningHours(initialOpeningHours ?? "");
+    } else {
+      setAddress("");
+      setDescription("");
+      setOpeningHours("");
+    }
+
+    if (initialImageUrl) {
+      setIsUploaded(true);
+    }
+  }, [
+    open,
+    initialName,
+    initialImageUrl,
+    isVenue,
+    initialAddress,
+    initialDescription,
+    initialOpeningHours,
+  ]);
 
   return (
     <Modal open={open} title={title} onClose={onClose}>
@@ -99,25 +163,87 @@ export function AdminStallModal({
         />
 
         {labelImage && (
-          <FormField
-            className="flex flex-col space-y-2 font-semibold"
-            classNameOut={`
-      p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
-      ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
-    `}
-            classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-            variant="text"
-            label={labelImage}
-            inputProps={{
-              value: imageUrl,
-              placeholder: "Image URL",
-              onChange: (e) => {
-                setImageUrl(e.target.value);
-                setError(null);
-              },
-            }}
-          />
+          <div className="space-y-3">
+            <div className="flex items-end gap-3">
+              {!isUploaded && (
+                <div className="flex-1">
+                  <FormField
+                    className="flex flex-col space-y-2 font-semibold"
+                    classNameOut={`
+                  p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+                  ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+                `}
+                    classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                    variant="text"
+                    label={labelImage}
+                    inputProps={{
+                      value: imageUrl,
+                      placeholder: "Image URL (optional)",
+                      onChange: (e) => {
+                        setImageUrl(e.target.value);
+                        setError(null);
+                        setIsUploaded(false);
+                        setUploadError(null);
+                      },
+                    }}
+                  />
+                </div>
+              )}
+              <label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const inputEl = e.currentTarget;  
+                    const file = inputEl.files?.[0];
+                    if (!file) return;
+
+                    try {
+                      setUploading(true);
+                      setUploadError(null);
+
+                      const url = await uploadSelectedImage(file);
+                      setImageUrl(url);
+                      setIsUploaded(true);
+                    } catch (err: any) {
+                      setUploadError(err?.message ?? "Upload failed");
+                    } finally {
+                      setUploading(false);
+                      inputEl.value = "";              
+                    }
+                  }}
+
+                />
+
+                <Button
+                  type="button"
+                  variant="updatestall"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? "Uploading..." : "Upload"}
+                </Button>
+              </label>
+            </div>
+
+            {uploadError && (
+              <p className="text-sm text-red-600">{uploadError}</p>
+            )}
+
+            {imageUrl?.trim() && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt="Preview"
+                className="h-32 w-full object-cover rounded-lg border"
+              />
+            )}
+          </div>
         )}
+
         {isVenue && (
           <div>
             <FormField
@@ -186,7 +312,7 @@ export function AdminStallModal({
           )}
           <Button
             variant="updatestall"
-            disabled={!name.trim()}
+            disabled={!name.trim() || uploading}
             onClick={() =>
               onSubmit({
                 name,
