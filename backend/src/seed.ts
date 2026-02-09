@@ -170,7 +170,7 @@ async function seed() {
 
       // 4. SEED TABLES for this venue
       for (const tNum of venueData.tables) {
-        await pool.query(`INSERT INTO "table" (venue_id, table_number, qr_code) VALUES ($1, $2, $3)`, [venueId, tNum, `qr-${venueId}-${tNum}`]);
+        await pool.query(`INSERT INTO "table" (venue_id, table_number) VALUES ($1, $2)`, [venueId, tNum]);
       }
 
       // 5. SEED STALLS for this venue 
