@@ -37,13 +37,6 @@ export const OrderItemController = {
       const type = req.params.type as 'STANDARD' | 'CUSTOM';
       const result = await OrderItemService.create(payload, type);
       
-      // Emit WebSocket event to the stall room if order item created successfully
-      if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        // Get stall_id from the menu item
-        WebSocketService.notifyStallOrderItemCreated(orderItem.stall_id, orderItem);
-      }
-      
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -64,12 +57,6 @@ export const OrderItemController = {
       const type = req.params.type as 'STANDARD' | 'CUSTOM';
       const result = await OrderItemService.update(id, payload, type);
       
-      // Emit WebSocket event to the stall room if order item updated successfully
-      if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        WebSocketService.notifyStallOrderItemUpdated(orderItem.stall_id, orderItem);
-      }
-      
       return res.status(result.payload.status).json(result);
     } catch (err) {
       if (err instanceof BadRequestError) {
@@ -87,11 +74,22 @@ export const OrderItemController = {
       const type = req.params.type as 'STANDARD' | 'CUSTOM';
       const result = await OrderItemService.updateStatus(id, type);
       
-      // Emit WebSocket event to the stall room if status updated successfully
-      if (result.success && result.payload.data) {
-        const orderItem = result.payload.data;
-        WebSocketService.notifyStallOrderItemUpdated(orderItem.stall_id, orderItem);
+      return res.status(result.payload.status).json(result);
+    } catch (err) {
+      if (err instanceof BadRequestError) {
+        const result = errorResponse(ErrorCodes.VALIDATION_ERROR, String(err.details));
+        return res.status(result.payload.status).json(result);
       }
+      const result = errorResponse(ErrorCodes.INTERNAL_ERROR);
+      return res.status(result.payload.status).json(result);
+    }
+  },
+
+  async revertStatus(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      const type = req.params.type as 'STANDARD' | 'CUSTOM';
+      const result = await OrderItemService.revertStatus(id, type);
       
       return res.status(result.payload.status).json(result);
     } catch (err) {
@@ -117,6 +115,12 @@ export const OrderItemController = {
     const type = req.params.type as 'STANDARD' | 'CUSTOM';
     const result = await OrderItemService.delete(id, type);
     //const result = successResponse(SuccessCodes.OK, data);
+    return res.status(result.payload.status).json(result);
+  },
+
+  async getModifiers(req: Request, res: Response) {
+    const orderItemId = Number(req.params.order_item_id);
+    const result = await OrderItemService.findModifiersByOrderItem(orderItemId);
     return res.status(result.payload.status).json(result);
   },
 };

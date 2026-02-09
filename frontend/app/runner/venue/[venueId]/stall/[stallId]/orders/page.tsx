@@ -1,17 +1,16 @@
 "use client";
 
+import { api } from "@/lib/api";
 import { BackButton, AddButton } from "@/components/ui/button";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
+import { OrderItemDetails } from "@/components/ui/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
 import { Stall } from "../../../../../../../../types/stall";
-import { get } from "http";
 import { useWebSocket } from "@/context/WebSocketContext";
 
 export default function Home() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
   const params = useParams();
   const venueId = params.venueId;
   const stallId = params.stallId[0];
@@ -22,10 +21,14 @@ export default function Home() {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<Stall | null>(null);
-  const [defaultItem, setDefaultItem] = useState<OrderItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
 
   const [showAddOrder, setShowAddOrder] = useState(false);
+  const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
+  const [selectedOrderItem, setSelectedOrderItem] = useState<OrderItem | null>(null);
+  
+  // Swipe state
+  const [swipeState, setSwipeState] = useState<{ [key: number]: { x: number; startX: number; isSwiping: boolean } }>({});
   
 
   const filteredOrderItems = orderItems.filter(
@@ -33,58 +36,39 @@ export default function Home() {
   );
 
   // -- FETCHING STALL AND ORDER ITEMS --
-  const getStall = async () => {
+  const getStall = useCallback(async () => {
     try{
-      const res = await fetch(`${API_URL}/stalls/${stallId}`);
-      const json = await res.json();
+      const response = await api.getStallById(Number(stallId));
 
-      if (!res.ok || !json.success) {
+      if (!response) {
         throw new Error("Failed to fetch stall");
       }
-      setStall(json.payload.data);
+      setStall(response);
     } catch (error: any) {
       setError(error.message);
     }
-  };
+  }, [stallId]);
 
-  const getOrderItemsByStall = async () => {
+  const getOrderItemsByStall = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/orderItem/stall/${stallId}`);
-      const json = await res.json();
+      const response = await api.getOrderItemsByStall(Number(stallId));
 
-      if (!res.ok || !json.success) {
+      if (!response) {
         throw new Error("Failed to fetch order items");
       }
-      console.log("Fetched order items:", json.payload.data);
-      setOrderItems(json.payload.data);
+      setOrderItems(response);
     } catch (error: any) {
       setError(error.message);
     }
-  };
-
-  const getDefaultItem = async () => {
-    try {
-      const res = await fetch(`${API_URL}/items/default/${stallId}`);
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        throw new Error("Failed to fetch default item");
-      }
-      setDefaultItem(json.payload.data);
-    } catch (error: any) {
-      setError(error.message);
-    }
-  };
+  }, [stallId]);
 
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
-    console.log('New order item received:', data.orderItem);
     setOrderItems((prev) => [...prev, data.orderItem]);
   }, []);
 
   const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
-    console.log('Order item updated:', data.orderItem);
     setOrderItems((prev) =>
       prev.map((item) =>
         item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
@@ -109,65 +93,30 @@ export default function Home() {
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
-  const createOrder = async (data: {
-    quantity: string;
-    unitPrice: string;
-    notes?: string;
-    table: string;
-  }) => {
-    const res = await fetch(`${API_URL}/order/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        table_id: data.table,
-        status: "PENDING",
-        total_price: data.unitPrice ? parseFloat(data.unitPrice) * (data.quantity ? parseInt(data.quantity) : 1) : 0,
-        created_at: new Date().toISOString(),
-        remarks: data.notes,
-      }),
-    });
-    const json = await res.json();
-
-    console.log("Create Order response:", json);
-
-    if (!res.ok || !json.success) {
-      throw new Error(json?.message || "Failed to create order");
-    }
-
-    return json.payload.data;
-  };
 
   const createOrderItem = async (
-    orderId: number,
     data: {
       itemName: string;
       quantity: string;
       unitPrice: string;
+      notes?: string;
+      table: string;
     }
   ) => {
     try {
-      const res = await fetch(`${API_URL}/orderItem/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          order_id: orderId,
-          item_id: defaultItem?.item_id,
-          status: "INCOMING",
-          quantity: parseInt(data.quantity),
-          price: parseInt(data.quantity) * parseFloat(data.unitPrice),
-        }),
-      });
-      
-      const json = await res.json();
+      const payload = {
+        stall_id: Number(stallId),
+        table_id: Number(data.table),
+        order_item_name: data.itemName,
+        status: "INCOMING" as const,
+        quantity: Number(data.quantity),
+        price: Number(data.unitPrice),
+        remarks: data.notes || "",
+      };
+      const json = await api.createCustomOrder(payload);
 
-      console.log("Create Order Item response:", json);
-    
-      if (!res.ok || !json.success) {
-        throw new Error(json?.message || "Failed to create order item");
+      if (!json) {
+        throw new Error("Failed to create order item");
       } else {
         getOrderItemsByStall();
       }
@@ -176,23 +125,81 @@ export default function Home() {
     }
   };
 
+  // Update order item status
+  const updateOrderItemStatus = async (orderItemId: number, type: "STANDARD" | "CUSTOM") => {
+    try {
+      await api.updateOrderItemStatus(orderItemId, type);
+      // The WebSocket will handle the state update
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent, orderItemId: number) => {
+    const touch = e.touches[0];
+    setSwipeState(prev => ({
+      ...prev,
+      [orderItemId]: {
+        x: 0,
+        startX: touch.clientX,
+        isSwiping: true
+      }
+    }));
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, orderItemId: number) => {
+    const state = swipeState[orderItemId];
+    if (!state?.isSwiping) return;
+
+    const touch = e.touches[0];
+    const diff = touch.clientX - state.startX;
+    
+    // Only allow right swipe (positive diff)
+    if (diff > 0) {
+      setSwipeState(prev => ({
+        ...prev,
+        [orderItemId]: {
+          ...state,
+          x: Math.min(diff, 150) // Cap at 150px
+        }
+      }));
+    }
+  };
+
+  const handleTouchEnd = async (orderItemId: number, type: "STANDARD" | "CUSTOM") => {
+    const state = swipeState[orderItemId];
+    if (!state) return;
+
+    // If swiped more than 100px, trigger status update
+    if (state.x > 100) {
+      await updateOrderItemStatus(orderItemId, type);
+    }
+
+    // Reset swipe state
+    setSwipeState(prev => {
+      const newState = { ...prev };
+      delete newState[orderItemId];
+      return newState;
+    });
+  };
+
   useEffect(() => {
     setLoading(true);
     getStall();
-    getDefaultItem();
     getOrderItemsByStall();
     setLoading(false);
-  }, [API_URL, stallId]);
+  }, [stallId, getStall, getOrderItemsByStall]);
 
 
   return (
-    <main className="p-2">
+    <main className="p-2 px-4">
       <div>
         <div>
-          <h1 className="text-3xl font-bold">
+          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
+          <h1 className="text-2xl font-bold">
             {stall?.name}
           </h1>
-          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
         </div>
 
         {/* Status Filter Row */}
@@ -240,27 +247,73 @@ export default function Home() {
                 No order item {selectedStatus.toLowerCase()}
               </p>
             )}
-
-            {filteredOrderItems.map((item) => (
-              <div
-                key={`${item.order_id}-${item.item_id}`}
-                className="flex justify-between items-center p-3 rounded-lg border bg-white shadow-sm"
+            {/* Sort the order items by created_at in descending order */}
+            {filteredOrderItems
+              .slice()
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((item, index) => {
+                const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
+                const opacity = 1 - (swipe.x / 150) * 0.3;
+                
+                return (
+              <div 
+                key={index}
+                className="relative overflow-hidden"
               >
+                {/* Background indicator */}
+                {swipe.x > 0 && (
+                  <div 
+                    className="absolute inset-0 bg-green-600 flex items-center px-4 rounded-lg"
+                    style={{ opacity: Math.min(swipe.x / 100, 1) }}
+                  >
+                    <span className="text-white font-semibold">
+                      {swipe.x > 100 ? '✓ Release to update' : 'Swipe to next status →'}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Card */}
+                <div
+                  className="flex h-16 justify-between items-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer relative"
+                  style={{
+                    transform: `translateX(${swipe.x}px)`,
+                    transition: swipe.isSwiping ? 'none' : 'transform 0.3s ease-out',
+                    opacity
+                  }}
+                  onTouchStart={(e) => handleTouchStart(e, item.order_item_id)}
+                  onTouchMove={(e) => handleTouchMove(e, item.order_item_id)}
+                  onTouchEnd={() => handleTouchEnd(item.order_item_id, item.type)}
+                  onClick={
+                    () => {
+                      if (!swipe.isSwiping) {
+                        setSelectedOrderItem(item);
+                        setShowOrderItemDetails(true);
+                      }
+                    }
+                  }
+                >
                 <div>
-                  <p className="font-medium">Order #{item.order_id}</p>
-                  <p className="text-sm text-gray-600">
-                    Item ID: {item.item_id}
+                  <p className="font-medium">
+                    {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    <p className="text-sm text-gray-600">
+                      {item.modifiers.map(modifier => modifier.name).join(", ")}
+                    </p>
+                  )}
+                  {item.remarks && (
+                    <p className="text-sm text-gray-500 italic truncate">
+                      {item.remarks}
+                    </p>
+                  )}
                 </div>
 
                 <div className="text-right">
-                  <p className="font-medium">x{item.quantity}</p>
-                  <p className="text-sm text-gray-600">
-                    ${item.price}
-                  </p>
+                  <p className="font-medium">Table {item.table_number}</p>
                 </div>
               </div>
-            ))}
+              </div>
+            )})}
           </div>
         )}
         </div>
@@ -269,17 +322,23 @@ export default function Home() {
           open={showAddOrder}
           onClose={() => setShowAddOrder(false)}
           onSubmit={async (data) => {
-            console.log("AddOrderPanel data:", data);
-
             try {
-              const order = await createOrder(data);
-
-              await createOrderItem(order.order_id, data);
-        
+              await createOrderItem(data);
             } catch (err) {
               console.error(err);
               setError(err instanceof Error ? err.message : String(err));
             }
+          }}
+        />
+        </div>
+        <div>
+        <OrderItemDetails
+          open={showOrderItemDetails}
+          orderItem={selectedOrderItem}
+          onClose={() => {
+            setShowOrderItemDetails(false);
+            setSelectedOrderItem(null);
+            getOrderItemsByStall();
           }}
         />
         </div>

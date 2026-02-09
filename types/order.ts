@@ -18,7 +18,6 @@ export interface Order {
   status: OrderStatus;
   total_price: Decimal;
   created_at: string; // ISO
-  remarks?: string | null;
   type: 'STANDARD' | 'CUSTOM';
 }
 
@@ -26,6 +25,7 @@ export interface OrderItem {
   order_item_id: ID;
   stall_id: ID;
   table_id: ID | null;
+  table_number?: string | null;
   user_id?: ID | null;
   order_item_name: string;
   status: OrderItemStatus;
@@ -33,13 +33,15 @@ export interface OrderItem {
   price: Decimal;
   created_at: string;
   remarks?: string | null;
+  modifiers?: OrderItemModifier[];
   type: 'STANDARD' | 'CUSTOM';
 }
 
 export interface OrderItemModifier {
   order_item_option_id: ID;
   order_item_id: ID;
+  option_name?: string;
   option_id: ID;
   price_modifier: Decimal;
-  option_name: string;
+  name: string;
 }

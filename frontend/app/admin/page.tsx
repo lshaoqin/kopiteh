@@ -17,7 +17,7 @@ export default function AdminIndexPage() {
       return;
     }
 
-    router.replace("/admin/main/home");
+    router.replace("/admin/main/viewanalytics");
   }, [user, isHydrated, router]);
 
   return (

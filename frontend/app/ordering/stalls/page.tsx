@@ -18,7 +18,7 @@ function StallSelectionContent() {
   const searchParams = useSearchParams();
   
   // Store actions and state
-  const { venueId, setVenueId, setTableNumber } = useCartStore();
+  const { venueId, tableId, setVenueId, setTableId } = useCartStore();
 
   const [stalls, setStalls] = useState<Stall[]>([]); 
   const [loading, setLoading] = useState(true); 
@@ -33,8 +33,8 @@ function StallSelectionContent() {
     const tParam = searchParams.get("table");
 
     if (vParam) setVenueId(Number(vParam));
-    if (tParam) setTableNumber(Number(tParam));
-  }, [searchParams, setVenueId, setTableNumber]);
+    if (tParam) setTableId(Number(tParam));
+  }, [searchParams, setVenueId, setTableId]);
 
   // 2. Fetch Stalls based on dynamic venueId
   useEffect(() => {
@@ -56,6 +56,19 @@ function StallSelectionContent() {
     fetchStalls();
   }, [venueId]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    // Check for Venue first
+    if (!venueId && !searchParams.get("venue")) {
+      router.push("/ordering/venue");
+    } 
+    // If venue exists but table is missing, redirect to table selection
+    else if (!tableId && !searchParams.get("table")) {
+      router.push("/ordering/table");
+    }
+  }, [loading, venueId, tableId, searchParams, router]);
+
   const filteredStalls = stalls
     .filter((stall) => stall.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
@@ -65,9 +78,8 @@ function StallSelectionContent() {
       return 0;
     });
 
-  // If no venue is selected and not in URL, redirect back to venue selection
-  if (!loading && !venueId && !searchParams.get("venue")) {
-    router.push("/ordering/venue");
+  // Prevent flash of content if redirecting
+  if (!loading && (!venueId || !tableId) && !searchParams.get("venue")) {
     return null;
   }
 

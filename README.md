@@ -13,6 +13,7 @@ To seed the database with mock values,
 in another terminal:
 ```bash
 cd backend
+docker compose exec backend npm run rollback
 docker compose exec backend npm run migrate
 docker compose exec backend npm run seed
 ```

@@ -2,7 +2,7 @@ import { validationResult, body, param } from 'express-validator';
 import { BadRequestError } from '../controllers/errors';
 import type { Request, Response, NextFunction } from 'express';
 
-const STALL_FIELDS = ['venue_id', 'name', 'description', 'stall_image', 'is_open', 'waiting_time'] as const;
+const STALL_FIELDS = ['venue_id', 'name', 'description', 'stall_image', 'is_open'] as const;
 
 const optionalTextField = (field: string, maxLength = 255) =>
   body(field)
@@ -64,7 +64,6 @@ export const updateStallValidation = [
   optionalTextField('description', 1000),
   optionalTextField('stall_image', 2048),
   optionalBoolean('is_open'),
-  optionalNonNegativeInt('waiting_time'),
 ];
 
 export const runValidation = (req: Request, _res: Response, next: NextFunction) => {

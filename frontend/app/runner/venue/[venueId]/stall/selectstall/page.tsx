@@ -58,7 +58,7 @@ export default function Home() {
         ) : (
           <DisplayGrid
             items={stalls.map((stall) => ({
-              id: stall.stall_id,
+              id: String(stall.stall_id),
               name: stall.name,
               img: stall.stall_image,
               isActive: stall.is_open,

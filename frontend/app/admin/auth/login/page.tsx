@@ -90,7 +90,7 @@ export default function Home() {
       setSuccess(message);
 
       setTimeout(() => {
-        router.push("/admin/main/home");
+        router.push("/admin/main/viewanalytics");
       }, 1500);
     } catch (err: any) {
       console.error("Signup error:", err);

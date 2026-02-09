@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   db:
     image: postgres:17
@@ -23,6 +21,9 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
     networks:
       - backend_network
 

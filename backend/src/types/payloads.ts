@@ -16,7 +16,6 @@ export interface StallPayload {
   description?: string;
   stall_image?: string;
   is_open?: boolean;
-  waiting_time?: number;
 }
 
 export interface UpdateStallPayload extends Partial<StallPayload> {}
@@ -76,7 +75,7 @@ export interface MenuItemModifierPayload {
 export interface TablePayload {
   venue_id: number;
   table_number: string;
-  qr_code: string;
+  is_active?: boolean;
 }
 
 // 1. Nested Modifier Payload
@@ -99,27 +98,25 @@ export interface OrderItemPayload {
   status?: OrderItemStatusCodes;
   unit_price?: number;
   line_subtotal?: number;
+  remarks?: string;
 }
 
 // 3. Main Order Payload (Matches Frontend Request)
 export interface OrderPayload {
-  table_number: number; // Changed from table_id to number
+  table_id: number;
   total_price: number;
   items: OrderItemPayload[]; // Nested array
   
   // Optional/Backend generated
-  table_id?: number; 
   user_id?: number;
   status?: OrderStatusCodes;
   created_at?: string;
-  remarks?: string;
 }
 
 // 4. Update Payload (Decoupled from OrderPayload to avoid nested items issues)
 export interface UpdateOrderPayload {
   status?: OrderStatusCodes;
   total_price?: number;
-  remarks?: string;
   created_at?: string;
 }
 
@@ -130,7 +127,6 @@ export interface CustomOrderItemPayload {
   table_id: number;
   user_id?: number;
   order_item_name: string;
-  status: OrderItemStatusCodes;
   quantity: number;
   price: number;
   created_at: string;
@@ -140,14 +136,8 @@ export interface CustomOrderItemPayload {
 export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
 export interface FetchOrderItemResponsePayload extends CustomOrderItemPayload {
   order_item_id: number;
+  modifiers?: OrderModifierPayload[];
   type: 'STANDARD' | 'CUSTOM';
-}
-
-export interface OrderItemModifierPayload {
-  order_item_id: number;
-  option_id: number;
-  price_modifier: number;
-  option_name: string;
 }
 
 export interface CreateAccountPayload {

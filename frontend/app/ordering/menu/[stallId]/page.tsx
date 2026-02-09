@@ -14,7 +14,7 @@ export default function MenuListPage() {
   const params = useParams();
   const stallId = Number(params.stallId); 
 
-  const { venueId, tableNumber } = useCartStore();
+  const { venueId, tableId } = useCartStore();
 
   const [stall, setStall] = useState<Stall | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -24,7 +24,7 @@ export default function MenuListPage() {
 
   const cartItems = useCartStore((state) => state.items);
   
-  const getItemQty = (itemId: string) => {
+  const getItemQty = (itemId: number) => {
     return cartItems
       .filter((cartItem) => cartItem.menuItem.item_id === itemId)
       .reduce((total, cartItem) => total + cartItem.quantity, 0);
@@ -85,7 +85,7 @@ export default function MenuListPage() {
     <div className="relative z-10 h-full flex flex-col justify-between p-6">
       <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-sm w-fit">
             <BackButton 
-              href={`/ordering/stalls?venue=${venueId}&table=${tableNumber}`} 
+              href={`/ordering/stalls?venue=${venueId}&table=${tableId}`} 
             />
       </div>
 

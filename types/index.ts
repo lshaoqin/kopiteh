@@ -4,3 +4,4 @@ export * from "./venue";
 export * from "./stall";
 export * from "./item";
 export * from "./order";
+export * from "./table";

@@ -31,7 +31,8 @@ function ItemCustomizationContent() {
   const [error, setError] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedMods, setSelectedMods] = useState<string[]>([]);
+  const [selectedMods, setSelectedMods] = useState<number[]>([]);
+  const [remarks, setRemarks] = useState("");
   
   const { addItem, updateItem, removeItem, items: cartItems } = useCartStore();
 
@@ -55,7 +56,7 @@ function ItemCustomizationContent() {
             
             // Auto-select defaults if NOT editing
             if (!cartIdToEdit) {
-                const defaultSelections: string[] = [];
+                const defaultSelections: number[] = [];
                 (sectionData || []).forEach(sec => {
                     if ((sec.min_selections ?? 0) > 0) {
                         const firstMod = (modifierData || []).find(m => m.section_id === sec.section_id);
@@ -81,13 +82,14 @@ function ItemCustomizationContent() {
         if (existingCartItem) {
             setQuantity(existingCartItem.quantity);
             setSelectedMods(existingCartItem.modifiers.map(m => m.option_id));
+            setRemarks(existingCartItem.remarks || "");
         }
     }
   }, [cartIdToEdit, cartItems, loading, item]);
 
   // --- LOGIC ---
 
-  const handleToggle = (modId: string, sectionId: string, maxSelections: number) => {
+  const handleToggle = (modId: number, sectionId: number, maxSelections: number) => {
     setSelectedMods(prev => {
         const isSelected = prev.includes(modId);
         
@@ -126,12 +128,11 @@ function ItemCustomizationContent() {
     const selectedModifierObjects = modifiers.filter(m => selectedMods.includes(m.option_id));
 
     if (cartIdToEdit) {
-        updateItem(cartIdToEdit, { modifiers: selectedModifierObjects, quantity });
+        updateItem(cartIdToEdit, { modifiers: selectedModifierObjects, quantity, remarks });
     } else {
-        // 4. Pass correct stall name
-        addItem(item, selectedModifierObjects, quantity, stall?.name || "Unknown Stall", "");
+        addItem(item, selectedModifierObjects, quantity, stall?.name || "Unknown Stall", remarks);
     }
-    router.back();
+    router.push("/ordering/cart");
   };
 
   const handleRemove = () => {
@@ -190,7 +191,7 @@ function ItemCustomizationContent() {
                                     price={Number(mod.price_modifier)}
                                     isSelected={selectedMods.includes(mod.option_id)}
                                     isRadio={section.max_selections === 1}
-                                    onClick={() => handleToggle(mod.option_id, section.section_id!, section.max_selections ?? 0)}
+                                    onClick={() => handleToggle(mod.option_id, section.section_id, section.max_selections ?? 0)}
                                 />
                             ))
                         }
@@ -200,9 +201,17 @@ function ItemCustomizationContent() {
         </div>
 
         {/* --- FOOTER --- */}
-        <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 px-6 py-6 pb-8 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-            
-            {/* Quantity Selector */}
+        <div className="px-6 mb-8">
+            <h3 className="font-bold text-xl text-slate-700 mb-4">Additional Comments</h3>
+            <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Add any special requests or instructions..."
+                className="w-full p-4 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={3}
+            />
+        </div>
+        <div className="fixed bottom-0 left-0 w-full bg-white px-6 py-4 border-t border-slate-200 shadow-md">
             <div className="flex justify-center mb-6">
                 <QuantitySelector 
                     value={quantity} 
@@ -235,7 +244,6 @@ function ItemCustomizationContent() {
                 )}
             </div>
         </div>
-
     </div>
   );
 }

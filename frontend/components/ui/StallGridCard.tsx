@@ -27,7 +27,7 @@ export function StallGridCard({ stall }: StallGridCardProps) {
         {stall.stall_image ? (
            <img 
             src={stall.stall_image} 
-            alt={stall.name} 
+            alt={stall.name}
             className={cn(
                 "w-full h-full object-cover transition-transform duration-500 ease-in-out",
                 stall.is_open && "group-hover:scale-105", // Zoom only if open

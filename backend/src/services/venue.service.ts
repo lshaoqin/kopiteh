@@ -77,7 +77,11 @@ export const VenueService = {
   async findTables(id: number): Promise<ServiceResult<any[]>> {
     try {
       const result = await BaseService.query(
-        'SELECT * FROM "table" WHERE venue_id = $1 ORDER BY table_number::INTEGER ASC',
+        `SELECT * FROM "table" WHERE venue_id = $1 AND is_active = TRUE
+         ORDER BY 
+           CASE WHEN table_number ~ '^[0-9]+$' THEN 0 ELSE 1 END,
+           CASE WHEN table_number ~ '^[0-9]+$' THEN table_number::INTEGER ELSE 0 END,
+           table_number ASC`,
         [id]
       );
       return successResponse(SuccessCodes.OK, result.rows);
