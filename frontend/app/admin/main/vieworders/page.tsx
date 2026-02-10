@@ -223,7 +223,7 @@ export default function ViewOrders() {
 
         setOrders(prev =>
           prev.map(o =>
-            o.order_id === orderId ? { ...o, items: itemsWithModifiers } : o
+            String(o.order_id) === String(orderId) ? { ...o, items: itemsWithModifiers } : o
           )
         )
       }
