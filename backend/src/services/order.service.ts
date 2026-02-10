@@ -203,9 +203,20 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
         `WITH standard_orders AS (
           SELECT 
             COUNT(DISTINCT o.order_id)::int as order_count,
-            COALESCE(SUM(o.total_price), 0) as order_total
+            COALESCE(
+              SUM(
+                (oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity
+              ), 
+              0
+            ) as order_total
           FROM "order" o
           LEFT JOIN "table" t ON o.table_id = t.table_id
+          LEFT JOIN order_item oi ON o.order_id = oi.order_id
+          LEFT JOIN (
+            SELECT order_item_id, SUM(price_modifier) as modifier_total
+            FROM order_item_modifiers
+            GROUP BY order_item_id
+          ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
           WHERE o.created_at >= $1 AND o.created_at < $2
             AND o.status != 'CANCELLED'${venueCondition}
         ),
