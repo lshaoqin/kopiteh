@@ -39,10 +39,11 @@ const CUSTOM_ITEM_COLUMNS = new Set([
 async function findStandardById(id: number): Promise<FetchOrderItemResponsePayload> {
   try {    
     const result = await BaseService.query(
-      `SELECT oi.order_item_id, m.stall_id, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
+      `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
       oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, \'STANDARD\' AS type
       FROM order_item oi 
       JOIN menu_item m ON oi.item_id = m.item_id 
+      JOIN stall s ON m.stall_id = s.stall_id
       JOIN "order" o ON oi.order_id = o.order_id 
       JOIN "table" t ON o.table_id = t.table_id 
       WHERE oi.order_item_id = $1 ORDER BY oi.order_item_id`,
@@ -113,10 +114,11 @@ export const OrderItemService = {
   async findByOrder(order_id: number): Promise<ServiceResult<FetchOrderItemResponsePayload[]>> {
     try {
       const baseItems = await BaseService.query(
-        `SELECT oi.order_item_id, m.stall_id, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
+        `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
         oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, 'STANDARD' AS type
         FROM order_item oi 
         JOIN menu_item m ON oi.item_id = m.item_id 
+        JOIN stall s ON m.stall_id = s.stall_id
         JOIN "order" o ON oi.order_id = o.order_id 
         JOIN "table" t ON o.table_id = t.table_id 
         WHERE oi.order_id = $1

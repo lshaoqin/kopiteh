@@ -12,6 +12,8 @@ import type { Order as BaseOrder, OrderItem as BaseOrderItem, OrderItemModifier,
 export interface OrderItem extends BaseOrderItem {
   item_id: number
   item_name: string
+  stall_id: number
+  stall_name?: string
 }
 
 export interface Order extends Omit<BaseOrder, 'table_id'> {
@@ -200,6 +202,8 @@ export default function ViewOrders() {
                 order_item_id: item.order_item_id,
                 item_id: item.item_id,
                 item_name: item.order_item_name,
+                stall_id: item.stall_id,
+                stall_name: item.stall_name,
                 quantity: item.quantity,
                 price: item.price,
                 status: item.status,
@@ -211,6 +215,8 @@ export default function ViewOrders() {
                 order_item_id: item.order_item_id,
                 item_id: item.item_id,
                 item_name: item.order_item_name,
+                stall_id: item.stall_id,
+                stall_name: item.stall_name,
                 quantity: item.quantity,
                 price: item.price,
                 status: item.status,

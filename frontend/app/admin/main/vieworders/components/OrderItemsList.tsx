@@ -13,6 +13,9 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
             <div className="flex justify-between items-start mb-2">
               <div>
                 <p className="font-medium text-gray-900">{item.item_name}</p>
+                {item.stall_name && (
+                  <p className="text-xs text-gray-500 mb-1">Stall: {item.stall_name}</p>
+                )}
                 <p className="text-sm text-gray-600">
                   Quantity: {item.quantity} × ${parseFloat(item.price.toString()).toFixed(2)}
                 </p>
