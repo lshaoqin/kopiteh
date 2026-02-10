@@ -65,10 +65,16 @@ export default function ViewOrders() {
   useEffect(() => {
     if (isHydrated && user && accessToken) {
       fetchVenues()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, user, accessToken])
+
+  useEffect(() => {
+    if (isHydrated && user && accessToken) {
       fetchOrders()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, user, accessToken, currentPage])
+  }, [isHydrated, user, accessToken, currentPage, venueId, stallId, startDate, endDate, tableNumber])
 
   useEffect(() => {
     if (venueId && accessToken) {

@@ -225,9 +225,9 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
             COUNT(coi.order_item_id)::int as order_count,
             COALESCE(SUM(coi.price * coi.quantity), 0) as order_total
           FROM custom_order_item coi
-          LEFT JOIN "table" t ON coi.table_id = t.table_id
+          LEFT JOIN stall s ON coi.stall_id = s.stall_id
           WHERE coi.created_at >= $1 AND coi.created_at < $2
-            AND coi.status != 'CANCELLED'${venueCondition}
+            AND coi.status != 'CANCELLED'${venueCondition.replace('t.venue_id', 's.venue_id')}
         )
         SELECT 
           (SELECT order_count FROM standard_orders) + (SELECT order_count FROM custom_orders) as total_orders,
@@ -315,9 +315,12 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       let countQuery = `
         SELECT (COUNT(DISTINCT o.order_id) + COUNT(DISTINCT coi.order_item_id))::int as total
         FROM "order" o
+        FULL OUTER JOIN custom_order_item coi ON FALSE
         LEFT JOIN "table" t ON o.table_id = t.table_id
         LEFT JOIN venue v ON t.venue_id = v.venue_id
-        FULL OUTER JOIN custom_order_item coi ON TRUE
+        LEFT JOIN stall cs ON coi.stall_id = cs.stall_id
+        LEFT JOIN venue cv ON cs.venue_id = cv.venue_id
+        LEFT JOIN stall s ON coi.stall_id = s.stall_id
       `;
 
       let query = `
@@ -328,9 +331,9 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           COALESCE(o.status, coi.status) as status,
           COALESCE(o.total_price, coi.price * coi.quantity) as total_price,
           COALESCE(o.created_at, coi.created_at) as created_at,
-          t.table_number,
-          t.venue_id,
-          v.name as venue_name,
+          CASE WHEN o.order_id IS NOT NULL THEN t.table_number ELSE coi.table_id::text END as table_number,
+          COALESCE(t.venue_id, cs.venue_id) as venue_id,
+          COALESCE(v.name, cv.name) as venue_name,
           CASE WHEN o.order_id IS NULL THEN 'CUSTOM' ELSE 'STANDARD' END as order_type,
           coi.order_item_name,
           coi.quantity,
@@ -339,8 +342,10 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           s.name as stall_name
         FROM "order" o
         FULL OUTER JOIN custom_order_item coi ON FALSE
-        LEFT JOIN "table" t ON COALESCE(o.table_id, coi.table_id) = t.table_id
+        LEFT JOIN "table" t ON o.table_id = t.table_id
         LEFT JOIN venue v ON t.venue_id = v.venue_id
+        LEFT JOIN stall cs ON coi.stall_id = cs.stall_id
+        LEFT JOIN venue cv ON cs.venue_id = cv.venue_id
         LEFT JOIN stall s ON coi.stall_id = s.stall_id
       `;
 
@@ -367,7 +372,8 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       }
 
       if (filters.venueId) {
-        conditions.push(`t.venue_id = $${paramIndex++}`);
+        conditions.push(`(t.venue_id = $${paramIndex} OR cs.venue_id = $${paramIndex})`);
+        paramIndex++;
         params.push(filters.venueId);
       }
 
