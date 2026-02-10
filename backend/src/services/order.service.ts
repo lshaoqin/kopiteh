@@ -334,11 +334,14 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
           CASE WHEN o.order_id IS NULL THEN 'CUSTOM' ELSE 'STANDARD' END as order_type,
           coi.order_item_name,
           coi.quantity,
-          coi.price as unit_price
+          coi.price as unit_price,
+          coi.stall_id,
+          s.name as stall_name
         FROM "order" o
         FULL OUTER JOIN custom_order_item coi ON FALSE
         LEFT JOIN "table" t ON COALESCE(o.table_id, coi.table_id) = t.table_id
         LEFT JOIN venue v ON t.venue_id = v.venue_id
+        LEFT JOIN stall s ON coi.stall_id = s.stall_id
       `;
 
       const conditions: string[] = [];

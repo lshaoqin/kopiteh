@@ -25,6 +25,8 @@ export interface Order extends Omit<BaseOrder, 'table_id'> {
   order_item_name?: string  // For custom orders
   quantity?: number         // For custom orders
   unit_price?: string       // For custom orders
+  stall_id?: number         // For custom orders
+  stall_name?: string       // For custom orders
   items?: OrderItem[]
 }
 

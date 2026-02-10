@@ -15,6 +15,9 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
   return (
     <>
       <tr className="hover:bg-gray-50">
+        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          #{order.order_id}
+        </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
           {new Date(order.created_at).toLocaleString()}
         </td>
@@ -58,7 +61,7 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={6} className="px-6 py-4 bg-gray-50">
+          <td colSpan={7} className="px-6 py-4 bg-gray-50">
             {isLoadingItems ? (
               <p className="text-gray-600 text-center">Loading items...</p>
             ) : isCustomOrder ? (
@@ -66,6 +69,11 @@ export function OrderRow({ order, isExpanded, isLoadingItems, onToggleExpand }: 
                 <div className="text-sm">
                   <span className="font-semibold">Item:</span> {order.order_item_name}
                 </div>
+                {order.stall_name && (
+                  <div className="text-sm">
+                    <span className="font-semibold">Stall:</span> {order.stall_name}
+                  </div>
+                )}
                 <div className="text-sm">
                   <span className="font-semibold">Quantity:</span> {order.quantity}
                 </div>
