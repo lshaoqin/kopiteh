@@ -1,37 +1,39 @@
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import supabaseStorageClient, { SUPABASE_BUCKET_NAME, SUPABASE_PUBLIC_URL } from '../config/storage';
-import crypto from 'crypto';
-import path from 'path';
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import filebaseClient, { FILEBASE_BUCKET_NAME } from "../config/storage";
+import crypto from "crypto";
+import path from "path";
 
 export class UploadService {
-  async uploadImage(
-    file: Express.Multer.File,
-    folder: string = 'assets'
-  ): Promise<string> {
-    const fileExtension = path.extname(file.originalname);
-    const fileName = `${folder}/${crypto.randomUUID()}${fileExtension}`;
+  async uploadImage(file: Express.Multer.File, folder: string = "uploads"): Promise<string> {
+    const ext = path.extname(file.originalname) || ".jpg";
+    const key = `${folder}/${crypto.randomUUID()}${ext}`;
 
-    const command = new PutObjectCommand({
-      Bucket: SUPABASE_BUCKET_NAME,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      // Make the file publicly accessible
-      ACL: 'public-read',
-    });
+    // 1) Upload to Filebase bucket
+    await filebaseClient.send(
+      new PutObjectCommand({
+        Bucket: FILEBASE_BUCKET_NAME,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      })
+    );
 
-    await supabaseStorageClient.send(command);
+    // 2) Return a signed URL so the browser can preview via <img src="...">
+    const url = await getSignedUrl(
+      filebaseClient,
+      new GetObjectCommand({
+        Bucket: FILEBASE_BUCKET_NAME,
+        Key: key,
+      }),
+      { expiresIn: 60 * 60 } // 1 hour
+    );
 
-    // Return Supabase public URL for the uploaded file
-    return `${SUPABASE_PUBLIC_URL}/${SUPABASE_BUCKET_NAME}/${fileName}`;
+    return url;
   }
 
-  async uploadMultipleImages(
-    files: Express.Multer.File[],
-    folder: string = 'images'
-  ): Promise<string[]> {
-    const uploadPromises = files.map((file) => this.uploadImage(file, folder));
-    return Promise.all(uploadPromises);
+  async uploadMultipleImages(files: Express.Multer.File[], folder: string = "uploads"): Promise<string[]> {
+    return Promise.all(files.map((f) => this.uploadImage(f, folder)));
   }
 }
 

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Trash2, Plus, X } from "lucide-react";
 import { FormField } from "../formfield";
 import { Button } from "../button";
+import { useRef } from "react";
+import { useAuthStore } from "@/stores/auth.store";
 
 type ModifierOptionDraft = {
   option_id?: number;
@@ -71,18 +73,77 @@ export default function ItemModal({
   const [sections, setSections] = useState<ModifierSectionDraft[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const { accessToken } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploaded, setIsUploaded] = useState(false);
+
+  const uploadSelectedImage = async (file: File) => {
+    if (!API_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+
+    const form = new FormData();
+    form.append("image", file);
+
+    const res = await fetch(`${API_URL}/upload/single`, {
+      method: "POST",
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      body: form,
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!json) {
+      throw new Error(`Upload failed (HTTP ${res.status})`);
+    }
+
+    if (!res.ok || json?.success === false) {
+      throw new Error(json?.payload?.message ?? `Upload failed (HTTP ${res.status})`);
+    }
+
+    const imageUrl = json?.payload?.data?.imageUrl as string | undefined;
+
+    if (!imageUrl) {
+      throw new Error("Upload succeeded but no imageUrl returned");
+    }
+
+    return imageUrl;
+  };
+
   useEffect(() => {
-    if (!open) return;
-    console.log(initialValues?.description);
+    if (!open) {
+      setIsUploaded(false);
+      return;
+    }
+
+    setFormError(null);
     setName(initialValues?.name ?? "");
     setImageUrl(initialValues?.imageUrl ?? "");
     setDescription(initialValues?.description ?? "");
     setPrice(initialValues?.price ?? "");
     setPrepTime(initialValues?.prep_time ?? "");
 
-    setSections(initialValues?.modifier_sections ?? []);
-    setFormError(null);
-  }, [open, initialValues]);
+    if (initialValues?.modifier_sections) {
+      setSections(initialValues.modifier_sections);
+    } else {
+      setSections([]);
+    }
+
+    if (initialValues?.imageUrl) {
+      setIsUploaded(true);
+    }
+
+  }, [
+    open,
+    initialValues?.name,
+    initialValues?.imageUrl,
+    initialValues?.description,
+    initialValues?.price,
+    initialValues?.prep_time,
+    initialValues?.modifier_sections,
+  ]);
 
 
   if (!open) return null;
@@ -217,27 +278,82 @@ export default function ItemModal({
               }}
             />
           </div>
-
-          <div className="space-y-2">
-            <FormField
-              className="flex flex-col space-y-2 font-semibold"
-              classNameOut={`
+          {!isUploaded && (
+            <div className="space-y-2">
+              <FormField
+                className="flex flex-col space-y-2 font-semibold"
+                classNameOut={`
             p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
             ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
           `}
-              classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
-              variant="text"
-              label="Image URL (optional)"
-              inputProps={{
-                value: imageUrl,
-                placeholder: "https//...",
-                onChange: (e) => {
-                  setImageUrl(e.target.value);
-                  setFormError(null);
-                },
-              }}
-            />
+                classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
+                variant="text"
+                label="Image URL (optional)"
+                inputProps={{
+                  value: imageUrl,
+                  placeholder: "https//...",
+                  onChange: (e) => {
+                    setImageUrl(e.target.value);
+                    setIsUploaded(false);
+                    setFormError(null);
+                  },
+                }}
+              />
+            </div>
+          )}
+          <div>
+            <label className="">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading}
+                onChange={async (e) => {
+                  const inputEl = e.currentTarget;
+                  const file = inputEl.files?.[0];
+                  if (!file) return;
+
+                  try {
+                    setUploading(true);
+                    setUploadError(null);
+
+                    const url = await uploadSelectedImage(file);
+                    setImageUrl(url);
+                    setIsUploaded(true);
+                  } catch (err: any) {
+                    setUploadError(err?.message ?? "Upload failed");
+                  } finally {
+                    setUploading(false);
+                    inputEl.value = "";
+                  }
+                }}
+
+              />
+
+              <Button
+                type="button"
+                variant="updatestall"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </Button>
+              {uploadError && (
+                <p className="text-sm text-red-600">{uploadError}</p>
+              )}
+
+              {imageUrl?.trim() && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="h-64 w-full object-cover rounded-lg border mt-4"
+                />
+              )}
+            </label>
           </div>
+
           <div className="space-y-2 flex flex-col">
             <label className="text-md font-bold">Description (optional)</label>
             <textarea

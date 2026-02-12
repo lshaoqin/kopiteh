@@ -1,25 +1,28 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import dotenv from 'dotenv';
-import path from 'path';
+import { S3Client } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
 
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config();
 
-// Supabase project reference - extract from SUPABASE_URL or use env var
-const SUPABASE_PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'rthdjygvrwxujpwldyjm'; //public bucket url
+const FILEBASE_ACCESS_KEY_ID = process.env.FILEBASE_ACCESS_KEY_ID;
+const FILEBASE_SECRET_ACCESS_KEY = process.env.FILEBASE_SECRET_ACCESS_KEY;
+export const FILEBASE_BUCKET_NAME = process.env.FILEBASE_BUCKET_NAME;
+export const FILEBASE_GATEWAY_URL = process.env.FILEBASE_GATEWAY_URL; // you have this
 
-export const SUPABASE_BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || 'assets';
+if (!FILEBASE_ACCESS_KEY_ID || !FILEBASE_SECRET_ACCESS_KEY) {
+  throw new Error("Missing FILEBASE_ACCESS_KEY_ID / FILEBASE_SECRET_ACCESS_KEY");
+}
+if (!FILEBASE_BUCKET_NAME) {
+  throw new Error("Missing FILEBASE_BUCKET_NAME");
+}
 
-// Public URL for accessing files
-export const SUPABASE_PUBLIC_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object/public`;
-
-const supabaseStorageClient = new S3Client({
-  region: process.env.SUPABASE_REGION || 'ap-southeast-1',
-  endpoint: `https://${SUPABASE_PROJECT_REF}.supabase.co/storage/v1/s3`,
+const filebaseClient = new S3Client({
+  region: "us-east-1",
+  endpoint: "https://s3.filebase.com",
   credentials: {
-    accessKeyId: process.env.ACCESS_ID_KEY || '',
-    secretAccessKey: process.env.SECRET_ACCESS_KEY || '',
+    accessKeyId: FILEBASE_ACCESS_KEY_ID,
+    secretAccessKey: FILEBASE_SECRET_ACCESS_KEY,
   },
   forcePathStyle: true,
 });
 
-export default supabaseStorageClient;
+export default filebaseClient;

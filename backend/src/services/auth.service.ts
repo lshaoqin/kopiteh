@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { ServiceResult } from "../types/responses";
 import { BaseService } from "./base.service";
