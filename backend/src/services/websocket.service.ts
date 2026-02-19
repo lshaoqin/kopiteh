@@ -9,7 +9,13 @@ const stallSockets = new Map<number, string[]>();
 export const WebSocketService = {
   init(httpServer: HTTPServer) {
     io = new Server(httpServer, {
-      cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000' },
+      cors: {
+        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        credentials: true,
+      },
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      transports: ['polling', 'websocket'],
     });
 
     io.on('connection', (socket: Socket) => {
