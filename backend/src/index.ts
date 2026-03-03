@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import routes from './routes';
 import errorHandler from './middleware/error.handler';
 import { WebSocketService } from './services/websocket.service';
+import pool from './config/database';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -22,8 +23,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint for Render
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, res) => {
+  try {
+    const start = Date.now();
+    await pool.query('SELECT 1');
+    const latency = Date.now() - start;
+
+    res.status(200).json({
+      status: 'ok',
+      database: 'connected',
+      dbLatencyMs: latency,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Health check DB error:', error);
+    res.status(503).json({
+      status: 'degraded',
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // API routes
