@@ -76,20 +76,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }
 )
 
-export function BackButton({ href = "/" }) {
-  const router = useRouter();
-
-  return (
-    <Button
-      variant="back"
-      onClick={() => router.push(href)}
-    >
-      <ArrowLeft className="size-5 text-green-600" />
-      Back
-    </Button>
-  )
-}
-
 type AddButtonProps = {
   href?: string;
   onClick?: () => void;

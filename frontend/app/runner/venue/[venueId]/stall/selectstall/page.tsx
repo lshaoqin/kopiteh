@@ -84,7 +84,7 @@ function StallSelectionContent() {
 
         <div className="space-y-6 mb-10 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-4">
-              <BackButton href="/ordering/table" />
+              <BackButton href="/runner/venue/selectvenue" />
               <h1 className="text-3xl font-bold text-slate-800">Search</h1>
           </div>
           
