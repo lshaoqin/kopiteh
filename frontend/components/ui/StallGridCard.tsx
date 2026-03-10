@@ -7,12 +7,16 @@ import { Stall } from "@/../types";
 
 interface StallGridCardProps {
   stall: Stall;
+  module?: "ordering" | "runner"; // To differentiate URL paths
 }
 
-export function StallGridCard({ stall }: StallGridCardProps) {
+export function StallGridCard({ stall, module = "ordering" }: StallGridCardProps) {
   return (
     <Link 
-      href={stall.is_open ? `/ordering/menu/${stall.stall_id}` : "#"} 
+      href={module === "runner"
+        ? `/runner/venue/${stall.venue_id}/stall/${stall.stall_id}/orders`
+        : `/ordering/stall/${stall.stall_id}`
+      } 
       className={cn(
         "flex flex-col group w-full relative", 
         !stall.is_open && "cursor-not-allowed"
