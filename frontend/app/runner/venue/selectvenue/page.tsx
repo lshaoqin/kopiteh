@@ -47,7 +47,7 @@ export default function VenueSelectionPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center flex-1">
           <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-          <p className="mt-4 text-slate-400 text-sm">Finding nearby courts...</p>
+          <p className="mt-4 text-slate-400 text-sm">Finding nearby locations...</p>
         </div>
       ) : (
         <div className="space-y-4">

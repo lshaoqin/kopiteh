@@ -90,7 +90,7 @@ function StallSelectionContent() {
           
           <div className="max-w-2xl">
             <SearchBar 
-              placeholder="Craving Something?" 
+              placeholder="Search stalls..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
