@@ -30,10 +30,11 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     const wsUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
     const newSocket = io(wsUrl, {
-      transports: ['websocket', 'polling'], // Add polling as fallback
+      transports: ['polling', 'websocket'], // Start with polling, upgrade to websocket
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 20000, // Increase timeout for slow proxy connections
     });
 
     newSocket.on('connect', () => {
