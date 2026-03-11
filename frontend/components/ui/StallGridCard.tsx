@@ -15,7 +15,7 @@ export function StallGridCard({ stall, module = "ordering" }: StallGridCardProps
     <Link 
       href={module === "runner"
         ? `/runner/venue/${stall.venue_id}/stall/${stall.stall_id}/orders`
-        : `/ordering/stall/${stall.stall_id}`
+        : `/ordering/menu/${stall.stall_id}`
       } 
       className={cn(
         "flex flex-col group w-full relative", 
