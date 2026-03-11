@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@/lib/api";
-import { BackButton, AddButton } from "@/components/ui/button";
+import { AddButton } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/BackButton";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { OrderItemDetails } from "@/components/ui/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
@@ -193,13 +194,11 @@ export default function Home() {
 
 
   return (
-    <main className="p-2 px-4">
-      <div>
-        <div>
-          <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
-          <h1 className="text-2xl font-bold">
-            {stall?.name}
-          </h1>
+    <div className="min-h-screen bg-white font-sans text-slate-600 w-full flex flex-col">
+      <div className="flex-1 overflow-y-auto px-6 pt-8 pb-20 no-scrollbar">
+        <div className="flex items-center gap-4">
+            <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
+            <h1 className="text-3xl font-bold text-slate-800">{stall?.name}</h1>
         </div>
 
         {/* Status Filter Row */}
@@ -342,6 +341,6 @@ export default function Home() {
           }}
         />
         </div>
-    </main>
+    </div>
   )
 }

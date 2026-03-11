@@ -124,7 +124,7 @@ function StallSelectionContent() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {!loading && filteredStalls.map((stall) => (
-                <StallGridCard key={stall.stall_id} stall={stall} />
+                <StallGridCard key={stall.stall_id} stall={stall} module="ordering" />
             ))}
             </div>
         </div>

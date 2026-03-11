@@ -1,72 +1,65 @@
 "use client";
 
-import { BackButton } from "@/components/ui/button"
-import { DisplayGrid } from "@/components/ui/displaygrid";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Venue } from "../../../../../types/venue";
+import { Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { Venue } from "@/../types";
+import { BackButton } from "@/components/ui/BackButton";
+import { VenueCard } from "@/components/ui/VenueCard";
 
-export default function Home() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export default function VenueSelectionPage() {
   const router = useRouter();
-
-  
-
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
+    async function fetchVenues() {
       try {
-        const res = await fetch(`${API_URL}/venue`);
-        const json = await res.json();
-        if (!res.ok || !json.success) {
-          throw new Error(json?.message || "Failed to fetch venues");
-        }
-
-        setVenues(json.payload.data ?? []);
-      } catch (err: any) {
-        console.error(err);
-        const message = err instanceof Error ? err.message : "Unexpected error occurred";
-        setError(message);
+        const data = await api.getVenues();
+        setVenues(data);
+      } catch (err) {
+        console.error("Failed to fetch venues", err);
       } finally {
         setLoading(false);
       }
-    };
+    }
+    fetchVenues();
+  }, []);
 
-    load();
-  }, [API_URL]);
-
+  const handleSelectVenue = (id: number) => {
+    router.push(`/runner/venue/${id}/stall/selectstall`);
+  };
 
   return (
-    <main className="p-2">
-      <BackButton href="/" />
+    <div className="min-h-screen bg-slate-50 flex flex-col px-6 pt-6 pb-10 font-sans">
+      <header className="pb-6">
+        <BackButton href="/" />
+      </header>
 
-      <div>
-        <h1 className="text-3xl font-bold">
-          Hey <span className="text-green-600">Runner</span>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-700 leading-tight">
+          Welcome <span className="text-green-600">Runner</span>, <br />
+          Pick a Location
         </h1>
-        <h2 className="text-xl font-semibold mt-2">
-          Select your venue
-        </h2>
-
-        {loading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p className="text-red-500">Error: {error}</p>
-        ) : (
-          <DisplayGrid
-            items={venues.map((venue) => ({
-              id: String(venue.venue_id),
-              name: venue.name,
-              img: venue.image_url,
-            }))}
-            variant="venue"
-            href={(id: string) => `/runner/venue/${id}/stall/selectstall`}
-          />
-        )}
       </div>
-    </main>
-  )
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center flex-1">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+          <p className="mt-4 text-slate-400 text-sm">Finding nearby locations...</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {venues.map((venue) => (
+            <VenueCard 
+              key={venue.venue_id} 
+              venue={venue} 
+              onClick={handleSelectVenue} 
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
