@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { AddButton } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
-import { OrderItemDetails } from "@/components/ui/OrderItemDetails";
+import { OrderItemDetails } from "@/components/ui/runner/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
