@@ -14,11 +14,10 @@ type OrderItemDetailsProps = {
   open: boolean;
   onClose: () => void;
   orderItem: OrderItem;
-  modifiers?: Array<OrderItemModifier>;
   onOrderItemUpdated?: () => void;
 };
 
-function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpdated }: OrderItemDetailsProps) {
+function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: OrderItemDetailsProps) {
   const [error, setError] = useState<string | null>(null);
   const [showEditMode, setShowEditMode] = useState(false);
 
@@ -254,7 +253,6 @@ function OrderItemDetails({ open, onClose, orderItem, modifiers, onOrderItemUpda
           setShowEditMode(false)
         )}
         orderItem={orderItem}
-        modifiers={modifiers}
         onOrderItemUpdated={onOrderItemUpdated}
       />
     </>

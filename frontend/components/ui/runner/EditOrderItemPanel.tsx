@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
 import { TextInput } from "../input";
 import { Button } from "../button";
@@ -12,12 +12,17 @@ type EditOrderItemProps = {
   open: boolean;
   onClose: () => void;
   orderItem: OrderItem;
-  modifiers?: Array<OrderItemModifier>;
   onOrderItemUpdated?: () => void;
 };
 
-function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated }: EditOrderItemProps) {
+function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrderItemProps) {
   const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState(orderItem.order_item_name);
+  const [quantity, setQuantity] = useState(orderItem.quantity);
+  const [selectedModifiers, setSelectedModifiers] = useState<OrderItemModifier[]>(
+    orderItem.modifiers || []
+  );
+  const [notes, setNotes] = useState(orderItem.remarks || "");
 
   if (!open) return null; 
 
@@ -65,11 +70,9 @@ function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated
     <>
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-9/10 h-2/3 bg-white rounded-lg shadow-lg border flex flex-col pb-4">
         <div className="flex px-3 items-center gap-2 border-b h-14">
-          <div className="text-xs text-gray-500">
-            <div>Table</div>
-            <div className="truncate font-medium text-gray-800">
-              {orderItem.table_number}
-            </div>
+          <div className="w-full text-xs text-gray-500 border-yellow-500 border-2 rounded-md px-2 py-1 flex items-center gap-2 bg-yellow-50">
+            <Pencil/>
+            <p>Editing Mode</p>
           </div>
         </div>
       
@@ -80,10 +83,32 @@ function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated
             <div>
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold text-gray-900 items-center flex ">
-                  {orderItem.order_item_name}
-                  <span className="ml-2 rounded-md text-white px-2 py-0.5 text-sm font-medium bg-green-600">
-                    x{orderItem.quantity}
-                  </span>
+                  {orderItem.type === "CUSTOM" ? (
+                    <TextInput
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        classNameOut=""
+                        classNameIn="text-2xl font-semibold border-gray-800 focus:ring-0 focus:border-gray-800"
+                    />
+                    ) : ( orderItem.order_item_name )
+                  }
+                  <div className="flex items-center ml-3 border rounded-md text-lg">
+                    <button
+                      className="px-2"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      -
+                    </button>
+
+                    <span className="px-3">{quantity}</span>
+
+                    <button
+                      className="px-2"
+                      onClick={() => setQuantity(quantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </h2>
               </div>
             </div>
@@ -119,21 +144,28 @@ function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated
               <div className="mb-2 text-sm font-semibold text-gray-900">
                 Modifiers
               </div>
-              <div className="">
-              {orderItem.modifiers && orderItem.modifiers.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {orderItem.modifiers.map((m, index) => (
-                  <span
-                    key={index}
-                    className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+              <div className="mb-2 flex flex-wrap gap-2">
+                {orderItem.modifiers?.map((m) => {
+                  const active = selectedModifiers.some((sm) => sm.option_id === m.option_id);
+
+                  return (
+                    <button
+                      key={m.option_id}
+                      onClick={() => {
+                        if (active) {
+                          setSelectedModifiers(selectedModifiers.filter((x) => x.option_id !== m.option_id));
+                        } else {
+                          setSelectedModifiers([...selectedModifiers, m]);
+                        }
+                      }}
+                      className={`rounded-md px-2 py-1 text-xs font-medium border
+                      ${active ? "bg-blue-100 border-blue-500 text-blue-700" : "bg-gray-100"}
+                      `}
                     >
-                    {m.name}
-                  </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic">No modifiers</p>
-              )}
+                      {m.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           
@@ -143,15 +175,13 @@ function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated
               <div className="my-1 text-sm font-semibold text-gray-900">
                 Additional Notes
               </div>
-              <div>
-                {orderItem.remarks ? (
-                  <p className="text-sm text-gray-700 whitespace-pre-line">
-                    {orderItem.remarks}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">No additional notes</p>
-                )}
-              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                // make textarea fixed height and not resizable
+                className="w-full border rounded-md p-2 text-sm text-gray-700 focus:border-gray-800 resize-none h-24"
+                rows={3}
+              />
             </div>
           </div>
         </div>
@@ -162,7 +192,9 @@ function EditOrderItem({ open, onClose, orderItem, modifiers, onOrderItemUpdated
             <Button
               variant="secondary"
               className="h-14"
-              onClick={() => onClose()}
+              onClick={() => {
+                onClose();
+              }}
             >
               Cancel
             </Button>
