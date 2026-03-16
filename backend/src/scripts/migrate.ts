@@ -11,7 +11,7 @@ const MIGRATIONS_DIR = path.join(__dirname, '../../migrations');
 const isProduction = process.env.NODE_ENV === 'production';
 const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL;
 
-const pool = connectionString
+const pool = isProduction
   ? new Pool({
       connectionString,
       ssl: { rejectUnauthorized: false },
