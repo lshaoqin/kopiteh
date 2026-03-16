@@ -41,7 +41,7 @@ export const MenuItemController = {
       if (err instanceof BadRequestError) {
         const result = errorResponse(
           ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
+          String(err.details),
         );
         return res.status(result.payload.status).json(result);
       }
@@ -61,7 +61,7 @@ export const MenuItemController = {
       if (err instanceof BadRequestError) {
         const result = errorResponse(
           ErrorCodes.VALIDATION_ERROR,
-          String(err.details)
+          String(err.details),
         );
         return res.status(result.payload.status).json(result);
       }
@@ -74,6 +74,13 @@ export const MenuItemController = {
   async remove(req: Request, res: Response) {
     const id = Number(req.params.id);
     const result = await MenuItemService.delete(id);
+    return res.status(result.payload.status).json(result);
+  },
+
+  // PATCH /items/toggle/:id
+  async toggle(req: Request, res: Response) {
+    const id = Number(req.params.id);
+    const result = await MenuItemService.toggleAvailability(id);
     return res.status(result.payload.status).json(result);
   },
 };

@@ -71,6 +71,9 @@ export default function ManageItemsPage() {
     const [deletingItem, setDeletingItem] = useState(false);
     const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
+    // toggle menu item is_available
+    const [togglingItems, setTogglingItems] = useState<Set<number>>(new Set());
+
     async function fetchJsonOrThrow(res: Response) {
         const data = await res.json();
         if (!res.ok || data?.success === false) {
@@ -497,6 +500,32 @@ export default function ManageItemsPage() {
         }
     };
 
+    const handleItemToggleAvailability = async (item: MenuItem) => {
+        setTogglingItems((prev) => new Set(prev).add(item.item_id));
+        try {
+            const res = await fetch(`${API_URL}/items/toggle/${item.item_id}`, {
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const data = await res.json();
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.payload?.message ?? "Failed to toggle availability");
+            }
+            const updated: MenuItem = data.payload?.data;
+            setItems((curr) =>
+                curr.map((it) => (it.item_id === updated.item_id ? { ...it, ...updated } : it))
+            );
+        } catch (e: any) {
+            setError(e?.message ?? "Failed to toggle availability");
+        } finally {
+            setTogglingItems((prev) => {
+                const next = new Set(prev);
+                next.delete(item.item_id);
+                return next;
+            });
+        }
+    };
+
 
     return (
         <main className="min-h-screen px-6 py-10 flex w-full">
@@ -595,9 +624,22 @@ export default function ManageItemsPage() {
                                                             <td className="py-3 pr-3">{it.prep_time}</td>
 
                                                             <td className="py-3 pr-3">
-                                                                <span className={`inline-flex rounded-full px-2 py-1 text-xs ${it.is_available ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-                                                                    {it.is_available ? "Yes" : "No"}
-                                                                </span>
+                                                                <Button
+                                                                    onClick={() => handleItemToggleAvailability(it)}
+                                                                    disabled={togglingItems.has(it.item_id)}
+                                                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium transition-opacity
+                                                                             ${it.is_available
+                                                                            ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+                                                                            disabled:opacity-40 disabled:cursor-not-allowed`}
+                                                                    aria-label={it.is_available ? "Mark unavailable" : "Mark available"}
+                                                                >
+                                                                    {togglingItems.has(it.item_id)
+                                                                        ? "…"
+                                                                        : it.is_available
+                                                                            ? "Yes"
+                                                                            : "No"}
+                                                                </Button>
                                                             </td>
 
                                                             <td className="py-3 pr-3 text-right">
