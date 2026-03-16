@@ -1,7 +1,7 @@
 "use client";
 
 import { X, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextInput } from "../input";
 import { Button } from "../button";
 
@@ -20,6 +20,18 @@ type OrderItemDetailsProps = {
 function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: OrderItemDetailsProps) {
   const [error, setError] = useState<string | null>(null);
   const [showEditMode, setShowEditMode] = useState(false);
+
+  const [currentItem, setCurrentItem] = useState<OrderItem | null>(orderItem);
+
+  useEffect(() => {
+    setCurrentItem(orderItem);
+  }, [orderItem]);
+
+  const refreshOrderItem = async () => {
+    const updated = await api.getOrderItemsById(orderItem.order_item_id, orderItem.type);
+    setCurrentItem(updated);
+    onOrderItemUpdated?.();
+  };
 
   if (!open) return null; 
 
@@ -54,14 +66,13 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
   const deleteOrderItem = async (order_item_id: number, type: string) => {
     try {
       await api.deleteOrderItem(order_item_id, type);
-      onOrderItemUpdated?.();
       onClose();
     } catch (error: any) {
       setError(error.message);
     }
   };
 
-  if (!open) return null;
+  if (!open || !currentItem) return null;
   
   return (
     <>
@@ -71,7 +82,7 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
           <div className="text-xs text-gray-500">
             <div>Table</div>
             <div className="truncate font-medium text-gray-800">
-              {orderItem.table_number}
+              {currentItem.table_number}
             </div>
           </div>
           
@@ -90,9 +101,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
             <div>
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold text-gray-900 items-center flex ">
-                  {orderItem.order_item_name}
+                  {currentItem.order_item_name}
                   <span className="ml-2 rounded-md text-white px-2 py-0.5 text-sm font-medium bg-green-600">
-                    x{orderItem.quantity}
+                    x{currentItem.quantity}
                   </span>
                 </h2>
               </div>
@@ -103,23 +114,23 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               <div className="text-sm text-gray-700">
                 <div className="flex justify-between">
                   <span>Item Price:</span>
-                  <span className="font-medium">${Number(orderItem.price).toFixed(2)}</span>
+                  <span className="font-medium">${Number(currentItem.price).toFixed(2)}</span>
                 </div>
-                {orderItem.modifiers && orderItem.modifiers.length > 0 && orderItem.modifiers.map((m, index) => (
+                {currentItem.modifiers && currentItem.modifiers.length > 0 && currentItem.modifiers.map((m, index) => (
                   <div key={index} className="flex justify-between text-gray-600">
                     <span className="ml-2">+ {m.name}:</span>
                     <span>${Number(m.price_modifier).toFixed(2)}</span>
                   </div>
                 ))}
-                {orderItem.modifiers && orderItem.modifiers.length > 0 && (
+                {currentItem.modifiers && currentItem.modifiers.length > 0 && (
                   <div className="flex justify-between pt-2 mt-2 border-t font-semibold">
                     <span>Subtotal (per item):</span>
-                    <span>${(Number(orderItem.price) + orderItem.modifiers.reduce((sum, m) => sum + Number(m.price_modifier), 0)).toFixed(2)}</span>
+                    <span>${(Number(currentItem.price) + currentItem.modifiers.reduce((sum, m) => sum + Number(m.price_modifier), 0)).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-2 mt-2 border-t font-bold text-base">
-                  <span>Total ({orderItem.quantity}x):</span>
-                  <span>${((Number(orderItem.price) + (orderItem.modifiers?.reduce((sum, m) => sum + Number(m.price_modifier), 0) || 0)) * Number(orderItem.quantity)).toFixed(2)}</span>
+                  <span>Total ({currentItem.quantity}x):</span>
+                  <span>${((Number(currentItem.price) + (currentItem.modifiers?.reduce((sum, m) => sum + Number(m.price_modifier), 0) || 0)) * Number(currentItem.quantity)).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -130,9 +141,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
                 Modifiers
               </div>
               <div className="">
-              {orderItem.modifiers && orderItem.modifiers.length > 0 ? (
+              {currentItem.modifiers && currentItem.modifiers.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {orderItem.modifiers.map((m, index) => (
+                  {currentItem.modifiers.map((m, index) => (
                   <span
                     key={index}
                     className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
@@ -154,9 +165,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
                 Additional Notes
               </div>
               <div>
-                {orderItem.remarks ? (
+                {currentItem.remarks ? (
                   <p className="text-sm text-gray-700 whitespace-pre-line">
-                    {orderItem.remarks}
+                    {currentItem.remarks}
                   </p>
                 ) : (
                   <p className="text-sm text-gray-500 italic">No additional notes</p>
@@ -168,20 +179,20 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
 
           {/* Actions */}
           <div className="p-3 flex flex-col gap-3">
-            {orderItem.status === "INCOMING" && (
+            {currentItem.status === "INCOMING" && (
             <>         
             <div className="grid grid-cols-5 gap-3">
               <Button
                 variant="destructive"
                 className="col-span-1 h-14"
-                onClick={() => deleteOrderItem(Number(orderItem.order_item_id), orderItem.type)}
+                onClick={() => deleteOrderItem(Number(currentItem.order_item_id), currentItem.type)}
               >
               <Trash2 />
               </Button> 
               <Button
                 variant="secondary"
                 className="col-span-2 h-14"
-                onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+                onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
               >
                 Mark as Served
               </Button>
@@ -195,27 +206,27 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
             </div>
             <Button
               className="w-full h-14 bg-green-600"
-              onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+              onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
             >
               Mark as Preparing
             </Button>
           </>
             )}
             
-            {orderItem.status === "PREPARING" && (
+            {currentItem.status === "PREPARING" && (
             <>
               <div className="grid grid-cols-5 gap-3">
                 <Button 
                   variant="destructive"
                   className="col-span-1 h-14"
-                  onClick={() => deleteOrderItem(Number(orderItem.order_item_id), orderItem.type)}
+                  onClick={() => deleteOrderItem(Number(currentItem.order_item_id), currentItem.type)}
                 >
                   <Trash2 />
                 </Button>         
                 <Button 
                   variant="secondary"
                   className="col-span-2 h-14"
-                  onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+                  onClick={() => revertOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
                 >
                   Mark as Incoming
                 </Button>
@@ -229,18 +240,18 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               </div>
               <Button 
                   className="w-full h-14 bg-green-600 cursor-pointer"
-                  onClick={() => updateOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+                  onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
                 >
                   Mark as Served
                 </Button>
             </>
             )}
             
-            {orderItem.status === "SERVED" && (
+            {currentItem.status === "SERVED" && (
               <Button 
                 variant="secondary"
                 className="w-full h-14"
-                onClick={() => revertOrderItemStatus(Number(orderItem.order_item_id), orderItem.type)}
+                onClick={() => revertOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
               >
                 Mark as Preparing
               </Button>
@@ -249,11 +260,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
       </div>
       <EditOrderItem
         open={showEditMode}
-        onClose={() => (
-          setShowEditMode(false)
-        )}
-        orderItem={orderItem}
-        onOrderItemUpdated={onOrderItemUpdated}
+        onClose={() => setShowEditMode(false)}
+        orderItem={currentItem}
+        onOrderItemUpdated={refreshOrderItem}
       />
     </>
   );

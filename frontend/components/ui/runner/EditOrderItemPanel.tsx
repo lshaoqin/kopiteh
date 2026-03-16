@@ -12,7 +12,7 @@ type EditOrderItemProps = {
   open: boolean;
   onClose: () => void;
   orderItem: OrderItem;
-  onOrderItemUpdated?: () => void;
+  onOrderItemUpdated: () => void;
 };
 
 function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrderItemProps) {
@@ -31,20 +31,19 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
     if (orderItem.type === "CUSTOM") {
       updateData = {
         order_item_name: name,
-        quantity: quantity,
+        quantity,
         remarks: notes,
       };
     } else {
       updateData = {
-        quantity: quantity,
+        quantity,
         remarks: notes,
         modifiers: selectedModifiers,
       };
     }
     try {
       await api.updateOrderItem(orderItem.order_item_id, orderItem.type, updateData);
-  
-      onOrderItemUpdated?.();
+      onOrderItemUpdated();
       onClose();
     } catch (error: any) {
       setError(error.message);
@@ -74,8 +73,8 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
                     <TextInput
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        classNameOut=""
-                        classNameIn="text-2xl font-semibold border-gray-800 focus:ring-0 focus:border-gray-800"
+                        classNameOut="w-1/2 border-gray-300"
+                        classNameIn="w-full text-2xl font-semibold border-2 rounded-md px-2 border-gray-800 focus:border-green-600"
                     />
                     ) : ( orderItem.order_item_name )
                   }
@@ -166,7 +165,7 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 // make textarea fixed height and not resizable
-                className="w-full border rounded-md p-2 text-sm text-gray-700 focus:border-gray-800 resize-none h-24"
+                className="w-full rounded-md p-2 text-sm text-gray-700 border-2 rounded-md px-2 border-gray-800 focus:border-green-600 resize-none h-24"
                 rows={3}
               />
             </div>
