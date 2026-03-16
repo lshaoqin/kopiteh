@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Use DATABASE_URL (Render standard) or SUPABASE_URL
 const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL;
 
-const pool = connectionString
+const pool = isProduction
   ? new Pool({
       connectionString,
       ssl: isProduction ? { rejectUnauthorized: false } : false,
