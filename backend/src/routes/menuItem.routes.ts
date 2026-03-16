@@ -20,5 +20,5 @@ router.get("/items/default/:stall_id", stallIdParamValidation, runValidation, Me
 router.post("/items/create", authenticateToken, createMenuItemValidation, runValidation, MenuItemController.create);
 router.put("/items/update/:id", authenticateToken, menuItemIdParamValidation, ...updateMenuItemValidation, runValidation, MenuItemController.update);
 router.delete("/items/remove/:id", authenticateToken, menuItemIdParamValidation, runValidation, MenuItemController.remove);
-
+router.patch("/items/toggle/:id", authenticateToken, menuItemIdParamValidation, runValidation, MenuItemController.toggle);
 export default router;
