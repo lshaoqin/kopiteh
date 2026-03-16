@@ -26,37 +26,24 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
 
   if (!open) return null; 
 
-  const updateOrderItemStatus = async (order_item_id: number, type: string) => {
-    try {
-      const response = await api.updateOrderItemStatus(order_item_id, type);
-    
-      if (!response) {
-        throw new Error("Failed to update order item status");
-      }
-      onOrderItemUpdated?.();
-      onClose();
-    } catch (error: any) {
-      setError(error.message);
+  const saveChanges = async () => {
+    let updateData;
+    if (orderItem.type === "CUSTOM") {
+      updateData = {
+        order_item_name: name,
+        quantity: quantity,
+        remarks: notes,
+      };
+    } else {
+      updateData = {
+        quantity: quantity,
+        remarks: notes,
+        modifiers: selectedModifiers,
+      };
     }
-  };
-
-  const revertOrderItemStatus = async (order_item_id: number, type: string) => {
     try {
-      const response = await api.revertOrderItemStatus(order_item_id, type);
-    
-      if (!response) {
-        throw new Error("Failed to revert order item status");
-      }
-      onOrderItemUpdated?.();
-      onClose();
-    } catch (error: any) {
-      setError(error.message);
-    }
-  };
-
-  const deleteOrderItem = async (order_item_id: number, type: string) => {
-    try {
-      await api.deleteOrderItem(order_item_id, type);
+      await api.updateOrderItem(orderItem.order_item_id, orderItem.type, updateData);
+  
       onOrderItemUpdated?.();
       onClose();
     } catch (error: any) {
@@ -200,6 +187,7 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
             </Button>
             <Button
               className="w-full h-14 bg-green-600"
+              onClick={saveChanges}
             >
               Save
             </Button>

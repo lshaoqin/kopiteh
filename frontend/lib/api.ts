@@ -1,4 +1,4 @@
-import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue, OrderItem } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue, OrderItem, OrderItemModifier } from "../../types";
 import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -227,5 +227,19 @@ export const api = {
     await fetchClient<any>(`/orderItem/delete/${type}/${orderItemId}`, {
       method: "DELETE"
     });
+  },
+
+  updateOrderItem: async (orderItemId: number, type: string, updateData: {
+    name?: string;
+    quantity?: number;
+    modifiers?: OrderItemModifier[];
+    remarks?: string;
+  }): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/update/${type}/${orderItemId}`, {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    });
+    return response;
   }
+
 };

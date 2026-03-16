@@ -17,21 +17,13 @@ import { WebSocketService } from './websocket.service';
 import { PoolClient, Pool } from 'pg';
 
 const STANDARD_ITEM_COLUMNS = new Set([
-  'order_id',
-  'item_id',
   'quantity',
-  'price',
   'remarks',
 ]);
 
 const CUSTOM_ITEM_COLUMNS = new Set([
-  'stall_id',
-  'table_id',
-  'user_id',
   'order_item_name',
-  'status',
   'quantity',
-  'price',
   'remarks',
 ]);
 
@@ -277,6 +269,7 @@ export const OrderItemService = {
     if (entries.length === 0)
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'No valid fields to update');
 
+    const modifiers = (payload as UpdateOrderItemPayload).modifiers;
     const setClause = entries.map(([field], i) => `${field} = $${i + 1}`).join(', ');
     const values = entries.map(([, v]) => v ?? null);
 
@@ -288,6 +281,24 @@ export const OrderItemService = {
         const orderItemId = await BaseService.query(query, [...values, id]);
         if (!orderItemId.rows[0])
           return errorResponse(ErrorCodes.NOT_FOUND, 'Order Item not found');
+
+        const standardPayload = payload as UpdateOrderItemPayload;
+        if (modifiers !== undefined) {
+          // Update modifiers: delete existing and insert new
+          await BaseService.query(
+            'DELETE FROM order_item_modifiers WHERE order_item_id = $1',
+            [id]
+          );
+          for (const mod of modifiers) {
+            await BaseService.query(
+              `INSERT INTO order_item_modifiers 
+               (order_item_id, option_id, price_modifier, option_name)
+               VALUES ($1,$2,$3,$4)`,
+               [id, mod.option_id, mod.price ?? 0, mod.name]
+            );
+          }
+        }
+
         const result = await findStandardById(orderItemId.rows[0].order_item_id);
         
         // Send WebSocket notification

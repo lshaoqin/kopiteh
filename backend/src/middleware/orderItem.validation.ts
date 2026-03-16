@@ -2,10 +2,10 @@ import { body, param } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
 import { enforceKnownFields, requireAtLeastOneField, optionalNonNegativeNum } from './base.validation';
 
-const STANDARD_ITEM_FIELDS = ['order_id', 'item_id', 'status', 'quantity', 'price'] as const;
+const STANDARD_ITEM_FIELDS = ['order_id', 'item_id', 'status', 'quantity', 'price', 'modifiers', 'remarks'] as const;
 const CUSTOM_ITEM_FIELDS = ['stall_id', 'table_id', 'user_id', 'order_item_name', 'status', 'quantity', 'price',  'created_at', 'remarks'] as const;
 
-const STANDARD_UPDATABLE_FIELDS = ['status', 'quantity', 'price'] as const;
+const STANDARD_UPDATABLE_FIELDS = ['status', 'quantity', 'price', 'modifiers', 'remarks'] as const;
 const CUSTOM_UPDATABLE_FIELDS = ['status', 'quantity', 'price', 'remarks'] as const;
 
 const isStandard = (req: any) => req.params.type === 'STANDARD';
