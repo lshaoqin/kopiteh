@@ -135,38 +135,15 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               </div>
             </div>
           
-            {/* Modifiers */}
-            <div className="border-b border-black">
-              <div className="mb-2 text-sm font-semibold text-gray-900">
-                Modifiers
-              </div>
-              <div className="">
-              {currentItem.modifiers && currentItem.modifiers.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {currentItem.modifiers.map((m, index) => (
-                  <span
-                    key={index}
-                    className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
-                    >
-                    {m.name}
-                  </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic">No modifiers</p>
-              )}
-              </div>
-            </div>
-          
           
             {/* Notes */}
-            <div className="border-b border-black">
+            <div>
               <div className="my-1 text-sm font-semibold text-gray-900">
                 Additional Notes
               </div>
               <div>
                 {currentItem.remarks ? (
-                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                  <p className="text-sm text-gray-700">
                     {currentItem.remarks}
                   </p>
                 ) : (
@@ -175,12 +152,12 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               </div>
             </div>
           </div>
-          </div>
+        </div>
 
-          {/* Actions */}
-          <div className="p-3 flex flex-col gap-3">
-            {currentItem.status === "INCOMING" && (
-            <>         
+        {/* Actions */}
+        <div className="p-3 flex flex-col gap-3">
+          {currentItem.status === "INCOMING" && (
+          <>         
             <div className="grid grid-cols-5 gap-3">
               <Button
                 variant="destructive"
@@ -211,52 +188,52 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               Mark as Preparing
             </Button>
           </>
-            )}
+          )}
             
-            {currentItem.status === "PREPARING" && (
-            <>
-              <div className="grid grid-cols-5 gap-3">
-                <Button 
-                  variant="destructive"
-                  className="col-span-1 h-14"
-                  onClick={() => deleteOrderItem(Number(currentItem.order_item_id), currentItem.type)}
-                >
-                  <Trash2 />
-                </Button>         
-                <Button 
-                  variant="secondary"
-                  className="col-span-2 h-14"
-                  onClick={() => revertOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
-                >
-                  Mark as Incoming
-                </Button>
-                <Button 
-                  variant="secondary"
-                  className="col-span-2 h-14"
-                  onClick={() => setShowEditMode(true)}
-                >
-                  Edit
-                </Button>
-              </div>
+          {currentItem.status === "PREPARING" && (
+          <>
+            <div className="grid grid-cols-5 gap-3">
               <Button 
-                  className="w-full h-14 bg-green-600 cursor-pointer"
-                  onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
-                >
-                  Mark as Served
-                </Button>
-            </>
-            )}
-            
-            {currentItem.status === "SERVED" && (
+                variant="destructive"
+                className="col-span-1 h-14"
+                onClick={() => deleteOrderItem(Number(currentItem.order_item_id), currentItem.type)}
+              >
+                <Trash2 />
+              </Button>         
               <Button 
                 variant="secondary"
-                className="w-full h-14"
+                className="col-span-2 h-14"
                 onClick={() => revertOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
               >
-                Mark as Preparing
+                Mark as Incoming
               </Button>
-            )}
-          </div>
+              <Button 
+                variant="secondary"
+                className="col-span-2 h-14"
+                onClick={() => setShowEditMode(true)}
+              >
+                Edit
+              </Button>
+            </div>
+            <Button 
+                className="w-full h-14 bg-green-600 cursor-pointer"
+                onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
+              >
+                Mark as Served
+              </Button>
+          </>
+          )}
+          
+          {currentItem.status === "SERVED" && (
+            <Button 
+              variant="secondary"
+              className="w-full h-14"
+              onClick={() => revertOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
+            >
+              Mark as Preparing
+            </Button>
+          )}
+        </div>
       </div>
       <EditOrderItem
         open={showEditMode}

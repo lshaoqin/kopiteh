@@ -106,52 +106,78 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
                   <span>Item Price:</span>
                   <span className="font-medium">${Number(orderItem.price).toFixed(2)}</span>
                 </div>
-                {orderItem.modifiers && orderItem.modifiers.length > 0 && orderItem.modifiers.map((m, index) => (
-                  <div key={index} className="flex justify-between text-gray-600">
-                    <span className="ml-2">+ {m.name}:</span>
-                    <span>${Number(m.price_modifier).toFixed(2)}</span>
-                  </div>
-                ))}
-                {orderItem.modifiers && orderItem.modifiers.length > 0 && (
+                <div className="gap-2 flex flex-col border-t pt-2 mt-2">
+                  <span className="text-sm italic text-gray-900">
+                    Modifiers (tap to toggle)
+                  </span>
+                  {orderItem.modifiers?.map((m) => {
+                    const active = selectedModifiers.some(
+                      (sm) => sm.option_id === m.option_id
+                    );
+                    return (
+                      <button
+                        key={m.option_id}
+                        onClick={() => {
+                          if (active) {
+                            setSelectedModifiers((prev) =>
+                              prev.filter((x) => x.option_id !== m.option_id)
+                            );
+                          } else {
+                            setSelectedModifiers((prev) => [...prev, m]);
+                          }
+                        }}
+                        className={`
+                          flex justify-between w-full text-left px-2 py-1 rounded-md transition
+                          ${active 
+                            ? "border-1 bg-green-50 hover:bg-green-100 cursor-pointer" 
+                            : "border-1 bg-gray-50 hover:bg-gray-100 cursor-pointer"}
+                        `}
+                      >
+                        <span
+                          className={`ml-2 ${
+                            !active ? "line-through text-gray-400" : ""
+                          }`}
+                        >
+                          + {m.name}:
+                        </span>
+                        <span
+                          className={`${!active ? "line-through text-gray-400" : ""}`}
+                        >
+                          ${Number(m.price_modifier).toFixed(2)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedModifiers.length > 0 && (
                   <div className="flex justify-between pt-2 mt-2 border-t font-semibold">
                     <span>Subtotal (per item):</span>
-                    <span>${(Number(orderItem.price) + orderItem.modifiers.reduce((sum, m) => sum + Number(m.price_modifier), 0)).toFixed(2)}</span>
+                    <span>
+                      $
+                      {(
+                        Number(orderItem.price) +
+                        selectedModifiers.reduce(
+                          (sum, m) => sum + Number(m.price_modifier),
+                          0
+                        )
+                      ).toFixed(2)}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between pt-2 mt-2 border-t font-bold text-base">
                   <span>Total ({orderItem.quantity}x):</span>
-                  <span>${((Number(orderItem.price) + (orderItem.modifiers?.reduce((sum, m) => sum + Number(m.price_modifier), 0) || 0)) * Number(orderItem.quantity)).toFixed(2)}</span>
+                  <span>
+                    $
+                    {(
+                      (Number(orderItem.price) +
+                        selectedModifiers.reduce(
+                          (sum, m) => sum + Number(m.price_modifier),
+                          0
+                        )) *
+                      Number(quantity)
+                    ).toFixed(2)}
+                  </span>
                 </div>
-              </div>
-            </div>
-          
-            {/* Modifiers */}
-            <div className="border-b border-black">
-              <div className="mb-2 text-sm font-semibold text-gray-900">
-                Modifiers
-              </div>
-              <div className="mb-2 flex flex-wrap gap-2">
-                {orderItem.modifiers?.map((m) => {
-                  const active = selectedModifiers.some((sm) => sm.option_id === m.option_id);
-
-                  return (
-                    <button
-                      key={m.option_id}
-                      onClick={() => {
-                        if (active) {
-                          setSelectedModifiers(selectedModifiers.filter((x) => x.option_id !== m.option_id));
-                        } else {
-                          setSelectedModifiers([...selectedModifiers, m]);
-                        }
-                      }}
-                      className={`rounded-md px-2 py-1 text-xs font-medium border
-                      ${active ? "bg-blue-100 border-blue-500 text-blue-700" : "bg-gray-100"}
-                      `}
-                    >
-                      {m.name}
-                    </button>
-                  );
-                })}
               </div>
             </div>
           
