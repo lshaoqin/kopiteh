@@ -1,4 +1,4 @@
-import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue, OrderItem } from "../../types";
+import { Stall, MenuItem, MenuItemModifier, MenuCategory, MenuItemModifierSection, DiningTable, Venue, OrderItem, OrderItemModifier } from "../../types";
 import { CartItem } from "@/stores/cart.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -162,6 +162,29 @@ export const api = {
     }));
   },
 
+  getOrderItemsById: async (orderItemId: number, type: string): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/id/${type}/${orderItemId}`);
+    return {
+      order_item_id: response.order_item_id,
+      stall_id: response.stall_id,
+      table_id: response.table_id,
+      table_number: response.table_number,
+      user_id: response.user_id,
+      order_item_name: response.order_item_name,
+      status: response.status,
+      quantity: response.quantity,
+      price: response.price,
+      created_at: response.created_at,
+      remarks: response.remarks,
+      modifiers: response.modifiers ? response.modifiers.map((mod: any) => ({
+      option_id: mod.option_id,
+      price_modifier: mod.price,
+      name: mod.name,
+      })) : [],
+      type: response.type,
+    } as OrderItem;
+  },
+
   createOrder: async (orderData: {
     table_id: number;
     total_price: number;
@@ -227,5 +250,19 @@ export const api = {
     await fetchClient<any>(`/orderItem/delete/${type}/${orderItemId}`, {
       method: "DELETE"
     });
+  },
+
+  updateOrderItem: async (orderItemId: number, type: string, updateData: {
+    name?: string;
+    quantity?: number;
+    modifiers?: OrderItemModifier[];
+    remarks?: string;
+  }): Promise<OrderItem> => {
+    const response = await fetchClient<any>(`/orderItem/update/${type}/${orderItemId}`, {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    });
+    return response;
   }
+
 };

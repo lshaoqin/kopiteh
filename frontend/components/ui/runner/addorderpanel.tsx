@@ -91,20 +91,20 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
 
   return (
     <div className="fixed inset-0 bg-white box-border p-5 overflow-y-auto">
-      <div className="w-full h-full flex flex-col justify-between">
+      <div className="w-full h-full justify-between flex-1 px-6 pt-8 pb-20 no-scrollbar">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Add Item</h2>
-            <button 
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
-            className="p-2 rounded-md hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
+          <h1 className="text-3xl font-bold text-slate-800">Add Item</h1>
+          <button 
+          onClick={() => {
+            resetForm();
+            onClose();
+          }}
+          className="p-2 rounded-md hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <div className="w-full py-2">
+        <div className="w-full pt-3">
           <p className="text-sm font-medium">Item Name*</p>
           <TextInput
             classNameOut={"w-full py-2"}
@@ -115,19 +115,19 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
         </div>
 
         <div className="flex justify-between">
-          <div className="w-10/21 py-2">
+          <div className="w-10/21 pt-3">
             <p className="text-sm font-medium">Quantity*</p>
             <TextInput
-              classNameOut={"w-full py-2"}
+              classNameOut={"w-full py-3"}
               classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
             />
           </div>
-          <div className="w-10/21 py-2">
+          <div className="w-10/21 pt-3">
             <p className="text-sm font-medium">Unit Price ($)*</p>
             <TextInput
-              classNameOut={"w-full py-2"}
+              classNameOut={"w-full py-3"}
               classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
               value={unitPrice}
               onChange={(e) => setUnitPrice(e.target.value)}
@@ -135,10 +135,10 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
           </div>
         </div>
         
-        <div>
-        <p className="text-sm font-medium">Additional Notes</p>
+        <div className="pt-3">
+          <p className="text-sm font-medium">Additional Notes</p>
           <TextInput
-              classNameOut={"w-full py-2"}
+              classNameOut={"w-full py-3"}
               classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -146,24 +146,24 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
         </div>
         
 
-        <div className="pt-2">
+        <div className="pt-3">
           <h3 className="text-lg font-bold mb-1">Volunteer Information</h3>
           <p className="text-base mb-1">Provide the Information of the volunteer who has requested this new order</p>
           <div className="flex justify-between">
-            <div className="w-10/21 py-2">
+            <div className="w-10/21 pt-3">
               <p className="text-sm font-medium">Table Number*</p>
               <TextInput
-                classNameOut={"w-full py-2"}
+                classNameOut={"w-full py-3"}
                 classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
                 value={table}
                 onChange={(e) => setTable(e.target.value)}
               />
             </div>
               
-            <div className="w-10/21 py-2">
+            <div className="w-10/21 pt-3">
               <p className="text-sm font-medium">Volunteer Name</p>
               <TextInput
-                classNameOut={"w-full py-2"}
+                classNameOut={"w-full py-3"}
                 classNameIn={"w-full border-2 border-black rounded-lg px-3 py-2"}
                 value={volunteerName}
                 onChange={(e) => setVolunteerName(e.target.value)}
@@ -171,7 +171,7 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
             </div>
           </div>
         </div>
-        <div className="w-full py-2">
+        <div className="w-full pt-3 pb-8">
           <Button
             variant="signin"
             onClick={handleSubmit}
