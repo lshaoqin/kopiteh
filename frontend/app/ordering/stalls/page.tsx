@@ -2,6 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react"; 
 import { useSearchParams, useRouter } from "next/navigation"; 
+import Link from "next/link";
+import { ClipboardList, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { Stall } from "@/../types";
 import { useCartStore } from "@/stores/cart.store";
@@ -21,6 +23,7 @@ function StallSelectionContent() {
   const { venueId, tableId, setVenueId, setTableId } = useCartStore();
 
   const [stalls, setStalls] = useState<Stall[]>([]); 
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
   
@@ -39,7 +42,6 @@ function StallSelectionContent() {
   // 2. Fetch Stalls based on dynamic venueId
   useEffect(() => {
     async function fetchStalls() {
-      // If we don't have a venueId yet (from store or URL), don't fetch
       if (!venueId) return;
 
       try {
@@ -57,13 +59,31 @@ function StallSelectionContent() {
   }, [venueId]);
 
   useEffect(() => {
+    if (!tableId) return;
+    
+    const checkOrders = async () => {
+        try {
+            const orders = await api.getOrdersByTable(tableId);
+            const active = orders.filter((o: any) => 
+                !['completed', 'cancelled'].includes(o.status.toLowerCase())
+            );
+            setActiveOrdersCount(active.length);
+        } catch (e) {
+            console.error("Order check failed", e);
+        }
+    };
+    
+    checkOrders();
+    const interval = setInterval(checkOrders, 30000); // Poll every 30s as fallback
+    return () => clearInterval(interval);
+  }, [tableId]);
+
+  useEffect(() => {
     if (loading) return;
 
-    // Check for Venue first
     if (!venueId && !searchParams.get("venue")) {
       router.push("/ordering/venue");
     } 
-    // If venue exists but table is missing, redirect to table selection
     else if (!tableId && !searchParams.get("table")) {
       router.push("/ordering/table");
     }
@@ -78,7 +98,6 @@ function StallSelectionContent() {
       return 0;
     });
 
-  // Prevent flash of content if redirecting
   if (!loading && (!venueId || !tableId) && !searchParams.get("venue")) {
     return null;
   }
@@ -88,11 +107,43 @@ function StallSelectionContent() {
       <div className="flex-1 overflow-y-auto px-6 pt-8 pb-20 no-scrollbar">
 
         <div className="space-y-6 mb-10 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-4">
-              <BackButton href="/ordering/table" />
-              <h1 className="text-3xl font-bold text-slate-800">Search</h1>
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                  <BackButton href="/ordering/table" />
+                  <h1 className="text-3xl font-bold text-slate-800">Search</h1>
+              </div>
+
+              {/* My Orders Button Entry Point */}
+              <Link href="/ordering/status">
+                <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-700 text-sm font-semibold transition-all border border-slate-200">
+                    <ClipboardList size={18} className="text-slate-500" />
+                    My Orders
+                    {activeOrdersCount > 0 && (
+                        <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                    )}
+                </button>
+              </Link>
           </div>
           
+          {/* Active Status Banner */}
+          {activeOrdersCount > 0 && (
+            <Link 
+                href="/ordering/status" 
+                className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-2xl hover:bg-orange-100 transition-colors"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold animate-bounce">
+                        !
+                    </div>
+                    <div>
+                        <p className="text-orange-900 text-sm font-bold">Preparation in Progress</p>
+                        <p className="text-orange-700 text-xs">Tap to track your {activeOrdersCount} active order{activeOrdersCount > 1 ? 's' : ''}.</p>
+                    </div>
+                </div>
+                <ChevronRight size={20} className="text-orange-400" />
+            </Link>
+          )}
+
           <div className="max-w-2xl">
             <SearchBar 
               placeholder="Craving Something?" 
