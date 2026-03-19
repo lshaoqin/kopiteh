@@ -20,17 +20,27 @@ const WebSocketContext = createContext<WebSocketContextType>({
 
 export const useWebSocket = () => useContext(WebSocketContext);
 
+function resolveWebSocketUrl() {
+  const explicitWsUrl = process.env.NEXT_PUBLIC_WS_URL;
+  if (explicitWsUrl) {
+    return explicitWsUrl.replace(/\/$/, '');
+  }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+  return apiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+}
+
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { user } = useAuthStore();
 
   useEffect(() => {
-    // Use NEXT_PUBLIC_API_URL (same as API calls)
-    const wsUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const wsUrl = resolveWebSocketUrl();
 
     const newSocket = io(wsUrl, {
-      transports: ['websocket', 'polling'], // Add polling as fallback
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
