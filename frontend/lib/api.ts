@@ -57,6 +57,7 @@ export const api = {
       description: item.description,
       stall_image: item.stall_image, 
       is_open: item.is_open,
+      allow_remarks: Boolean(item.allow_remarks),
       waiting_time: item.waiting_time
     }));
   },
@@ -70,6 +71,7 @@ export const api = {
       description: item.description,
       stall_image: item.stall_image,
       is_open: item.is_open,
+      allow_remarks: Boolean(item.allow_remarks),
       waiting_time: item.waiting_time
     };
   },
