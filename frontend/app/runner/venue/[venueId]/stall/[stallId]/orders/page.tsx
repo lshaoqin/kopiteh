@@ -30,6 +30,7 @@ export default function Home() {
   
   // Swipe state
   const [swipeState, setSwipeState] = useState<{ [key: number]: { x: number; startX: number; isSwiping: boolean } }>({});
+  const [updatingItemIds, setUpdatingItemIds] = useState<Set<number>>(new Set());
   
 
   const filteredOrderItems = orderItems.filter(
@@ -128,11 +129,35 @@ export default function Home() {
 
   // Update order item status
   const updateOrderItemStatus = async (orderItemId: number, type: "STANDARD" | "CUSTOM") => {
+    if (updatingItemIds.has(orderItemId)) return;
+
     try {
-      await api.updateOrderItemStatus(orderItemId, type);
-      // The WebSocket will handle the state update
+      setUpdatingItemIds((prev) => {
+        const next = new Set(prev);
+        next.add(orderItemId);
+        return next;
+      });
+
+      const updatedOrderItem = await api.updateOrderItemStatus(orderItemId, type);
+
+      // Optimistically update local state so the card moves categories immediately.
+      setOrderItems((prev) =>
+        prev.map((item) =>
+          item.order_item_id === orderItemId ? { ...item, ...updatedOrderItem } : item
+        )
+      );
+
+      setSelectedOrderItem((prev) =>
+        prev && prev.order_item_id === orderItemId ? { ...prev, ...updatedOrderItem } : prev
+      );
     } catch (error: any) {
       setError(error.message);
+    } finally {
+      setUpdatingItemIds((prev) => {
+        const next = new Set(prev);
+        next.delete(orderItemId);
+        return next;
+      });
     }
   };
 
@@ -173,7 +198,7 @@ export default function Home() {
     if (!state) return;
 
     // If swiped more than 100px, trigger status update
-    if (state.x > 100) {
+    if (state.x > 100 && !updatingItemIds.has(orderItemId)) {
       await updateOrderItemStatus(orderItemId, type);
     }
 
