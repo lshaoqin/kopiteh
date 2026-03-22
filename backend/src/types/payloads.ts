@@ -106,7 +106,6 @@ export interface OrderPayload {
   table_id: number;
   total_price: number;
   items: OrderItemPayload[]; // Nested array
-  volunteer_name: string;
   
   // Optional/Backend generated
   user_id?: number;
@@ -119,7 +118,6 @@ export interface UpdateOrderPayload {
   status?: OrderStatusCodes;
   total_price?: number;
   created_at?: string;
-  volunteer_name?: string;
 }
 
 export interface UpdateOrderItemPayload extends Partial<OrderItemPayload> {}
@@ -133,7 +131,6 @@ export interface CustomOrderItemPayload {
   price: number;
   created_at: string;
   remarks?: string;
-  volunteer_name: string;
 }
 
 export interface UpdateCustomOrderItemPayload extends Partial<CustomOrderItemPayload> {}
