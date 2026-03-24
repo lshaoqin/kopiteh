@@ -25,6 +25,7 @@ const CUSTOM_ITEM_COLUMNS = new Set([
   'order_item_name',
   'quantity',
   'remarks',
+  'volunteer_name',
 ]);
 
 // --- Helper Fuction ---
@@ -231,8 +232,8 @@ export const OrderItemService = {
       } else {
         const customItemPayload = request as CustomOrderItemPayload;
         result = await BaseService.query(
-          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-          VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7) RETURNING *, \'CUSTOM\' AS type`,
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks, volunteer_name) 
+          VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7,$8) RETURNING *, \'CUSTOM\' AS type`,
           [
             customItemPayload.stall_id,
             customItemPayload.table_id,
@@ -241,6 +242,7 @@ export const OrderItemService = {
             customItemPayload.quantity,
             customItemPayload.price,
             customItemPayload.remarks ?? null,
+            customItemPayload.volunteer_name,
           ]
         );
         
