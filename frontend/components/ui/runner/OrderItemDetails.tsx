@@ -71,6 +71,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
       setError(error.message);
     }
   };
+  console.log(
+    currentItem
+  )
 
   if (!open || !currentItem) return null;
   
@@ -79,10 +82,15 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
       <div className="absolute top-0 left-0 w-full h-full bg-black opacity-60"></div>
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-9/10 h-2/3 bg-white rounded-lg shadow-lg border flex flex-col pb-4">
         <div className="flex px-3 items-center gap-2 border-b h-14">
-          <div className="text-xs text-gray-500">
-            <div>Table</div>
-            <div className="truncate font-medium text-gray-800">
-              {currentItem.table_number}
+          <div className="text-xs text-gray-500 flex justify-between w-full">
+            <div className="flex flex-col">
+              <span>Table: {currentItem.table_number}</span>
+              <span>Volunteer Name: {currentItem.volunteer_name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-2 rounded-md text-white text-xs font-medium bg-blue-600">
+                {currentItem.type === "CUSTOM" ? "Custom Order" : ""}
+              </span>
             </div>
           </div>
           

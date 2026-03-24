@@ -14,7 +14,7 @@ type AddOrderPanelProps = {
     unitPrice: string;
     notes?: string;
     table: string;
-    volunteerName?: string;
+    volunteerName: string;
   }) => void;
 };
 
@@ -46,6 +46,7 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
       { valid: quantity.trim() !== "", message: "Quantity required" },
       { valid: unitPrice.trim() !== "", message: "Unit price required" },
       { valid: table.trim() !== "", message: "Table number required" },
+      { valid: volunteerName.trim() !== "", message: "Volunteer name required" },
   
       { valid: isValidQuantity(quantity), message: "Quantity must be a number" },
       {
