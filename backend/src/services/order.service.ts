@@ -14,7 +14,6 @@ const ITEM_COLUMNS = new Set([
   'status',
   'total_price',
   'created_at',
-  'volunteer_name',
 ]);
 
 
@@ -85,10 +84,10 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
     // 2. Create Order Header
     const userId = (request as any).user_id || 1; 
     const orderRes = await BaseService.query(
-      `INSERT INTO "order" (table_id, user_id, status, total_price, created_at, volunteer_name) 
-        VALUES ($1, $2, $3, $4, NOW(), $5) 
+      `INSERT INTO "order" (table_id, user_id, status, total_price, created_at) 
+        VALUES ($1, $2, $3, $4, NOW()) 
         RETURNING order_id`,
-      [request.table_id, userId, 'pending', request.total_price, request.volunteer_name]
+      [request.table_id, userId, 'pending', request.total_price]
     );
     const orderId = orderRes.rows[0].order_id;
 

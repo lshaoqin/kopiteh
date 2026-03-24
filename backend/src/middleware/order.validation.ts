@@ -2,7 +2,7 @@ import { body, param, query } from 'express-validator';
 import { OrderStatusCodes } from '../types/orderStatus';
 import { enforceKnownFields, requireAtLeastOneField, optionalTextField, optionalNonNegativeNum } from './base.validation';
 
-const ITEM_FIELDS = ['table_id', 'items', 'user_id', 'total_price', 'remarks', 'volunteer_name'] as const;
+const ITEM_FIELDS = ['table_id', 'items', 'user_id', 'total_price', 'remarks'] as const;
 
 export const orderIdParamValidation = [
   param('id').isInt({ gt: 0 }).withMessage('id must be positive integer'),
@@ -27,7 +27,6 @@ export const createOrderValidation = [
   optionalNonNegativeNum('user_id'),
   body('total_price').exists().isFloat({ min: 0 }),
   optionalTextField('remarks', 1000),
-  body('volunteer_name').exists({ checkFalsy: true }).isString(),
 
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
   body('items.*.item_id').isInt({ gt: 0 }),
@@ -48,5 +47,4 @@ export const updateOrderValidation = [
   optionalNonNegativeNum('total_price'),
   optionalTextField('created_at'),
   optionalTextField('remarks', 1000),
-  body('volunteer_name').optional().isString(),
 ];
