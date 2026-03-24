@@ -33,7 +33,7 @@ async function findStandardById(id: number): Promise<FetchOrderItemResponsePaylo
   try {    
     const result = await BaseService.query(
       `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
-      oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, \'STANDARD\' AS type
+      oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, o.volunteer_name, \'STANDARD\' AS type
       FROM order_item oi 
       JOIN menu_item m ON oi.item_id = m.item_id 
       JOIN stall s ON m.stall_id = s.stall_id
@@ -108,7 +108,7 @@ export const OrderItemService = {
     try {
       const baseItems = await BaseService.query(
         `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
-        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, 'STANDARD' AS type
+        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, o.volunteer_name, 'STANDARD' AS type
         FROM order_item oi 
         JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN stall s ON m.stall_id = s.stall_id
