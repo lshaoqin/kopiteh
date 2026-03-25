@@ -13,8 +13,8 @@ import { useWebSocket } from "@/context/WebSocketContext";
 
 export default function Home() {
   const params = useParams();
-  const venueId = params.venueId;
-  const stallId = params.stallId[0];
+  const venueId = Array.isArray(params.venueId) ? params.venueId[0] : params.venueId;
+  const stallId = Array.isArray(params.stallId) ? params.stallId[0] : params.stallId;
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
