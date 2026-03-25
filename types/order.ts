@@ -33,6 +33,7 @@ export interface OrderItem {
   price: Decimal;
   created_at: string;
   remarks?: string | null;
+  volunteer_name: string;
   modifiers?: OrderItemModifier[];
   type: 'STANDARD' | 'CUSTOM';
 }

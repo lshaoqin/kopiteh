@@ -103,6 +103,7 @@ export default function Home() {
       unitPrice: string;
       notes?: string;
       table: string;
+      volunteerName: string;
     }
   ) => {
     try {
@@ -114,6 +115,7 @@ export default function Home() {
         quantity: Number(data.quantity),
         price: Number(data.unitPrice),
         remarks: data.notes || "",
+        volunteer_name: data.volunteerName
       };
       const json = await api.createCustomOrder(payload);
 

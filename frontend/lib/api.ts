@@ -155,6 +155,7 @@ export const api = {
       price: item.price,
       created_at: item.created_at,
       remarks: item.remarks,
+      volunteer_name: item.volunteer_name,
       modifiers: item.modifiers ? item.modifiers.map((mod: any) => ({
         option_id: mod.option_id,
         price_modifier: mod.price,
@@ -178,6 +179,7 @@ export const api = {
       price: response.price,
       created_at: response.created_at,
       remarks: response.remarks,
+      volunteer_name: response.volunteer_name,
       modifiers: response.modifiers ? response.modifiers.map((mod: any) => ({
       option_id: mod.option_id,
       price_modifier: mod.price,
@@ -225,6 +227,7 @@ export const api = {
     quantity: number,
     price: number,
     remarks?: string,
+    volunteer_name: string
   }): Promise<OrderItem> => {
     const response = await fetchClient<any>(`/orderItem/create/CUSTOM`, {
       method: "POST",
