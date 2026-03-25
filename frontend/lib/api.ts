@@ -89,7 +89,8 @@ export const api = {
         item_image: item.item_image, 
         is_available: item.is_available,
         prep_time: item.prep_time
-    }));
+    }))
+    .filter(item => item.is_available === true);
   },
 
   getItemById: async (itemId: number): Promise<MenuItem> => {
@@ -202,11 +203,13 @@ export const api = {
     table_id: number;
     total_price: number;
     items: CartItem[];
+    volunteer_name: string;
   }) => {
     // Transform frontend CartItems to backend payload structure
     const request = {
       table_id: Number(orderData.table_id),
       total_price: Number(orderData.total_price),
+      volunteer_name: orderData.volunteer_name,
       items: orderData.items.map((item) => ({
         item_id: Number(item.menuItem.item_id),
         quantity: Number(item.quantity),

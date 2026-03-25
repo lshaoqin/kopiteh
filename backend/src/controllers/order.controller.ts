@@ -32,11 +32,11 @@ export const OrderController = {
 
   async getByTable(req: Request, res: Response) {
     try {
-      const tableId = req.params.table_id;
+      const tableId = Number(req.params.table_id);
       const venueId = req.query.venueId ? Number(req.query.venueId) : undefined;
 
       const result = await OrderService.getAllWithFilters({ 
-        tableNumber: String(tableId), 
+        tableId: tableId,
         venueId: venueId,
         page: 1, 
         limit: 100 
@@ -44,7 +44,7 @@ export const OrderController = {
 
       if (result.success && result.payload.data?.orders) {
         for (const order of result.payload.data.orders) {
-          const itemResult = await OrderItemService.findByOrder(order.order_id);
+          const itemResult = await OrderItemService.findByOrder(Number(order.order_id));
           
           if (itemResult.success && 'data' in itemResult.payload) {
             order.items = itemResult.payload.data || [];

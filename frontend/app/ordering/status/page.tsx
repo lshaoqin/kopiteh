@@ -64,10 +64,13 @@ export default function OrderStatusPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.sort((a,b) => b.order_id - a.order_id).map((order) => (
+            {orders.sort((a,b) => {
+                // Handle "CUSTOM-X" IDs by extracting the numeric part if necessary, 
+                // or just simple string comparison for sorting
+                return String(b.order_id).localeCompare(String(a.order_id), undefined, {numeric: true});
+            }).map((order) => (
               <div key={order.order_id} className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
                 
-                {/* Status Bar Indicator */}
                 <div className={`absolute top-0 left-0 w-2 h-full ${getStatusColor(order.status)}`} />
 
                 <div className="flex justify-between items-start mb-6 ml-2">
@@ -81,14 +84,34 @@ export default function OrderStatusPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 ml-2">
+                <div className="space-y-4 ml-2">
                   {order.items?.map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-sm border-b border-slate-50 pb-2 last:border-none">
-                      <div className="flex gap-3">
-                        <span className="font-bold text-slate-400">{item.quantity}x</span>
-                        <span className="text-slate-700 font-medium">{item.name || item.order_item_name}</span>
+                    <div key={idx} className="border-b border-slate-50 pb-3 last:border-none">
+                      <div className="flex justify-between items-center text-sm mb-1">
+                        <div className="flex gap-3">
+                          <span className="font-bold text-slate-400">{item.quantity}x</span>
+                          <span className="text-slate-700 font-medium">{item.name || item.order_item_name}</span>
+                        </div>
+                        <span className="font-semibold text-slate-800">${(Number(item.price) * item.quantity).toFixed(2)}</span>
                       </div>
-                      <span className="font-semibold text-slate-800">${(item.price * item.quantity).toFixed(2)}</span>
+
+                      {/* Display Modifiers */}
+                      {item.modifiers && item.modifiers.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 ml-8 mt-1">
+                          {item.modifiers.map((mod: any, mIdx: number) => (
+                            <span key={mIdx} className="text-[10px] bg-slate-50 text-slate-500 border border-slate-100 px-2 py-0.5 rounded-md">
+                              + {mod.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Display Remarks/Notes */}
+                      {item.remarks && (
+                        <p className="text-[11px] text-slate-400 italic ml-8 mt-1">
+                          Note: {item.remarks}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
