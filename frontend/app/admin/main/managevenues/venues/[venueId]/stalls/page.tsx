@@ -74,6 +74,29 @@ export default function Stalls() {
         }
     };
 
+    const handleToggleRemarks = async (stallId: number, next: boolean) => {
+        if (next === undefined || next === null) return; // add this guard
+        const prev = stalls;
+        setStalls(curr =>
+            curr.map(s => (s.stall_id === stallId ? { ...s, allow_remarks: next } : s))
+        );
+        try {
+            const token = useAuthStore.getState().accessToken;
+            const res = await fetch(`${API_URL}/stalls/update/${stallId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ allow_remarks: next }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.success === false) throw new Error(data?.payload?.message);
+        } catch {
+            setStalls(prev);
+        }
+    };
+
     const handleCreate = async ({
         name,
         imageUrl,
@@ -186,7 +209,7 @@ export default function Stalls() {
         if (!editingStall) return;
 
         try {
-            setUpdateError(null);   
+            setUpdateError(null);
             setUpdating(true);
 
             const stallId = editingStall.stall_id;
@@ -244,6 +267,8 @@ export default function Stalls() {
                                         variant="default"
                                         isActive={s.is_open}
                                         onActiveChange={(next) => handleToggle(s.stall_id, next)}
+                                        allowRemarks={s.allow_remarks}
+                                        onRemarksChange={(next) => handleToggleRemarks(s.stall_id, next)}
                                         onEdit={() => {
                                             setEditingStall(s);
                                             setShowUpdateModal(true);

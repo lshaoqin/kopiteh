@@ -11,6 +11,7 @@ const STALL_COLUMNS = new Set([
   "description",
   "stall_image",
   "is_open",
+  "allow_remarks"
 ]);
 
 export const StallService = {

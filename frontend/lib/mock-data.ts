@@ -9,7 +9,8 @@ export const MOCK_STALLS: Stall[] = [
     description: "Singapore's most famous chicken rice.",
     stall_image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80",
     is_open: true,
-    waiting_time: 15
+    waiting_time: 15,
+    allow_remarks: true
   },
   {
     stall_id: 2,
@@ -18,7 +19,8 @@ export const MOCK_STALLS: Stall[] = [
     description: "Old school chicken chop and fish & chips.",
     stall_image: "https://images.unsplash.com/photo-1625938145744-e38051539994?auto=format&fit=crop&w=500&q=80",
     is_open: true,
-    waiting_time: 10
+    waiting_time: 10,
+    allow_remarks: true
   },
   {
     stall_id: 3,
@@ -27,7 +29,8 @@ export const MOCK_STALLS: Stall[] = [
     description: "Wok hei goodness with fresh prawns.",
     stall_image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=500&q=80",
     is_open: false, 
-    waiting_time: 0
+    waiting_time: 0,
+    allow_remarks: true
   },
   {
     stall_id: 4,
@@ -36,7 +39,8 @@ export const MOCK_STALLS: Stall[] = [
     description: "Crispy prata and spicy curry.",
     stall_image: null, 
     is_open: true,
-    waiting_time: 5
+    waiting_time: 5,
+    allow_remarks: true
   }
 ];
 

@@ -7,5 +7,6 @@ export interface Stall {
   description?: string | null;
   stall_image?: string | null;
   is_open?: boolean | null;
+  allow_remarks: boolean;
   waiting_time?: number | null; // minutes
 }

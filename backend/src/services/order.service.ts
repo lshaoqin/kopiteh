@@ -194,97 +194,99 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       const params: any[] = [startDate.toISOString(), endDate.toISOString()];
       
       if (venueId) {
-        venueCondition = ' AND t.venue_id = $3';
+        venueCondition = ' AND s.venue_id = $3';
         params.push(venueId);
       }
 
       // Get total orders and total amount for the month (including custom orders)
+      // An "order" is counted once per standard order_id or custom order_item_id,
+      // excluding only CANCELLED records and including both pending and served states.
       const totalResult = await BaseService.query(
-        `WITH standard_orders AS (
-          SELECT 
-            COUNT(DISTINCT o.order_id)::int as order_count,
-            COALESCE(
-              SUM(
-                (oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity
-              ), 
-              0
-            ) as order_total
-          FROM "order" o
-          LEFT JOIN "table" t ON o.table_id = t.table_id
-          LEFT JOIN order_item oi ON o.order_id = oi.order_id
+        `WITH standard_lines AS (
+          SELECT
+            CONCAT('STANDARD-', o.order_id::text) AS order_key,
+            ((oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity) AS line_total
+          FROM order_item oi
+          INNER JOIN "order" o ON oi.order_id = o.order_id
+          INNER JOIN menu_item mi ON oi.item_id = mi.item_id
+          INNER JOIN stall s ON mi.stall_id = s.stall_id
           LEFT JOIN (
-            SELECT order_item_id, SUM(price_modifier) as modifier_total
+            SELECT order_item_id, SUM(price_modifier) AS modifier_total
             FROM order_item_modifiers
             GROUP BY order_item_id
           ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
-          WHERE o.created_at >= $1 AND o.created_at < $2
+          WHERE o.created_at >= $1
+            AND o.created_at < $2
             AND o.status != 'CANCELLED'${venueCondition}
         ),
-        custom_orders AS (
-          SELECT 
-            COUNT(coi.order_item_id)::int as order_count,
-            COALESCE(SUM(coi.price * coi.quantity), 0) as order_total
+        custom_lines AS (
+          SELECT
+            CONCAT('CUSTOM-', coi.order_item_id::text) AS order_key,
+            (coi.price * coi.quantity) AS line_total
           FROM custom_order_item coi
-          LEFT JOIN stall s ON coi.stall_id = s.stall_id
-          WHERE coi.created_at >= $1 AND coi.created_at < $2
-            AND coi.status != 'CANCELLED'${venueCondition.replace('t.venue_id', 's.venue_id')}
+          INNER JOIN stall s ON coi.stall_id = s.stall_id
+          WHERE coi.created_at >= $1
+            AND coi.created_at < $2
+            AND coi.status != 'CANCELLED'${venueCondition}
+        ),
+        all_lines AS (
+          SELECT order_key, line_total FROM standard_lines
+          UNION ALL
+          SELECT order_key, line_total FROM custom_lines
         )
-        SELECT 
-          (SELECT order_count FROM standard_orders) + (SELECT order_count FROM custom_orders) as total_orders,
-          (SELECT order_total FROM standard_orders) + (SELECT order_total FROM custom_orders) as total_amount`,
+        SELECT
+          COUNT(DISTINCT order_key)::int AS total_orders,
+          COALESCE(SUM(line_total), 0) AS total_amount
+        FROM all_lines`,
         params
       );
 
       // Get analytics per stall (including custom orders)
       const stallResult = await BaseService.query(
-        `WITH standard_stall_orders AS (
-          SELECT 
+        `WITH standard_lines AS (
+          SELECT
             s.stall_id,
-            s.name as stall_name,
-            COUNT(DISTINCT o.order_id)::int as order_count,
-            COALESCE(
-              SUM(
-                (oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity
-              ), 
-              0
-            ) as order_total
-          FROM stall s
-          LEFT JOIN menu_item mi ON s.stall_id = mi.stall_id
-          LEFT JOIN order_item oi ON mi.item_id = oi.item_id
+            s.name AS stall_name,
+            CONCAT('STANDARD-', o.order_id::text) AS order_key,
+            ((oi.price + COALESCE(mod_sum.modifier_total, 0)) * oi.quantity) AS line_total
+          FROM order_item oi
+          INNER JOIN "order" o ON oi.order_id = o.order_id
+          INNER JOIN menu_item mi ON oi.item_id = mi.item_id
+          INNER JOIN stall s ON mi.stall_id = s.stall_id
           LEFT JOIN (
-            SELECT order_item_id, SUM(price_modifier) as modifier_total
+            SELECT order_item_id, SUM(price_modifier) AS modifier_total
             FROM order_item_modifiers
             GROUP BY order_item_id
           ) mod_sum ON oi.order_item_id = mod_sum.order_item_id
-          LEFT JOIN "order" o ON oi.order_id = o.order_id
-          LEFT JOIN "table" t ON o.table_id = t.table_id
-          WHERE ${venueId ? 's.venue_id = $3 AND ' : ''}(o.order_id IS NULL OR (
-            o.created_at >= $1 
+          WHERE o.created_at >= $1
             AND o.created_at < $2
-            AND o.status != 'CANCELLED'
-          ))
-          GROUP BY s.stall_id, s.name
+            AND o.status != 'CANCELLED'${venueCondition}
         ),
-        custom_stall_orders AS (
-          SELECT 
+        custom_lines AS (
+          SELECT
             s.stall_id,
-            COUNT(coi.order_item_id)::int as order_count,
-            COALESCE(SUM(coi.price * coi.quantity), 0) as order_total
-          FROM stall s
-          LEFT JOIN custom_order_item coi ON s.stall_id = coi.stall_id
-            AND coi.created_at >= $1 AND coi.created_at < $2
-            AND coi.status != 'CANCELLED'
-          WHERE ${venueId ? 's.venue_id = $3' : 'TRUE'}
-          GROUP BY s.stall_id
+            s.name AS stall_name,
+            CONCAT('CUSTOM-', coi.order_item_id::text) AS order_key,
+            (coi.price * coi.quantity) AS line_total
+          FROM custom_order_item coi
+          INNER JOIN stall s ON coi.stall_id = s.stall_id
+          WHERE coi.created_at >= $1
+            AND coi.created_at < $2
+            AND coi.status != 'CANCELLED'${venueCondition}
+        ),
+        all_lines AS (
+          SELECT stall_id, stall_name, order_key, line_total FROM standard_lines
+          UNION ALL
+          SELECT stall_id, stall_name, order_key, line_total FROM custom_lines
         )
-        SELECT 
-          COALESCE(ss.stall_id, cs.stall_id) as stall_id,
-          ss.stall_name,
-          (COALESCE(ss.order_count, 0) + COALESCE(cs.order_count, 0))::int as total_orders,
-          COALESCE(ss.order_total, 0) + COALESCE(cs.order_total, 0) as total_amount
-        FROM standard_stall_orders ss
-        FULL OUTER JOIN custom_stall_orders cs ON ss.stall_id = cs.stall_id
-        ORDER BY ss.stall_name`,
+        SELECT
+          stall_id,
+          stall_name,
+          COUNT(DISTINCT order_key)::int AS total_orders,
+          COALESCE(SUM(line_total), 0) AS total_amount
+        FROM all_lines
+        GROUP BY stall_id, stall_name
+        ORDER BY stall_name`,
         params
       );
 
