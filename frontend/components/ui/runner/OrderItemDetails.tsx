@@ -71,9 +71,6 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
       setError(error.message);
     }
   };
-  console.log(
-    currentItem
-  )
 
   if (!open || !currentItem) return null;
   
