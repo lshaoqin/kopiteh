@@ -25,6 +25,7 @@ const CUSTOM_ITEM_COLUMNS = new Set([
   'order_item_name',
   'quantity',
   'remarks',
+  'volunteer_name',
 ]);
 
 // --- Helper Fuction ---
@@ -32,7 +33,7 @@ async function findStandardById(id: number): Promise<FetchOrderItemResponsePaylo
   try {    
     const result = await BaseService.query(
       `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
-      oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, \'STANDARD\' AS type
+      oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, o.volunteer_name, \'STANDARD\' AS type
       FROM order_item oi 
       JOIN menu_item m ON oi.item_id = m.item_id 
       JOIN stall s ON m.stall_id = s.stall_id
@@ -107,7 +108,7 @@ export const OrderItemService = {
     try {
       const baseItems = await BaseService.query(
         `SELECT oi.order_item_id, m.stall_id, s.name as stall_name, o.table_id, t.table_number, o.user_id, m.name as order_item_name, 
-        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, 'STANDARD' AS type
+        oi.item_id, oi.status, oi.quantity, oi.price, o.created_at, oi.remarks, o.volunteer_name, 'STANDARD' AS type
         FROM order_item oi 
         JOIN menu_item m ON oi.item_id = m.item_id 
         JOIN stall s ON m.stall_id = s.stall_id
@@ -231,8 +232,8 @@ export const OrderItemService = {
       } else {
         const customItemPayload = request as CustomOrderItemPayload;
         result = await BaseService.query(
-          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks) 
-          VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7) RETURNING *, \'CUSTOM\' AS type`,
+          `INSERT INTO custom_order_item (stall_id, table_id, user_id, order_item_name, status, quantity, price, created_at, remarks, volunteer_name) 
+          VALUES ($1,$2,$3,$4,'INCOMING',$5,$6,NOW(),$7,$8) RETURNING *, \'CUSTOM\' AS type`,
           [
             customItemPayload.stall_id,
             customItemPayload.table_id,
@@ -241,6 +242,7 @@ export const OrderItemService = {
             customItemPayload.quantity,
             customItemPayload.price,
             customItemPayload.remarks ?? null,
+            customItemPayload.volunteer_name,
           ]
         );
         

@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS "order" (
   status      VARCHAR NOT NULL DEFAULT 'pending',
   total_price DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_price >= 0),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  remarks     TEXT
+  remarks     TEXT,
+  volunteer_name VARCHAR NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_order_table_id ON "order" (table_id);
 
@@ -137,7 +138,8 @@ CREATE TABLE IF NOT EXISTS custom_order_item (
   quantity      INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   price         DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0), -- unit price
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  remarks       TEXT
+  remarks       TEXT,
+  volunteer_name VARCHAR NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_custom_order_item_stall_id ON custom_order_item (stall_id);
 CREATE INDEX IF NOT EXISTS idx_custom_order_item_table_id ON custom_order_item (table_id);
