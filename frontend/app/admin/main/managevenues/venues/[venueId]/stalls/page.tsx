@@ -257,7 +257,7 @@ export default function Stalls() {
                 )}
 
                 {!loading && !error && stalls.length > 0 && (
-                    <ul className="mt-4 grid grid-cols-3 gap-10">
+                    <ul className="mt-4 grid grid-cols-1 custom:grid-cols-2 xl:grid-cols-3 gap-10">
                         {stalls.map((s) => (
                             <li key={s.stall_id}>
                                 <Link href={`/admin/main/managevenues/venues/${venueId}/stalls/${s.stall_id}/items`}>

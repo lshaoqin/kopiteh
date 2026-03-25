@@ -118,7 +118,7 @@ export default function ViewAnalytics() {
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i)
 
   return (
-    <main className="p-6 max-w-7xl mx-auto">
+    <main className="p-6 max-w-7xl mx-auto w-full min-w-0">
       <h1 className="text-3xl font-bold mb-6">View Analytics</h1>
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Filters</h2>

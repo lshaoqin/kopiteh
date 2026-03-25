@@ -274,7 +274,7 @@ export default function VenuesPage() {
         )}
 
         {!loading && !error && venues.length > 0 && (
-          <ul className="mt-4 grid grid-cols-3 gap-10">
+          <ul className="mt-4 grid grid-cols-1 custom:grid-cols-2 xl:grid-cols-3 gap-10">
             {venues.map((v) => (
               <li key={v.venue_id}>
                 <Link href={`/admin/main/managevenues/venues/${v.venue_id}/stalls`}>

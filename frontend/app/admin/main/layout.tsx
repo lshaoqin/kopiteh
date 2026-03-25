@@ -8,7 +8,7 @@ export default function AdminAuthLayout({
     return (
         <div className="min-h-screen flex">
             <AdminSideBar />
-            <div className="md:ml-[352px] flex-1 flex bg-white pt-14 md:pt-0">
+            <div className="md:ml-[352px] flex-1 flex bg-white pt-14 md:pt-0 overflow-hidden min-w-0">
                 {children}
             </div>
         </div>
