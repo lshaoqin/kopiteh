@@ -17,6 +17,7 @@ router.get('/order/:id', orderIdParamValidation, runValidation, OrderController.
 router.get('/order/user/:user_id', userIdParamValidation, runValidation, OrderController.getByUser);
 router.get('/order/analytics/monthly', authenticateToken, analyticsQueryValidation, runValidation, OrderController.getMonthlyAnalytics);
 router.get('/order', authenticateToken, OrderController.getAllWithFilters);
+router.get('/order/table/:table_id', OrderController.getByTable);
 
 // Public writes
 interface RequestWithTraceId extends Request {

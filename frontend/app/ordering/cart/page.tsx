@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton"; 
 import { CartItemRow } from "@/components/ui/CartItemRow";
 import { api } from "@/lib/api";
+import { Plus } from "lucide-react";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, clearCart, totalPrice, tableId } = useCartStore();
+  const { items, venueId, updateQuantity, clearCart, totalPrice, tableId } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -31,7 +32,7 @@ export default function CartPage() {
 
         // Success
         clearCart();
-        router.push("/ordering/stalls");
+        router.push(`/ordering/stalls?venue=${venueId}&table=${tableId}`);
         alert("Order sent to kitchen!");
         
     } catch (error: any) {
@@ -87,6 +88,16 @@ export default function CartPage() {
                 onDecrease={() => handleDecrease(item.uniqueId)}
             />
         ))}
+
+        <div className="pt-4">
+            <button 
+                onClick={() => router.push("/ordering/stalls")}
+                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-50 transition-colors"
+            >
+                <Plus size={18} />
+                <span className="font-medium">Add more items</span>
+            </button>
+        </div>
       </div>
 
       <div className="px-6 mt-10 space-y-3 border-t border-slate-100 pt-6">

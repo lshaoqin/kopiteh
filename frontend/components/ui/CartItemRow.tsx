@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { CartItem } from "@/stores/cart.store";
 
 interface CartItemRowProps {
@@ -60,24 +60,27 @@ export function CartItemRow({ item, onIncrease, onDecrease }: CartItemRowProps) 
       </div>
 
       {/* RIGHT: Quantity Controls */}
-      <div className="flex items-center gap-3 pt-1">
-        {/* Minus Button */}
+      <div className="flex items-center gap-3 pt-1 bg-slate-50/50 p-1 rounded-full border border-slate-100">
+        
         <button 
             onClick={onDecrease}
-            className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors active:scale-95"
+            className={`w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center transition-all active:scale-90 shadow-sm
+                ${item.quantity === 1 ? 'text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50' : 'text-slate-600 hover:bg-slate-50'}`}
         >
-            <Minus className="w-4 h-4" />
+            {item.quantity === 1 ? (
+                <Trash2 className="w-4 h-4" />
+            ) : (
+                <Minus className="w-4 h-4" />
+            )}
         </button>
         
-        {/* Number */}
-        <span className="text-base font-semibold text-slate-700 w-4 text-center">
+        <span className="text-base font-bold text-slate-800 w-4 text-center">
             {item.quantity}
         </span>
         
-        {/* Plus Button */}
         <button 
             onClick={onIncrease}
-            className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors active:scale-95"
+            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-90 shadow-sm"
         >
             <Plus className="w-4 h-4" />
         </button>

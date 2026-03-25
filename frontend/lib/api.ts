@@ -189,6 +189,15 @@ export const api = {
     } as OrderItem;
   },
 
+  getOrdersByTable: async (tableId: number, venueId?: number): Promise<any[]> => {
+    const url = `/order/table/${tableId}${venueId ? `?venueId=${venueId}` : ''}`;
+    const data = await fetchClient<any>(url);
+  
+    if (data && data.orders) return data.orders;
+    if (Array.isArray(data)) return data;
+    return [];
+  },
+
   createOrder: async (orderData: {
     table_id: number;
     total_price: number;
