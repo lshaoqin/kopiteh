@@ -82,7 +82,7 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
           <div className="text-xs text-gray-500 flex justify-between w-full">
             <div className="flex flex-col">
               <span>Table: {currentItem.table_number}</span>
-              <span>Volunteer Name: {currentItem.volunteer_name}</span>
+              <span>Volunteer: {currentItem.volunteer_name}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="px-2 py-2 rounded-md text-white text-xs font-medium bg-blue-600">

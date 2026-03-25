@@ -276,7 +276,7 @@ export default function Home() {
             {/* Sort the order items by created_at in descending order */}
             {filteredOrderItems
               .slice()
-              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .sort((a) => new Date(a.created_at).getTime())
               .map((item, index) => {
                 const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
                 const opacity = 1 - (swipe.x / 150) * 0.3;
@@ -336,6 +336,7 @@ export default function Home() {
 
                 <div className="text-right">
                   <p className="font-medium">Table {item.table_number}</p>
+                  <p className="text-sm text-gray-600">{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
               </div>
