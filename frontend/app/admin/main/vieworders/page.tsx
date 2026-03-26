@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth.store"
 import { useRouter } from "next/navigation"
 import { FilterSection } from "./components/FilterSection"
 import { OrdersTable } from "./components/OrdersTable"
+import { Button } from "@/components/ui/button"
 import { PaginationControls } from "./components/PaginationControls"
 import type { Order as BaseOrder, OrderItem as BaseOrderItem, OrderItemModifier, Venue, Stall } from "../../../../../types"
 
@@ -39,13 +40,13 @@ export default function ViewOrders() {
   const [error, setError] = useState<string | null>(null)
   const [expandedOrders, setExpandedOrders] = useState<Set<number | string>>(new Set())
   const [loadingItems, setLoadingItems] = useState<Set<number | string>>(new Set())
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalOrders, setTotalOrders] = useState(0)
   const ordersPerPage = 15
-  
+
   // Filters
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -254,7 +255,7 @@ export default function ViewOrders() {
 
   const toggleOrderExpansion = (orderId: number | string) => {
     const newExpanded = new Set(expandedOrders)
-    
+
     if (newExpanded.has(orderId)) {
       newExpanded.delete(orderId)
     } else {
@@ -266,7 +267,7 @@ export default function ViewOrders() {
       }
       // For custom orders, the data is already in the order object
     }
-    
+
     setExpandedOrders(newExpanded)
   }
 
@@ -305,12 +306,103 @@ export default function ViewOrders() {
     return null
   }
 
+  const handleExportOrders = async () => {
+    const XLSX = require("xlsx")
+
+    const params = new URLSearchParams()
+    if (startDate) params.append('startDate', new Date(startDate).toISOString())
+    if (endDate) params.append('endDate', new Date(endDate).toISOString())
+    if (tableNumber) params.append('tableNumber', tableNumber)
+    if (venueId) params.append('venueId', venueId)
+    if (stallId) params.append('stallId', stallId)
+    params.append('limit', '10000') // fetch all matching, no pagination
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/order?${params.toString()}`,
+      { headers: { "Authorization": `Bearer ${accessToken}` } }
+    )
+    const data = await res.json()
+    const allOrders: Order[] = data.payload?.data?.orders ?? []
+
+    const sheetData = [
+      ["Order ID", "Date & Time", "Venue", "Table", "Status", "Type", "Total"],
+      ...allOrders.map(o => [
+        o.order_id,
+        new Date(o.created_at).toLocaleString(),
+        o.venue_name,
+        o.table_number,
+        o.status,
+        o.order_type ?? "STANDARD",
+        `$${parseFloat(o.total_price?.toString() ?? "0").toFixed(2)}`,
+      ])
+    ]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetData), "Orders")
+    XLSX.writeFile(wb, `orders_filtered_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }
+
+  const handleExportAllVenues = async () => {
+    const XLSX = require("xlsx")
+
+    const sheetRows: any[][] = [
+      ["Order ID", "Date & Time", "Venue", "Table", "Status", "Type", "Total"]
+    ]
+
+    for (const venue of venues) {
+      const params = new URLSearchParams()
+      params.append('venueId', venue.venue_id.toString())
+      params.append('limit', '10000')
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/order?${params.toString()}`,
+          { headers: { "Authorization": `Bearer ${accessToken}` } }
+        )
+        const data = await res.json()
+        const venueOrders: Order[] = data.payload?.data?.orders ?? []
+
+        venueOrders.forEach(o => {
+          sheetRows.push([
+            o.order_id,
+            new Date(o.created_at).toLocaleString(),
+            o.venue_name,
+            o.table_number,
+            o.status,
+            o.order_type ?? "STANDARD",
+            `$${parseFloat(o.total_price?.toString() ?? "0").toFixed(2)}`,
+          ])
+        })
+      } catch (err) {
+        console.error(`Failed to fetch orders for ${venue.name}:`, err)
+      }
+    }
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetRows), "All Orders")
+    XLSX.writeFile(wb, `orders_all_venues_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }
+
   return (
     <main className="p-6 max-w-7xl mx-auto w-full">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">View Orders</h1>
       </div>
 
+      <div className="flex justify-end gap-3 mb-4">
+        <Button
+          onClick={handleExportOrders}
+          className="bg-green-600 hover:bg-green-700 text-white py-1"
+        >
+          Export Current Filters
+        </Button>
+        <Button
+          onClick={handleExportAllVenues}
+          className="bg-blue-600 hover:bg-blue-700 text-white py-1"
+        >
+          Export All Venues
+        </Button>
+      </div>
       <FilterSection
         startDate={startDate}
         endDate={endDate}
