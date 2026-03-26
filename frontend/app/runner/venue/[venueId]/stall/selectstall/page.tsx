@@ -123,7 +123,6 @@ function StallSelectionContent() {
             ))}
             </div>
         </div>
-        <FloatingCartButton />
       </div>
     </div>
   );
