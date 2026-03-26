@@ -73,37 +73,9 @@ export default function TableSelectionPage() {
     }
 
     initializeSelection();
-  }, [urlVenueId, urlTableId, isHydrated, volunteerName, router, venueId, tableId, setVenueId, setTableId]);
+  }, [urlVenueId, urlTableId, isHydrated, router, venueId, tableId, setVenueId, setTableId]);
 
-  useEffect(() => {
-    async function loadTables() {
-      // 1. Determine the effective Venue ID (URL takes priority over Store)
-      const effectiveVenueId = urlVenueId ? parseInt(urlVenueId) : venueId;
 
-      // 2. If no venue ID is found at all, redirect back to venue selection
-      if (!effectiveVenueId) {
-        router.push("/ordering/venue");
-        return;
-      }
-
-      // 3. Sync Store if the URL has a venue that differs from Store state
-      if (urlVenueId && parseInt(urlVenueId) !== venueId) {
-        setVenueId(parseInt(urlVenueId));
-      }
-
-      try {
-        setLoading(true);
-        const data = await api.getTablesByVenue(effectiveVenueId); 
-        setTables(data);
-      } catch (err) {
-        console.error("Failed to load tables:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadTables();
-  }, [urlVenueId, venueId, setVenueId, router]);
 
 
   const handleSelectOption = (id: number, number: string) => {

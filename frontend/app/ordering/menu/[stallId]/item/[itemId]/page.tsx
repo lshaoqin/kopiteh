@@ -89,27 +89,31 @@ function ItemCustomizationContent() {
 
   // --- LOGIC ---
 
-  const handleToggle = (modId: number, sectionId: number, maxSelections: number) => {
+  const handleToggle = (modId: number, sectionId: number, minSelections:number, maxSelections: number) => {
     setSelectedMods(prev => {
         const isSelected = prev.includes(modId);
         
         if (maxSelections === 1) {
-        // If the item is already selected and the limit is 1, 
-        // do nothing (prevent unselecting).
-        if (isSelected) return prev;
+        if (isSelected) {
+            // --- THE KEY FIX ---
+            // If it's optional (min is 0), allow unselecting.
+            // If it's required (min >= 1), do nothing (prevent unselecting).
+            if (minSelections === 0) {
+                return prev.filter(id => id !== modId);
+            }
+            return prev; 
+        }
 
-        // Otherwise, perform "Radio" logic: 
-        // remove any other selection from this specific section
+        // If selecting a NEW item in a Max 1 section:
+        // Remove any other selection from this section and add the new one (Radio behavior)
         const others = prev.filter(id => {
             const m = modifiers.find(mod => mod.option_id === id);
             return m && m.section_id !== sectionId;
         });
-        
-        // Add the new selection
         return [...others, modId];
         }
 
-        // Checkbox Logic
+        // Standard Multi-select Logic (Max > 1 or Max 0)
         return isSelected ? prev.filter(id => id !== modId) : [...prev, modId];
     });
   };
@@ -151,7 +155,6 @@ function ItemCustomizationContent() {
 
 if (loading) return <div className="p-10 text-center text-slate-400">Loading...</div>;
 
-// --- UPDATE THIS LINE ---
 if (error || !item || item.is_available === false) {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
@@ -209,7 +212,7 @@ if (error || !item || item.is_available === false) {
                                     price={Number(mod.price_modifier)}
                                     isSelected={selectedMods.includes(mod.option_id)}
                                     isRadio={section.max_selections === 1}
-                                    onClick={() => handleToggle(mod.option_id, section.section_id, section.max_selections ?? 0)}
+                                    onClick={() => handleToggle(mod.option_id, section.section_id, section.min_selections ?? 0, section.max_selections ?? 0)}
                                 />
                             ))
                         }
