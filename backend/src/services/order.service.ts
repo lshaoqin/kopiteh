@@ -305,6 +305,7 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
     startDate?: string;
     endDate?: string;
     tableNumber?: string;
+    tableId?: number;  
     venueId?: number;
     stallId?: number;
     page?: number;
@@ -372,6 +373,11 @@ async create(request: OrderPayload): Promise<ServiceResult<any>> {
       if (filters.tableNumber) {
         conditions.push(`t.table_number = $${paramIndex++}`);
         params.push(filters.tableNumber);
+      }
+
+      if (filters.tableId) {
+        conditions.push(`t.table_id = $${paramIndex++}`);
+        params.push(filters.tableId);
       }
 
       if (filters.venueId) {

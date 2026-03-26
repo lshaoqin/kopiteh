@@ -94,12 +94,19 @@ function ItemCustomizationContent() {
         const isSelected = prev.includes(modId);
         
         if (maxSelections === 1) {
-            // Radio Logic
-            const others = prev.filter(id => {
-                const m = modifiers.find(mod => mod.option_id === id);
-                return m && m.section_id !== sectionId;
-            });
-            return [...others, modId];
+        // If the item is already selected and the limit is 1, 
+        // do nothing (prevent unselecting).
+        if (isSelected) return prev;
+
+        // Otherwise, perform "Radio" logic: 
+        // remove any other selection from this specific section
+        const others = prev.filter(id => {
+            const m = modifiers.find(mod => mod.option_id === id);
+            return m && m.section_id !== sectionId;
+        });
+        
+        // Add the new selection
+        return [...others, modId];
         }
 
         // Checkbox Logic
@@ -142,8 +149,18 @@ function ItemCustomizationContent() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-slate-400">Loading...</div>;
-  if (error || !item) return <div className="p-10 text-center text-red-500">Item not found</div>;
+if (loading) return <div className="p-10 text-center text-slate-400">Loading...</div>;
+
+// --- UPDATE THIS LINE ---
+if (error || !item || item.is_available === false) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+            <h2 className="text-xl font-bold text-slate-800">Item Unavailable</h2>
+            <p className="text-slate-500 mt-2">Sorry, this item is currently not being served.</p>
+            <Button className="mt-6" onClick={() => router.back()}>Go Back</Button>
+        </div>
+    );
+}
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-600 pb-48">
@@ -184,6 +201,7 @@ function ItemCustomizationContent() {
                     <div className="border-t border-slate-100">
                         {modifiers
                             .filter(m => m.section_id === section.section_id)
+                            .filter(m => m.is_available !== false) 
                             .map(mod => (
                                 <ModifierRow 
                                     key={mod.option_id}

@@ -17,6 +17,7 @@ interface CartState {
   isHydrated: boolean;
   venueId: number | null;
   tableId: number | null;
+  volunteerName: string;
 
   // Actions
   addItem: (item: MenuItem, modifiers: MenuItemModifier[], quantity: number, stallName: string, remarks?: string) => void;
@@ -24,8 +25,9 @@ interface CartState {
   updateQuantity: (uniqueId: string, delta: number) => void;
   updateItem: (uniqueId: string, updates: Partial<Omit<CartItem, 'uniqueId'>>) => void;
   clearCart: () => void;
-  setVenueId: (id: number) => void;
-  setTableId: (id: number) => void;
+  setVenueId: (id: number | null) => void; 
+  setTableId: (id: number | null) => void; 
+  setVolunteerName: (name: string) => void; 
   
   // Getters
   totalPrice: () => number;
@@ -41,8 +43,11 @@ export const useCartStore = create<CartState>()(
       isHydrated: false,
       venueId: null,
       tableId: null,
+      volunteerName: "",
+
       setVenueId: (id) => set({ venueId: id }),
       setTableId: (id) => set({ tableId: id }),
+      setVolunteerName: (name) => set({ volunteerName: name }),
 
       addItem: (menuItem, modifiers, quantity, stallName, remarks = "") => {
         // 1. Generate Unique ID

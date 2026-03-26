@@ -76,7 +76,7 @@ async function attachModifiers(
 
   const mods = await BaseService.query(
     `
-    SELECT option_id, option_name AS name, price_modifier AS price
+    SELECT order_item_id, option_id, option_name AS name, price_modifier AS price
     FROM order_item_modifiers
     WHERE order_item_id = ANY($1)
     `,
