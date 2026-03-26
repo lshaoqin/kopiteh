@@ -2,10 +2,10 @@
 BEGIN;
 
 -- Add volunteer_name column to order
-ALTER TABLE "order" ADD COLUMN volunteer_name VARCHAR NOT NULL;
+ALTER TABLE "order" ADD COLUMN volunteer_name VARCHAR NOT NULL DEFAULT 'Unknown Volunteer';
 
 -- Add volunteer_name column to custom_order_item
-ALTER TABLE custom_order_item ADD COLUMN volunteer_name VARCHAR NOT NULL;
+ALTER TABLE custom_order_item ADD COLUMN volunteer_name VARCHAR NOT NULL DEFAULT 'Unknown Volunteer';
 
 
 COMMIT;
