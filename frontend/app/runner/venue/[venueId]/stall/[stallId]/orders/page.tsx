@@ -311,7 +311,11 @@ export default function Home() {
             {/* Sort the order items by created_at in descending order */}
             {filteredOrderItems
               .slice()
-              .sort((a) => new Date(a.created_at).getTime())
+              .sort((a, b) => {
+                const aTime = Number.isNaN(Date.parse(a.created_at)) ? 0 : Date.parse(a.created_at);
+                const bTime = Number.isNaN(Date.parse(b.created_at)) ? 0 : Date.parse(b.created_at);
+                return aTime - bTime;
+              })
               .map((item) => {
                 const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
                 const opacity = 1 - (swipe.x / 150) * 0.3;
