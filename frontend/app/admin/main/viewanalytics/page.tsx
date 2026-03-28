@@ -28,7 +28,7 @@ export default function ViewAnalytics() {
   const [analytics, setAnalytics] = useState<MonthlyAnalytics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const { user, isHydrated, logout, accessToken } = useAuthStore()
   const router = useRouter()
 
@@ -76,10 +76,10 @@ export default function ViewAnalytics() {
 
   const fetchAnalytics = async () => {
     if (!selectedVenueId) return
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/order/analytics/monthly?year=${selectedYear}&month=${selectedMonth}&venueId=${selectedVenueId}`,
@@ -117,11 +117,103 @@ export default function ViewAnalytics() {
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i)
 
+  const handleExportExcel = () => {
+    if (!analytics) return
+
+    const XLSX = require("xlsx")
+
+    const venueName = venues.find(v => v.venue_id === selectedVenueId)?.name ?? "venue"
+    const monthLabel = monthNames[selectedMonth - 1]
+
+    // Summary sheet data
+    const summaryData = [
+      ["Venue", venueName],
+      ["Month", `${monthLabel} ${selectedYear}`],
+      ["Total Orders", analytics.total_orders],
+      ["Total Expenditure", `$${parseFloat(analytics.total_amount).toFixed(2)}`],
+    ]
+
+    // Stall breakdown sheet data
+    const stallData = [
+      ["Stall Name", "Total Orders", "Total Expenditure"],
+      ...analytics.stalls.map(s => [
+        s.stall_name,
+        s.total_orders,
+        `$${parseFloat(s.total_amount).toFixed(2)}`,
+      ]),
+    ]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "Summary")
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(stallData), "Breakdown by Stall")
+
+    XLSX.writeFile(wb, `analytics_${venueName}_${monthLabel}_${selectedYear}.xlsx`)
+  }
+
+  const handleExportAllVenues = async () => {
+    const XLSX = require("xlsx")
+    const wb = XLSX.utils.book_new()
+    const monthLabel = monthNames[selectedMonth - 1]
+
+    for (const venue of venues) {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/order/analytics/monthly?year=${selectedYear}&month=${selectedMonth}&venueId=${venue.venue_id}`,
+          { headers: { "Authorization": `Bearer ${accessToken}` } }
+        )
+        const data = await res.json()
+        const venueAnalytics: MonthlyAnalytics = data.payload?.data
+
+        if (!venueAnalytics) continue
+
+        const sheetData = [
+          ["Venue", venue.name],
+          ["Month", `${monthLabel} ${selectedYear}`],
+          ["Total Orders", venueAnalytics.total_orders],
+          ["Total Expenditure", `$${parseFloat(venueAnalytics.total_amount).toFixed(2)}`],
+          [],
+          ["Stall Name", "Total Orders", "Total Expenditure"],
+          ...venueAnalytics.stalls.map(s => [
+            s.stall_name,
+            s.total_orders,
+            `$${parseFloat(s.total_amount).toFixed(2)}`,
+          ]),
+        ]
+
+        const sheetName = venue.name.slice(0, 31)
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetData), sheetName)
+      } catch (err) {
+        console.error(`Failed to fetch analytics for ${venue.name}:`, err)
+      }
+    }
+
+    XLSX.writeFile(wb, `analytics_all_venues_${monthLabel}_${selectedYear}.xlsx`)
+  }
+
   return (
     <main className="p-6 max-w-7xl mx-auto w-full min-w-0">
       <h1 className="text-3xl font-bold mb-6">View Analytics</h1>
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Filters</h2>
+       
+        {!loading && (
+          <div className="flex justify-end gap-3 mb-6">
+            {analytics && (
+              <Button
+                onClick={handleExportExcel}
+                className="bg-green-600 py-1 hover:bg-green-700 text-white"
+              >
+                Export This Venue
+              </Button>
+            )}
+            <Button
+              onClick={handleExportAllVenues}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Export All Venues
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Venue</label>
