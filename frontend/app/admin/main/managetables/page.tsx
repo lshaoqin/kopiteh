@@ -266,7 +266,7 @@ export default function ManageTables() {
                             {/* Individual Table */}
                             <div className="mb-6">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Add Individual Table</h3>
-                                <div className="flex gap-4 items-end">
+                                <div className="flex flex-wrap gap-4 items-end">
                                     <div className="flex-1">
                                         <label className="block text-sm font-medium mb-2">Table Name</label>
                                         <input
@@ -301,7 +301,7 @@ export default function ManageTables() {
                             {/* Range of Tables */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Add Tables by Range</h3>
-                                <div className="flex gap-4 items-end">
+                                <div className="flex flex-wrap gap-4 items-end">
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Start Number</label>
                                         <input

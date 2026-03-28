@@ -60,6 +60,8 @@
   --color-white:  #FFFFFF;
   --color-grey-primary: #545F71;
   --color-grey-secondary: #EEF1F4;
+
+  --breakpoint-custom: 866px;
 }
 
 @layer base {
