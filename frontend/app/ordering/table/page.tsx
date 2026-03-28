@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Loader2, User } from "lucide-react";
+import { ChevronDown, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart.store";
 import { Button } from "@/components/ui/button"; 
@@ -11,7 +11,7 @@ import { BackButton } from "@/components/ui/BackButton";
 import { DiningTable } from "@/../types/item";
 import { api } from "@/lib/api";
 
-export default function TableSelectionPage() {
+function TableSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -21,6 +21,7 @@ export default function TableSelectionPage() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [tables, setTables] = useState<DiningTable[]>([]);
+  const [tablesVenueId, setTablesVenueId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);
 
@@ -55,25 +56,27 @@ export default function TableSelectionPage() {
       if (urlVenueId && parseInt(urlVenueId) !== venueId) setVenueId(parseInt(urlVenueId));
       if (urlTableId && parseInt(urlTableId) !== tableId) setTableId(parseInt(urlTableId));
 
-      try {
-        setLoading(true);
-        const data = await api.getTablesByVenue(effectiveVenueId); 
-        setTables(data);
-        
-        // Pre-select the dropdown label if a table exists in store/URL
-        const currentTable = data.find(t => t.table_id === effectiveTableId);
-        if (currentTable) {
-          setSelectedTableNumber(currentTable.table_number.toString());
+      if (!tables.length) { // Do not fetch tables again if we already have them
+        try {
+          setLoading(true);
+          const data = await api.getTablesByVenue(effectiveVenueId); 
+          setTables(data);
+          
+          // Pre-select the dropdown label if a table exists in store/URL
+          const currentTable = data.find(t => t.table_id === effectiveTableId);
+          if (currentTable) {
+            setSelectedTableNumber(currentTable.table_number.toString());
+          }
+        } catch (err) {
+          console.error("Failed to load tables:", err);
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Failed to load tables:", err);
-      } finally {
-        setLoading(false);
       }
     }
 
     initializeSelection();
-  }, [urlVenueId, urlTableId, isHydrated, router, venueId, tableId, setVenueId, setTableId]);
+  }, [urlVenueId, urlTableId, isHydrated, router, venueId, tableId, tables, tablesVenueId, setVenueId, setTableId]);
 
 
 
@@ -178,5 +181,21 @@ export default function TableSelectionPage() {
 
       </main>
     </div>
+  );
+}
+
+function TableSelectionFallback() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans text-slate-600 px-6">
+      <p className="text-sm text-slate-500">Loading table selection...</p>
+    </div>
+  );
+}
+
+export default function TableSelectionPage() {
+  return (
+    <Suspense fallback={<TableSelectionFallback />}>
+      <TableSelectionContent />
+    </Suspense>
   );
 }
