@@ -6,7 +6,7 @@ import { BackButton } from "@/components/ui/BackButton";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { OrderItemDetails } from "@/components/ui/runner/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
 import { Stall } from "../../../../../../../../types/stall";
 import { useWebSocket } from "@/context/WebSocketContext";
@@ -23,6 +23,8 @@ export default function Home() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<Stall | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+  const [newIncomingIds, setNewIncomingIds] = useState<Set<number>>(new Set());
+  const previousStatusRef = useRef<OrderItemStatus>("INCOMING");
 
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
@@ -68,6 +70,14 @@ export default function Home() {
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
     setOrderItems((prev) => [...prev, data.orderItem]);
+
+    if (data.orderItem.status === "INCOMING") {
+      setNewIncomingIds((prev) => {
+        const next = new Set(prev);
+        next.add(data.orderItem.order_item_id);
+        return next;
+      });
+    }
   }, []);
 
   const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
@@ -76,6 +86,15 @@ export default function Home() {
         item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
       )
     );
+
+    if (data.orderItem.status !== "INCOMING") {
+      setNewIncomingIds((prev) => {
+        if (!prev.has(data.orderItem.order_item_id)) return prev;
+        const next = new Set(prev);
+        next.delete(data.orderItem.order_item_id);
+        return next;
+      });
+    }
   }, []);
 
   // Join stall room and set up WebSocket listeners
@@ -95,6 +114,12 @@ export default function Home() {
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
+  useEffect(() => {
+    if (previousStatusRef.current === "INCOMING" && selectedStatus !== "INCOMING") {
+      setNewIncomingIds(new Set());
+    }
+    previousStatusRef.current = selectedStatus;
+  }, [selectedStatus]);
 
   const createOrderItem = async (
     data: {
@@ -239,7 +264,14 @@ export default function Home() {
                 : "bg-gray-200 text-gray-700"
             }`}
           >
-            Incoming
+            <span className="inline-flex items-center gap-2">
+              Incoming
+              {newIncomingIds.size > 0 && (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {newIncomingIds.size}
+                </span>
+              )}
+            </span>
           </button>
           <button 
           onClick={() => setSelectedStatus("PREPARING")}
@@ -277,14 +309,14 @@ export default function Home() {
             {filteredOrderItems
               .slice()
               .sort((a) => new Date(a.created_at).getTime())
-              .map((item, index) => {
+              .map((item) => {
                 const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
                 const opacity = 1 - (swipe.x / 150) * 0.3;
                 
                 return (
               <div 
-                key={index}
-                className="relative overflow-hidden"
+                key={item.order_item_id}
+                className="relative overflow-visible"
               >
                 {/* Background indicator */}
                 {swipe.x > 0 && (
@@ -312,12 +344,21 @@ export default function Home() {
                   onClick={
                     () => {
                       if (!swipe.isSwiping) {
+                        setNewIncomingIds((prev) => {
+                          if (!prev.has(item.order_item_id)) return prev;
+                          const next = new Set(prev);
+                          next.delete(item.order_item_id);
+                          return next;
+                        });
                         setSelectedOrderItem(item);
                         setShowOrderItemDetails(true);
                       }
                     }
                   }
                 >
+                {item.status === "INCOMING" && newIncomingIds.has(item.order_item_id) && (
+                  <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
+                )}
                 <div>
                   <p className="font-medium">
                     {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
