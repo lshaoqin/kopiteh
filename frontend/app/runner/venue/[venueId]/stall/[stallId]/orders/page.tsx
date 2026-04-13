@@ -60,6 +60,7 @@ export default function Home() {
       if (!response) {
         throw new Error("Failed to fetch order items");
       }
+      console.log("Fetched order items:", response);
       setOrderItems(response);
     } catch (error: any) {
       setError(error.message);
