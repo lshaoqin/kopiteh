@@ -627,18 +627,20 @@ export default function ManageItemsPage() {
                                                                 <Button
                                                                     onClick={() => handleItemToggleAvailability(it)}
                                                                     disabled={togglingItems.has(it.item_id)}
-                                                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium transition-opacity
-                                                                             ${it.is_available
-                                                                            ? "bg-green-50 text-green-700 hover:bg-green-100"
-                                                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
-                                                                            disabled:opacity-40 disabled:cursor-not-allowed`}
+                                                                    variant="ghost"
+                                                                    size="bare"
+                                                                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out
+                                                                        ${it.is_available ? "bg-green-500" : "bg-gray-300"}
+                                                                        disabled:opacity-40 disabled:cursor-not-allowed`}
                                                                     aria-label={it.is_available ? "Mark unavailable" : "Mark available"}
+                                                                    role="switch"
+                                                                    aria-checked={it.is_available}
                                                                 >
-                                                                    {togglingItems.has(it.item_id)
-                                                                        ? "…"
-                                                                        : it.is_available
-                                                                            ? "Yes"
-                                                                            : "No"}
+                                                                    <span
+                                                                        className={`absolute left-0.75 inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+                                                                            ${it.is_available ? "translate-x-4" : "translate-x-0"}
+                                                                            ${togglingItems.has(it.item_id) ? "opacity-60" : ""}`}
+                                                                    />
                                                                 </Button>
                                                             </td>
 
