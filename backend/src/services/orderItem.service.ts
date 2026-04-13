@@ -46,21 +46,29 @@ async function findStandardById(id: number): Promise<FetchOrderItemResponsePaylo
       throw new Error('Order Item not found');
     }
 
-    // 🔹 Fetch modifiers
+    // 🔹 Fetch modifiers from both order_item and menu_item
     const modifiersResult = await BaseService.query(
       `
       SELECT 
-        option_id,
-        option_name AS name,
-        price_modifier AS price
+        option_id, option_name AS name, price_modifier AS price
       FROM order_item_modifiers
       WHERE order_item_id = $1
+      `,
+      [id]
+    );
+    const menuModifiersResult = await BaseService.query(
+      `
+      SELECT 
+        option_id, name, price_modifier AS price
+      FROM menu_item_modifier
+      WHERE item_id = (SELECT item_id FROM order_item WHERE order_item_id = $1)
       `,
       [id]
     )
     return {
       ...result.rows[0],
       modifiers: modifiersResult.rows, // OrderModifierPayload[]
+      menuModifiers: menuModifiersResult.rows, // MenuModifierPayload[]
     };
   } catch (error) {
     throw error;
@@ -292,11 +300,12 @@ export const OrderItemService = {
             [id]
           );
           for (const mod of modifiers) {
+            const modifierPrice = Number((mod as any).price_modifier ?? mod.price ?? 0);
             await BaseService.query(
               `INSERT INTO order_item_modifiers 
                (order_item_id, option_id, price_modifier, option_name)
                VALUES ($1,$2,$3,$4)`,
-               [id, mod.option_id, mod.price ?? 0, mod.name]
+               [id, mod.option_id, modifierPrice, mod.name]
             );
           }
         }
