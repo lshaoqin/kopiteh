@@ -22,7 +22,6 @@ export interface Order {
 }
 
 export interface OrderItem {
-  menuModifiers: any;
   order_item_id: ID;
   stall_id: ID;
   table_id: ID | null;
@@ -36,6 +35,7 @@ export interface OrderItem {
   remarks?: string | null;
   volunteer_name: string;
   modifiers?: OrderItemModifier[];
+  menuModifiers?: OrderItemModifier[];
   type: 'STANDARD' | 'CUSTOM';
 }
 
