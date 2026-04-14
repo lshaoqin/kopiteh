@@ -10,7 +10,7 @@ export default function AdminAuthLayout({
   return (
     <div className="min-h-screen flex">
       
-      <AuthSidebar module={"admin"} />
+      <AuthSidebar module="runner" />
 
       {/* Right side: individual auth pages */}
       <div className="flex-1 flex items-center justify-center bg-white">
