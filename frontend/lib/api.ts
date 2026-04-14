@@ -162,6 +162,11 @@ export const api = {
         price_modifier: mod.price,
         name: mod.name,
       })) : [],
+      menuModifiers: item.menuModifiers ? item.menuModifiers.map((mod: any) => ({
+        option_id: mod.option_id,
+        price_modifier: mod.price,
+        name: mod.name,
+      })) : [],
       type: item.type,
     }));
   },
@@ -185,6 +190,11 @@ export const api = {
       option_id: mod.option_id,
       price_modifier: mod.price,
       name: mod.name,
+      })) : [],
+      menuModifiers: response.menuModifiers ? response.menuModifiers.map((mod: any) => ({
+        option_id: mod.option_id,
+        price_modifier: mod.price,
+        name: mod.name,
       })) : [],
       type: response.type,
     } as OrderItem;

@@ -174,9 +174,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               <Button
                 variant="secondary"
                 className="col-span-2 h-14"
-                onClick={() => {
-                  updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
-                  updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
+                onClick={async () => {
+                  await updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
+                  await updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
                 }}
               >
                 Mark as Served
