@@ -1,9 +1,10 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TextInput } from "../input";
 import { Button } from "../button";
+import { useRunnerStore } from "@/stores/runner.store";
 
 type AddOrderPanelProps = {
   open: boolean;
@@ -19,12 +20,13 @@ type AddOrderPanelProps = {
 };
 
 function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
+  const runnerName = useRunnerStore((state) => state.runnerName);
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [table, setTable] = useState("");
-  const [volunteerName, setVolunteerName] = useState("");
+  const [volunteerName, setVolunteerName] = useState(runnerName || "");
   const [errorMessage, setErrorMessage] = useState("");
 
   if (!open) return null;
@@ -86,7 +88,7 @@ function AddOrderPanel({ open, onClose, onSubmit }: AddOrderPanelProps) {
     setUnitPrice("");
     setNotes("");
     setTable("");
-    setVolunteerName("");
+    setVolunteerName(runnerName || "");
     setErrorMessage("");
   };
 

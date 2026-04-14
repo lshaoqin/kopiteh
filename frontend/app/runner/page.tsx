@@ -3,22 +3,23 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useRunnerStore } from "@/stores/runner.store";
 
 export default function RunnerIndexPage() {
   const router = useRouter();
+  const isAuthenticated = useRunnerStore((state) => state.isAuthenticated);
+  const isHydrated = useRunnerStore((state) => state.isHydrated);
 
   useEffect(() => {
-    const isRunnerAuthenticated =
-      typeof window !== "undefined" &&
-      window.localStorage.getItem("runner-authenticated") === "true";
+    if (!isHydrated) return;
 
-    if (!isRunnerAuthenticated) {
+    if (!isAuthenticated) {
       router.replace("/runner/auth/login");
       return;
     }
 
     router.replace("/runner/venue/selectvenue");
-  }, [router]);
+  }, [isAuthenticated, isHydrated, router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen text-gray-500">
