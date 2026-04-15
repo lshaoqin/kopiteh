@@ -22,11 +22,11 @@ export default function TableSelectionPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);
 
   const { 
     venueId, setVenueId, 
     tableId, setTableId, 
+    tableNumber, setTableNumber, 
     volunteerName, setVolunteerName,
     isHydrated 
   } = useCartStore();
@@ -63,8 +63,23 @@ export default function TableSelectionPage() {
         // Pre-select the dropdown label if a table exists in store/URL
         const currentTable = data.find(t => t.table_id === effectiveTableId);
         if (currentTable) {
-          setSelectedTableNumber(currentTable.table_number.toString());
+          setTableNumber(currentTable.table_number.toString());
         }
+
+        const isNewTableContext = urlTableId && parseInt(urlTableId) !== tableId;
+        if (isNewTableContext && effectiveVenueId && effectiveTableId && volunteerName.trim()) {
+            setVenueId(effectiveVenueId);
+            setTableId(effectiveTableId);
+            // Also set number for context switch
+            if (currentTable) setTableNumber(currentTable.table_number.toString());
+            
+            router.push(`/ordering/stalls?venue=${effectiveVenueId}&table=${effectiveTableId}`);
+            return;
+        }
+
+        if (urlVenueId && parseInt(urlVenueId) !== venueId) setVenueId(parseInt(urlVenueId));
+        if (urlTableId && parseInt(urlTableId) !== tableId) setTableId(parseInt(urlTableId));
+
       } catch (err) {
         console.error("Failed to load tables:", err);
       } finally {
@@ -75,12 +90,9 @@ export default function TableSelectionPage() {
     initializeSelection();
   }, [urlVenueId, urlTableId, isHydrated, router, venueId, tableId, setVenueId, setTableId]);
 
-
-
-
   const handleSelectOption = (id: number, number: string) => {
     setTableId(id);
-    setSelectedTableNumber(number);
+    setTableNumber(number);
     setIsOpen(false);
   };
 
@@ -137,8 +149,8 @@ export default function TableSelectionPage() {
                 loading && "opacity-60 cursor-not-allowed"
               )}
             >
-              <span className={selectedTableNumber ? "text-slate-700" : "text-slate-300"}>
-                {loading ? "Loading tables..." : (selectedTableNumber ? `Table ${selectedTableNumber}` : "Select Table")}
+              <span className={tableNumber ? "text-slate-700" : "text-slate-300"}>
+                {loading ? "Loading tables..." : (tableNumber ? `Table ${tableNumber}` : "Select Table")}
               </span>
               <ChevronDown className={cn("w-5 h-5 text-slate-500 transition-transform", isOpen && "rotate-180")} />
             </button>

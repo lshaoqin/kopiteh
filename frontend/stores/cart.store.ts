@@ -17,6 +17,7 @@ interface CartState {
   isHydrated: boolean;
   venueId: number | null;
   tableId: number | null;
+  tableNumber: string | null;
   volunteerName: string;
 
   // Actions
@@ -27,6 +28,7 @@ interface CartState {
   clearCart: () => void;
   setVenueId: (id: number | null) => void; 
   setTableId: (id: number | null) => void; 
+  setTableNumber: (num: string | null) => void;
   setVolunteerName: (name: string) => void; 
   
   // Getters
@@ -43,10 +45,12 @@ export const useCartStore = create<CartState>()(
       isHydrated: false,
       venueId: null,
       tableId: null,
+      tableNumber: null,
       volunteerName: "",
 
       setVenueId: (id) => set({ venueId: id }),
       setTableId: (id) => set({ tableId: id }),
+      setTableNumber: (num) => set({ tableNumber: num }),
       setVolunteerName: (name) => set({ volunteerName: name }),
 
       addItem: (menuItem, modifiers, quantity, stallName, remarks = "") => {

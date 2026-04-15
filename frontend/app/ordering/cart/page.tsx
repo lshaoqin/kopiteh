@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton"; 
 import { CartItemRow } from "@/components/ui/CartItemRow";
 import { api } from "@/lib/api";
+import { Plus } from "lucide-react";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, clearCart, totalPrice, tableId, volunteerName, setVolunteerName } = useCartStore();
+  const { items, updateQuantity, clearCart, totalPrice, tableId, tableNumber, volunteerName, setVolunteerName } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -79,9 +80,23 @@ export default function CartPage() {
       {/* Header - Centered Title */}
       <div className="pt-8 pb-4 px-6 mb-2 relative flex items-center justify-center">
         <div className="absolute left-6">
-            <BackButton href="/ordering/stalls" />
+          <BackButton href="/ordering/stalls" />
         </div>
-        <h1 className="text-xl font-bold text-slate-700">Your Orders</h1>
+
+        {/* Centered Title and Badge Group */}
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+            Your Orders
+          </h1>
+          
+          {tableId && (
+            <div className="bg-[#f0f4f8] px-4 py-1.5 rounded-full flex items-center justify-center">
+              <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">
+                Table {tableNumber}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Cart Items List */}
@@ -94,6 +109,16 @@ export default function CartPage() {
                 onDecrease={() => handleDecrease(item.uniqueId)}
             />
         ))}
+
+        {/* ADD MORE ITEMS BUTTON */}
+        <Button
+          variant="outline"
+          onClick={() => router.push("/ordering/stalls")}
+          className="w-full mt-4 border-dashed border-2 py-6 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2"
+        >
+          <Plus size={18} />
+          Add More Items
+        </Button>
       </div>
 
       <div className="px-6 mt-10 space-y-3 border-t border-slate-100 pt-6">
