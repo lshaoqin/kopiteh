@@ -18,33 +18,31 @@ function StallSelectionContent() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ venueId: string }>();
   const { venueId, setVenueId} = useCartStore();
 
-  const [stalls, setStalls] = useState<Stall[]>([]); 
-  const [loading, setLoading] = useState(true); 
+  const [stalls, setStalls] = useState<Stall[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
 
-  // 1. Sync URL Params to Store
+  // 1. Sync URL path param to store and fetch stalls
   useEffect(() => {
-    const vParam = searchParams.get("venue");
-    const tParam = searchParams.get("table");
+    const id = params.venueId
+      ? Number(params.venueId)
+      : Number(searchParams.get("venue")) || null;
 
-    if (vParam) setVenueId(Number(vParam));
-  }, [searchParams, setVenueId]);
+    if (!id) return;
 
-  // 2. Fetch Stalls based on dynamic venueId
-  useEffect(() => {
+    setVenueId(id);
+
     async function fetchStalls() {
-      // If we don't have a venueId yet (from store or URL), don't fetch
-      if (!venueId) return;
-
       try {
         setLoading(true);
-        const data = await api.getStallsByVenue(venueId); 
-        setStalls(data || []); 
+        const data = await api.getStallsByVenue(id);
+        setStalls(data || []);
       } catch (err: any) {
         console.error(err);
         setError("Failed to load stalls");
@@ -53,7 +51,7 @@ function StallSelectionContent() {
       }
     }
     fetchStalls();
-  }, [venueId]);
+  }, [params.venueId, searchParams, setVenueId]);
 
   useEffect(() => {
     if (loading) return;
