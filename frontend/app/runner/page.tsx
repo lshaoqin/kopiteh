@@ -14,7 +14,7 @@ export default function RunnerIndexPage() {
     if (!isHydrated) return;
 
     if (!isAuthenticated) {
-      router.replace("/runner/auth/login");
+      router.replace("/runner/login");
       return;
     }
 
