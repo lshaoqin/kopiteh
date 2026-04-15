@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/formfield"
+import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useRunnerStore } from "@/stores/runner.store"
@@ -84,18 +85,23 @@ export default function Home() {
         <div className="p-5 flex flex-col w-full h-full space-y-20 items-center">
           <div className="flex items-center flex-col">
             <h1 className=" font-extrabold text-4xl text-center">Login</h1>
+            <p className="mt-3 max-w-sm text-center text-sm text-grey-primary/80">
+              This module is for stall management. If you are a volunteer, go to the ordering module instead.
+            </p>
+            <Link href="/ordering/venue" className="mt-2 text-sm font-semibold text-primary1 underline underline-offset-4">
+              Go to Ordering
+            </Link>
           </div>
           <div className="w-full">
             <div className="flex flex-col space-y-10 w-full">
               <FormField
                 className="flex flex-col space-y-1"
-                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
-                  ${error ? "border-2 border-red-500" : "border-1 focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80"}
-                `}
+                classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out border-1 
+                  focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary1/80`}
                 classNameIn="focus:outline-none text-grey-primary placeholder-center w-full text-left focus:placeholder-transparent"
                 variant="email"
                 label=""
-                inputProps={{ value: name, placeholder: "Volunteer Name", onChange: (e) => { setName(e.target.value); setError(null); } }} />
+                inputProps={{ value: name, placeholder: "Runner Name", onChange: (e) => { setName(e.target.value); setError(null); } }} />
               <FormField
                 className="flex flex-col space-y-1"
                 classNameOut={`p-3 bg-white rounded-2xl transition-all duration-200 ease-out
