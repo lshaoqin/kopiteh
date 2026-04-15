@@ -97,46 +97,34 @@ export default function Stalls() {
         }
     };
 
-    const handleCreate = async ({
-        name,
-        imageUrl,
-    }: {
-        name: string;
-        imageUrl: string;
-    }) => {
+    const handleCreate = async ({ name, imageUrl }: { name: string; imageUrl: string }) => {
         try {
             setCreateError(null);
-
             const trimmedName = name.trim();
-            if (!trimmedName) {
-                setCreateError("Stall name is required.");
-                return;
-            }
-
+            if (!trimmedName) { setCreateError("Stall name is required."); return; }
             setCreating(true);
+
+            let finalImageUrl = imageUrl.trim() || null;
+            if (finalImageUrl?.startsWith('data:')) {
+                const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                    body: JSON.stringify({ dataUri: finalImageUrl, folder: 'stalls' }),
+                });
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+            }
 
             const res = await fetch(`${API_URL}/stalls/create`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    venue_id: Number(venueId),
-                    name: trimmedName,
-                    stall_image: imageUrl.trim() ? imageUrl.trim() : null,
-                }),
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({ venue_id: Number(venueId), name: trimmedName, stall_image: finalImageUrl }),
             });
 
             const data = await res.json();
+            if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to create stall");
 
-            if (!res.ok || data?.success === false) {
-                throw new Error(data?.payload?.message ?? "Failed to create stall");
-            }
-
-            const created = data.payload?.data;
-
-            setStalls((curr) => [...curr, created]);
+            setStalls((curr) => [...curr, data.payload?.data]);
             setShowCreateModal(false);
         } catch (err: any) {
             setCreateError(err?.message ?? "Failed to create stall");
@@ -145,57 +133,36 @@ export default function Stalls() {
         }
     };
 
-    const handleUpdate = async ({
-        name,
-        imageUrl,
-    }: {
-        name: string;
-        imageUrl: string;
-    }) => {
+    const handleUpdate = async ({ name, imageUrl }: { name: string; imageUrl: string }) => {
         try {
             setUpdateError(null);
-
-            if (!editingStall) {
-                setUpdateError("No stall selected to update.");
-                return;
-            }
-
+            if (!editingStall) { setUpdateError("No stall selected to update."); return; }
             const trimmedName = name.trim();
-            if (!trimmedName) {
-                setUpdateError("Stall name is required.");
-                return;
-            }
-
+            if (!trimmedName) { setUpdateError("Stall name is required."); return; }
             setUpdating(true);
 
-            const stallId = editingStall.stall_id;
+            let finalImageUrl = imageUrl.trim() || null;
+            if (finalImageUrl?.startsWith('data:')) {
+                const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                    body: JSON.stringify({ dataUri: finalImageUrl, folder: 'stalls' }),
+                });
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+            }
 
+            const stallId = editingStall.stall_id;
             const res = await fetch(`${API_URL}/stalls/update/${stallId}`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    name: trimmedName,
-                    stall_image: imageUrl.trim() ? imageUrl.trim() : null,
-                }),
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({ name: trimmedName, stall_image: finalImageUrl }),
             });
 
             const data = await res.json();
+            if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to update stall");
 
-            if (!res.ok || data?.success === false) {
-                throw new Error(data?.payload?.message ?? "Failed to update stall");
-            }
-
-            const updated = data.payload?.data;
-
-            setStalls((curr) =>
-                curr.map((stall) =>
-                    stall.stall_id === stallId ? { ...stall, ...updated } : stall
-                )
-            );
-
+            setStalls((curr) => curr.map((s) => (s.stall_id === stallId ? { ...s, ...data.payload?.data } : s)));
             setShowUpdateModal(false);
             setEditingStall(null);
         } catch (err: any) {
