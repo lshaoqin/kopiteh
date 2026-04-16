@@ -1,4 +1,4 @@
-export function AuthSidebar() {
+export function AuthSidebar({ module }: { module: "admin" | "runner" }) {
   return (
     <div className="md:flex md:w-2/5 bg-primary1 text-white flex-col rounded-r-lg items-center justify-center">
 
@@ -8,7 +8,9 @@ export function AuthSidebar() {
             The Volunteer <br /> Switchboard
           </p>
         </div>
-        <p className="mt-6 text-3xl font-bold text-center">Admin Portal</p>
+        <p className="mt-6 text-3xl font-bold text-center">
+          {module === "runner" ? "Runner Portal" : "Admin Portal"}
+        </p>
       </div>
     </div>
   );

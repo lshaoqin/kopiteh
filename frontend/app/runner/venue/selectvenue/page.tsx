@@ -7,11 +7,13 @@ import { api } from "@/lib/api";
 import { Venue } from "@/../types";
 import { BackButton } from "@/components/ui/BackButton";
 import { VenueCard } from "@/components/ui/VenueCard";
+import { useRunnerStore } from "@/stores/runner.store";
 
 export default function VenueSelectionPage() {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const runnerName = useRunnerStore((state) => state.runnerName);
 
   useEffect(() => {
     async function fetchVenues() {
@@ -39,7 +41,7 @@ export default function VenueSelectionPage() {
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-700 leading-tight">
-          Welcome <span className="text-green-600">Runner</span>, <br />
+          Welcome <span className="text-green-600">{runnerName}</span>, <br />
           Pick a Location
         </h1>
       </div>
