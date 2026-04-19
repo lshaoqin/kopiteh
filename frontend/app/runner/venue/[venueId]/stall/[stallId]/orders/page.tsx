@@ -25,6 +25,8 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
   const [newIncomingIds, setNewIncomingIds] = useState<Set<number>>(new Set());
   const previousStatusRef = useRef<OrderItemStatus>("INCOMING");
+  const orderItemIdsRef = useRef<Set<number>>(new Set());
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
@@ -62,24 +64,75 @@ export default function Home() {
       }
       console.log("Fetched order items:", response);
       setOrderItems(response);
+      orderItemIdsRef.current = new Set(response.map((item) => Number(item.order_item_id)));
     } catch (error: any) {
       setError(error.message);
     }
   }, [stallId]);
 
+  const ensureAudioContext = useCallback(async () => {
+    if (typeof window === "undefined") return null;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume();
+    }
+
+    return audioContextRef.current.state === "running" ? audioContextRef.current : null;
+  }, []);
+
+  const playNewOrderTone = useCallback(async () => {
+    const audioContext = await ensureAudioContext();
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+
+    const playBeep = (startAt: number, frequency: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+
+      gainNode.gain.setValueAtTime(0.0001, startAt);
+      gainNode.gain.exponentialRampToValueAtTime(0.2, startAt + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration + 0.02);
+    };
+
+    playBeep(now, 880, 0.12);
+    playBeep(now + 0.16, 1175, 0.14);
+  }, [ensureAudioContext]);
+
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
+    const orderItemId = Number(data.orderItem.order_item_id);
+
+    if (orderItemIdsRef.current.has(orderItemId)) {
+      return;
+    }
+
     setOrderItems((prev) => [...prev, data.orderItem]);
+    orderItemIdsRef.current.add(orderItemId);
 
     if (data.orderItem.status === "INCOMING") {
       setNewIncomingIds((prev) => {
         const next = new Set(prev);
-        next.add(data.orderItem.order_item_id);
+        next.add(orderItemId);
         return next;
       });
+      void playNewOrderTone();
     }
-  }, []);
+  }, [playNewOrderTone]);
 
   const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
     setOrderItems((prev) =>
@@ -114,6 +167,29 @@ export default function Home() {
       leaveStall(numericStallId);
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      void ensureAudioContext();
+    };
+
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, [ensureAudioContext]);
+
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        void audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (previousStatusRef.current === "INCOMING" && selectedStatus !== "INCOMING") {
