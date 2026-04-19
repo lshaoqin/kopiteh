@@ -96,20 +96,22 @@ function CardHolder({
         {/* Both toggles in one row */}
         {showToggle && (
           <div
-            className="flex items-center justify-between my-1"
+            className="flex items-center gap-6 my-1"
             onClick={stopPropagation}
             onPointerDown={stopPropagation}
           >
             <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">Open</span>
               <Switch
+                className="data-[state=checked]:bg-green-600"
                 checked={isActive}
                 onCheckedChange={(v) => onActiveChange?.(v)}
               />
-              <span className="text-sm text-gray-500">Open</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500">Remarks</span>
+              <span className="text-sm text-gray-500">Allow remarks</span>
               <Switch
+                className="data-[state=checked]:bg-green-600"
                 checked={allowRemarks}
                 onCheckedChange={(v) => onRemarksChange?.(v)}
               />
