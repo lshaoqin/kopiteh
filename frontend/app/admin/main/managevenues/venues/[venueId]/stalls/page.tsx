@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/auth.store"
 import { CardHolder } from "@/components/ui/cardholder"
 import { Button } from "@/components/ui/button"
 import { useParams } from "next/navigation";
-import { CirclePlus } from "lucide-react"
+import { CirclePlus, Download } from "lucide-react"
 import { AdminStallModal } from "@/components/ui/admin/adminstallmodal"
 import Link from "next/link"
 
@@ -23,7 +23,16 @@ export default function Stalls() {
     const [updateError, setUpdateError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
     const [editingStall, setEditingStall] = useState<Stall>(null)
+    const [exporting, setExporting] = useState(false);
     const API_URL = process.env.NEXT_PUBLIC_API_URL
+
+    async function fetchJsonOrThrow(res: Response, fallbackMessage: string) {
+        const data = await res.json();
+        if (!res.ok || data?.success === false) {
+            throw new Error(data?.payload?.message ?? fallbackMessage);
+        }
+        return data;
+    }
 
     useEffect(() => {
         const loadStall = async () => {
@@ -204,15 +213,163 @@ export default function Stalls() {
         }
     };
 
+    const handleExportVenueMenu = async () => {
+        if (!API_URL) {
+            setError("NEXT_PUBLIC_API_URL is not set");
+            return;
+        }
+
+        const numericVenueId = Number(venueId);
+        if (Number.isNaN(numericVenueId)) {
+            setError("Invalid venue ID");
+            return;
+        }
+
+        try {
+            setExporting(true);
+            setError(null);
+
+            const XLSX = require("xlsx");
+
+            const stallsRes = await fetch(`${API_URL}/stalls/venue/${numericVenueId}`);
+            const stallsJson = await fetchJsonOrThrow(stallsRes, "Failed to fetch stalls");
+            const venueStalls: Stall[] = stallsJson.payload?.data ?? [];
+
+            const itemRows: any[] = [];
+            const variantRows: any[] = [];
+
+            for (const stall of venueStalls) {
+                const itemRes = await fetch(`${API_URL}/items/stalls/${stall.stall_id}`);
+                const itemJson = await fetchJsonOrThrow(itemRes, `Failed to fetch items for stall ${stall.name}`);
+                const stallItems = itemJson.payload?.data ?? [];
+
+                for (const item of stallItems) {
+                    itemRows.push([
+                        numericVenueId,
+                        stall.stall_id,
+                        stall.name,
+                        item.item_id,
+                        item.name,
+                        item.category_id ?? "",
+                        Number(item.price ?? 0),
+                        Boolean(item.is_available),
+                        item.prep_time ?? "",
+                        item.description ?? "",
+                    ]);
+
+                    const sectionsRes = await fetch(`${API_URL}/item-sections/items/${item.item_id}`);
+                    const sectionsJson = await fetchJsonOrThrow(
+                        sectionsRes,
+                        `Failed to fetch variants for item ${item.name}`
+                    );
+                    const sections = sectionsJson.payload?.data ?? [];
+
+                    for (const section of sections) {
+                        const optionsRes = await fetch(`${API_URL}/modifiers/sections/${section.section_id}`);
+                        const optionsJson = await fetchJsonOrThrow(
+                            optionsRes,
+                            `Failed to fetch variant options for section ${section.name}`
+                        );
+                        const options = optionsJson.payload?.data ?? [];
+
+                        if (options.length === 0) {
+                            variantRows.push([
+                                numericVenueId,
+                                stall.stall_id,
+                                stall.name,
+                                item.item_id,
+                                item.name,
+                                section.section_id,
+                                section.name,
+                                section.min_selections ?? 0,
+                                section.max_selections ?? 0,
+                                "",
+                                "",
+                                "",
+                                "",
+                            ]);
+                            continue;
+                        }
+
+                        for (const option of options) {
+                            variantRows.push([
+                                numericVenueId,
+                                stall.stall_id,
+                                stall.name,
+                                item.item_id,
+                                item.name,
+                                section.section_id,
+                                section.name,
+                                section.min_selections ?? 0,
+                                section.max_selections ?? 0,
+                                option.option_id,
+                                option.name,
+                                Number(option.price_modifier ?? 0),
+                                Boolean(option.is_available),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            const stallSheet = [
+                ["Venue ID", "Stall ID", "Stall Name", "Description", "Image", "Is Open", "Allow Remarks", "Waiting Time"],
+                ...venueStalls.map((stall) => [
+                    numericVenueId,
+                    stall.stall_id,
+                    stall.name,
+                    stall.description ?? "",
+                    stall.stall_image ?? "",
+                    Boolean(stall.is_open),
+                    Boolean(stall.allow_remarks),
+                    stall.waiting_time ?? "",
+                ]),
+            ];
+
+            const itemSheet = [
+                ["Venue ID", "Stall ID", "Stall Name", "Item ID", "Item Name", "Category ID", "Price", "Is Available", "Prep Time", "Description"],
+                ...itemRows,
+            ];
+
+            const variantSheet = [
+                ["Venue ID", "Stall ID", "Stall Name", "Item ID", "Item Name", "Section ID", "Section Name", "Min Selections", "Max Selections", "Option ID", "Option Name", "Price Modifier", "Option Is Available"],
+                ...variantRows,
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(stallSheet), "Stalls");
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(itemSheet), "Items");
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(variantSheet), "Variants");
+
+            const dateLabel = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(workbook, `venue_${numericVenueId}_menu_export_${dateLabel}.xlsx`);
+        } catch (err: any) {
+            setError(err?.message ?? "Failed to export venue menu");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     return (
         <main className="min-h-screen px-6 py-10 flex w-full">
             <div className="flex-1 w-full">
                 <div className="flex justify-between">
                     <h1 className="font-bold text-2xl">Stalls</h1>
-                    <Button variant="addstall" onClick={() => setShowCreateModal(true)}>
-                        <CirclePlus />
-                        Add
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            className="py-2 rounded-xl"
+                            onClick={handleExportVenueMenu}
+                            disabled={exporting || loading}
+                        >
+                            <Download className="h-4 w-4" />
+                            {exporting ? "Exporting..." : "Export Stalls and Items"}
+                        </Button>
+                        <Button variant="addstall" onClick={() => setShowCreateModal(true)}>
+                            <CirclePlus />
+                            Add
+                        </Button>
+                    </div>
                 </div>
 
                 {loading && <div className="flex-1 grid place-items-center">
