@@ -337,7 +337,7 @@ export default function Home() {
           onClick={() => setSelectedStatus("INCOMING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
               selectedStatus === "INCOMING"
-                ? "bg-green-600 text-white"
+                ? "bg-green-700 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
@@ -354,7 +354,7 @@ export default function Home() {
           onClick={() => setSelectedStatus("PREPARING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm gap-10 ${
               selectedStatus === "PREPARING"
-                ? "bg-green-600 text-white hover:bg-green-700"
+                ? "bg-green-700 text-white hover:bg-green-800"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
@@ -364,7 +364,7 @@ export default function Home() {
           onClick={() => setSelectedStatus("SERVED")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
               selectedStatus === "SERVED"
-                ? "bg-green-600 text-white"
+                ? "bg-green-700 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
@@ -405,7 +405,7 @@ export default function Home() {
                 {/* Background indicator */}
                 {swipe.x > 0 && (
                   <div 
-                    className="absolute inset-0 bg-green-600 flex items-center px-4 rounded-lg"
+                    className="absolute inset-0 bg-green-700 flex items-center px-4 rounded-lg"
                     style={{ opacity: Math.min(swipe.x / 100, 1) }}
                   >
                     <span className="text-white font-semibold">
@@ -445,7 +445,7 @@ export default function Home() {
                 )}
                 <div>
                   <p className="font-medium">
-                    {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
+                    {item.order_item_name} <span className="bg-green-700 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
                   {item.modifiers && item.modifiers.length > 0 && (
                     <p className="text-sm text-gray-600">
