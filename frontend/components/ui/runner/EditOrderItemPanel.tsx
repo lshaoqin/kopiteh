@@ -211,7 +211,7 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
               Cancel
             </Button>
             <Button
-              className="w-full h-14 bg-green-600"
+              className="w-full h-14 bg-green-700"
               onClick={saveChanges}
             >
               Save
