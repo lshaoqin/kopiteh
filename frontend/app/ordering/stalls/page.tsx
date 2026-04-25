@@ -20,7 +20,7 @@ function StallSelectionContent() {
   const searchParams = useSearchParams();
   
   // Store actions and state
-  const { venueId, tableId, setVenueId, setTableId } = useCartStore();
+  const { venueId, tableId, tableNumber, setVenueId, setTableId, setTableNumber } = useCartStore();
 
   const [stalls, setStalls] = useState<Stall[]>([]); 
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
@@ -110,7 +110,16 @@ function StallSelectionContent() {
           <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                   <BackButton href="/ordering/table" />
-                  <h1 className="text-3xl font-bold text-slate-800">Search</h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Search</h1>
+                    {tableId && (
+                      <div className="bg-[#f0f4f8] px-4 py-1.5 rounded-full flex items-center justify-center">
+                        <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">
+                          Table {tableNumber}
+                        </span>
+                      </div>
+                    )}
+                  </div>
               </div>
 
               {/* My Orders Button Entry Point */}

@@ -23,11 +23,11 @@ function TableSelectionContent() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [tablesVenueId, setTablesVenueId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);
 
   const { 
     venueId, setVenueId, 
     tableId, setTableId, 
+    tableNumber, setTableNumber, 
     volunteerName, setVolunteerName,
     isHydrated 
   } = useCartStore();
@@ -78,12 +78,9 @@ function TableSelectionContent() {
     initializeSelection();
   }, [urlVenueId, urlTableId, isHydrated, router, venueId, tableId, tables, tablesVenueId, setVenueId, setTableId]);
 
-
-
-
   const handleSelectOption = (id: number, number: string) => {
     setTableId(id);
-    setSelectedTableNumber(number);
+    setTableNumber(number);
     setIsOpen(false);
   };
 
@@ -140,8 +137,8 @@ function TableSelectionContent() {
                 loading && "opacity-60 cursor-not-allowed"
               )}
             >
-              <span className={selectedTableNumber ? "text-slate-700" : "text-slate-300"}>
-                {loading ? "Loading tables..." : (selectedTableNumber ? `Table ${selectedTableNumber}` : "Select Table")}
+              <span className={tableNumber ? "text-slate-700" : "text-slate-300"}>
+                {loading ? "Loading tables..." : (tableNumber ? `Table ${tableNumber}` : "Select Table")}
               </span>
               <ChevronDown className={cn("w-5 h-5 text-slate-500 transition-transform", isOpen && "rotate-180")} />
             </button>

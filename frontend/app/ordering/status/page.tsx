@@ -10,7 +10,7 @@ import { Clock, CheckCircle2, Utensils, AlertCircle } from "lucide-react";
 const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000");
 
 export default function OrderStatusPage() {
-  const { tableId } = useCartStore();
+  const { tableId, tableNumber } = useCartStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,15 +52,26 @@ export default function OrderStatusPage() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-600">
       <div className="max-w-2xl mx-auto p-6 space-y-8">
         
-        <header className="flex items-center gap-4">
-          <BackButton href="/ordering/stalls" />
-          <h1 className="text-2xl font-bold text-slate-800">Track My Orders</h1>
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <BackButton href="/ordering/stalls" />
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-800">Track My Orders</h1>
+              {tableNumber && (
+                <div className="bg-[#f0f4f8] px-4 py-1.5 rounded-full flex items-center justify-center">
+                  <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">
+                    Table {tableNumber}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </header>
 
         {orders.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-100">
             <AlertCircle size={48} className="mx-auto text-slate-200 mb-4" />
-            <p className="text-slate-400">No orders found for Table {tableId}.</p>
+            <p className="text-slate-400">No orders found for Table {tableNumber}.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -78,6 +89,8 @@ export default function OrderStatusPage() {
                     <h3 className="text-lg font-bold text-slate-800">Order #{order.order_id}</h3>
                     <p className="text-xs text-slate-400">Placed at {new Date(order.created_at).toLocaleTimeString()}</p>
                   </div>
+                  
+                  {/* STATUS PILL WITH COLOURS */}
                   <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${getStatusBg(order.status)}`}>
                     {getStatusIcon(order.status)}
                     {order.status}
@@ -132,17 +145,22 @@ export default function OrderStatusPage() {
 // Helpers for UI state
 function getStatusColor(status: string) {
     switch(status.toLowerCase()) {
-        case 'pending': return 'bg-slate-300';
+        case 'pending': return 'bg-yellow-400';    // YELLOW for Pending
         case 'preparing': return 'bg-blue-500';
-        case 'ready': return 'bg-green-500';
-        default: return 'bg-slate-200';
+        case 'ready': 
+        case 'completed': return 'bg-green-500';  // GREEN for Ready/Completed
+        case 'cancelled': return 'bg-red-500';
+        default: return 'bg-slate-300';
     }
 }
 
 function getStatusBg(status: string) {
     switch(status.toLowerCase()) {
+        case 'pending': return 'bg-yellow-50 text-yellow-700 border border-yellow-100'; // YELLOW Background
         case 'preparing': return 'bg-blue-50 text-blue-600 animate-pulse';
-        case 'ready': return 'bg-green-50 text-green-600 border border-green-100 shadow-sm';
+        case 'ready': 
+        case 'completed': return 'bg-green-50 text-green-700 border border-green-100 shadow-sm'; // GREEN Background
+        case 'cancelled': return 'bg-red-50 text-red-700 border border-red-100';
         default: return 'bg-slate-50 text-slate-500';
     }
 }
@@ -151,7 +169,8 @@ function getStatusIcon(status: string) {
     switch(status.toLowerCase()) {
         case 'pending': return <Clock size={14} />;
         case 'preparing': return <Utensils size={14} />;
-        case 'ready': return <CheckCircle2 size={14} />;
+        case 'ready': 
+        case 'completed': return <CheckCircle2 size={14} />;
         default: return null;
     }
 }
