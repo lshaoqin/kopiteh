@@ -110,7 +110,7 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
                   <span className="text-sm italic text-gray-900">
                     Modifiers (tap to toggle)
                   </span>
-                  {orderItem.modifiers?.map((m) => {
+                  {orderItem.menuModifiers?.map((m) => {
                     const active = selectedModifiers.some(
                       (sm) => sm.option_id === m.option_id
                     );
@@ -211,7 +211,7 @@ function EditOrderItem({ open, onClose, orderItem, onOrderItemUpdated }: EditOrd
               Cancel
             </Button>
             <Button
-              className="w-full h-14 bg-green-600"
+              className="w-full h-14 bg-green-700"
               onClick={saveChanges}
             >
               Save

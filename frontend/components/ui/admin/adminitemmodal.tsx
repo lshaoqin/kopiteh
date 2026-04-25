@@ -549,7 +549,7 @@ export default function ItemModal({
                               `}
                                     classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
                                     variant="text"
-                                    label=""
+                                    label="Option Name"
                                     inputProps={{
                                       value: o.name,
                                       placeholder: "Spicy-level",
@@ -565,15 +565,15 @@ export default function ItemModal({
                                   <FormField
                                     className="flex flex-col space-y-2 font-semibold"
                                     classNameOut={`
-                                p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
-                                ${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
-                              `}
+p-2 bg-white rounded-lg transition-all duration-200 ease-out font-normal
+${error ? "border-2 border-red-500" : "border-1 focus-within:ring-2 focus-within:ring-primary1/80"}
+`}
                                     classNameIn="focus:outline-none text-grey-primary w-full text-left focus:placeholder-transparent"
                                     variant="text"
-                                    label=""
+                                    label="Price Add-on ($)"
                                     inputProps={{
                                       value: o.price_modifier,
-                                      placeholder: "Price add-on",
+                                      placeholder: "0.00",
                                       onChange: (e) => {
                                         updateOption(sectionIdx, optionIdx, { price_modifier: e.target.value });
                                         setFormError(null);

@@ -2,6 +2,7 @@
 import { Switch } from "@/components/ui/switch";
 import { Pencil } from "lucide-react";
 import { Button } from "./button";
+import { useState } from "react";
 
 type CardProps = {
   name: string;
@@ -13,6 +14,24 @@ type CardProps = {
   onRemarksChange?: (v: boolean) => void;
   onEdit?: () => void;
 };
+
+function ImagePlaceholder({ name }: { name: string }) {
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center gap-2 bg-green-50">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-12 w-12 text-green-300"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 2c0 0 2 2 2 6h-4c0-4 2-6 2-6zm0 6v10M6 2v4a2 2 0 004 0V2M8 8v14" />
+      </svg>
+      <span className="text-xs text-green-400 font-medium">{name}</span>
+    </div>
+  );
+}
 
 function CardHolder({
   name,
@@ -32,18 +51,23 @@ function CardHolder({
     e.stopPropagation();
   };
 
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div
       className={`flex flex-col rounded-xl bg-white shadow-md shadow-black/25 ${showActions ? "h-auto" : "h-50"
         }`}
     >
       <div className="h-63 rounded-t-xl bg-gray-100 overflow-hidden">
-        {img ? (
-          <img src={img} alt={name} className="h-full w-full object-cover rounded-t-xl" />
+        {img && !imgError ? (
+          <img
+            src={img}
+            alt={name}
+            className="h-full w-full object-cover rounded-t-xl"
+            onError={() => setImgError(true)}
+          />
         ) : (
-          <div className="h-full w-full grid place-items-center">
-            <span className="text-sm opacity-70">No image</span>
-          </div>
+          <ImagePlaceholder name={name} />
         )}
       </div>
 
@@ -72,20 +96,22 @@ function CardHolder({
         {/* Both toggles in one row */}
         {showToggle && (
           <div
-            className="flex items-center justify-between my-1"
+            className="flex items-center gap-6 my-1"
             onClick={stopPropagation}
             onPointerDown={stopPropagation}
           >
             <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">Open</span>
               <Switch
+                className="data-[state=checked]:bg-green-600"
                 checked={isActive}
                 onCheckedChange={(v) => onActiveChange?.(v)}
               />
-              <span className="text-sm text-gray-500">Open</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500">Remarks</span>
+              <span className="text-sm text-gray-500">Allow remarks</span>
               <Switch
+                className="data-[state=checked]:bg-green-600"
                 checked={allowRemarks}
                 onCheckedChange={(v) => onRemarksChange?.(v)}
               />

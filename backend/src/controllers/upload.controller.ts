@@ -30,6 +30,20 @@ export class UploadController {
     const result = successResponse(SuccessCodes.OK, { imageUrls });
     return res.status(result.payload.status).json(result);
   }
+
+  async uploadBase64(req: Request, res: Response) {
+    const { dataUri, folder } = req.body;
+
+    if (!dataUri || typeof dataUri !== 'string' || !dataUri.startsWith('data:')) {
+      const result = errorResponse(ErrorCodes.VALIDATION_ERROR, 'Invalid or missing dataUri');
+      return res.status(result.payload.status).json(result);
+    }
+
+    const imageUrl = await uploadService.uploadBase64Image(dataUri, folder || 'images');
+
+    const result = successResponse(SuccessCodes.OK, { imageUrl });
+    return res.status(result.payload.status).json(result);
+  }
 }
 
 export default new UploadController();

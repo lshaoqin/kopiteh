@@ -82,7 +82,7 @@ export default function MenuListPage() {
     <div className="min-h-screen bg-white font-sans text-slate-600 pb-32 w-full flex flex-col">
       
     {/* --- HEADER --- */}
-    <div className="relative z-10 h-full flex flex-col justify-between p-6">
+    <div className="relative z-10 h-full flex flex-col justify-between p-6 bg-green-700">
       <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-sm w-fit">
             <BackButton 
               href={`/ordering/stalls?venue=${venueId}&table=${tableId}`} 

@@ -91,53 +91,42 @@ export default function VenuesPage() {
     }
   };
 
-  const handleCreateVenue = async ({
-    name,
-    imageUrl,
-    address,
-    description,
-    opening_hours,
-  }: {
-    name: string;
-    imageUrl?: string;
-    address?: string;
-    description?: string;
-    opening_hours?: string;
+  const handleCreateVenue = async ({ name, imageUrl, address, description, opening_hours }: {
+    name: string; imageUrl?: string; address?: string; description?: string; opening_hours?: string;
   }) => {
     try {
       setCreateError(null);
-
       const trimmedName = name.trim();
-      if (!trimmedName) {
-        setCreateError("Venue name is required.");
-        return;
-      }
-
+      if (!trimmedName) { setCreateError("Venue name is required."); return; }
       setCreating(true);
+
+      let finalImageUrl = imageUrl?.trim() || null;
+      if (finalImageUrl?.startsWith('data:')) {
+        const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ dataUri: finalImageUrl, folder: 'venues' }),
+        });
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+      }
 
       const res = await fetch(`${API_URL}/venue/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({
           name: trimmedName,
-          image_url: imageUrl?.trim() ? imageUrl.trim() : null,
-          address: address?.trim() ? address.trim() : null,
-          description: description?.trim() ? description.trim() : null,
-          opening_hours: opening_hours?.trim() ? opening_hours.trim() : null,
+          image_url: finalImageUrl,
+          address: address?.trim() || null,
+          description: description?.trim() || null,
+          opening_hours: opening_hours?.trim() || null,
         }),
       });
 
       const data = await res.json();
+      if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to create venue");
 
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.payload?.message ?? "Failed to create venue");
-      }
-
-      const created = data.payload?.data;
-      setVenues((curr) => [...curr, created]);
+      setVenues((curr) => [...curr, data.payload?.data]);
       setShowCreateModal(false);
     } catch (err: any) {
       setCreateError(err?.message ?? "Failed to create venue");
@@ -146,65 +135,44 @@ export default function VenuesPage() {
     }
   };
 
-
-  const handleUpdateVenue = async ({
-    name,
-    imageUrl,
-    address,
-    description,
-    opening_hours,
-  }: {
-    name: string;
-    imageUrl?: string;
-    address?: string;
-    description?: string;
-    opening_hours?: string;
+  const handleUpdateVenue = async ({ name, imageUrl, address, description, opening_hours }: {
+    name: string; imageUrl?: string; address?: string; description?: string; opening_hours?: string;
   }) => {
     try {
       setUpdateError(null);
-
-      if (!editingVenue) {
-        setUpdateError("No venue selected to update.");
-        return;
-      }
-
+      if (!editingVenue) { setUpdateError("No venue selected to update."); return; }
       const trimmedName = name.trim();
-      if (!trimmedName) {
-        setUpdateError("Venue name is required.");
-        return;
-      }
-
+      if (!trimmedName) { setUpdateError("Venue name is required."); return; }
       setUpdating(true);
 
-      const venueId = editingVenue.venue_id;
+      let finalImageUrl = imageUrl?.trim() || null;
+      if (finalImageUrl?.startsWith('data:')) {
+        const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ dataUri: finalImageUrl, folder: 'venues' }),
+        });
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+      }
 
+      const venueId = editingVenue.venue_id;
       const res = await fetch(`${API_URL}/venue/update/${venueId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({
           name: trimmedName,
-          image_url: imageUrl?.trim() ? imageUrl.trim() : null,
-          address: address?.trim() ? address.trim() : null,
-          description: description?.trim() ? description.trim() : null,
-          opening_hours: opening_hours?.trim() ? opening_hours.trim() : null,
+          image_url: finalImageUrl,
+          address: address?.trim() || null,
+          description: description?.trim() || null,
+          opening_hours: opening_hours?.trim() || null,
         }),
       });
 
       const data = await res.json();
+      if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to update venue");
 
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.payload?.message ?? "Failed to update venue");
-      }
-
-      const updated = data.payload?.data;
-
-      setVenues((curr) =>
-        curr.map((v) => (v.venue_id === venueId ? { ...v, ...updated } : v))
-      );
-
+      setVenues((curr) => curr.map((v) => (v.venue_id === venueId ? { ...v, ...data.payload?.data } : v)));
       setShowUpdateModal(false);
       setEditingVenue(null);
     } catch (err: any) {
@@ -274,7 +242,7 @@ export default function VenuesPage() {
         )}
 
         {!loading && !error && venues.length > 0 && (
-          <ul className="mt-4 grid grid-cols-3 gap-10">
+          <ul className="mt-4 grid grid-cols-1 custom:grid-cols-2 xl:grid-cols-3 gap-10">
             {venues.map((v) => (
               <li key={v.venue_id}>
                 <Link href={`/admin/main/managevenues/venues/${v.venue_id}/stalls`}>

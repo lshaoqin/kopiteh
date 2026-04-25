@@ -145,7 +145,7 @@ function StallSelectionContent() {
                         !
                     </div>
                     <div>
-                        <p className="text-orange-900 text-sm font-bold">Preparation in Progress</p>
+                        <p className="text-orange-900 text-sm font-bold">Preparing your order...</p>
                         <p className="text-orange-700 text-xs">Tap to track your {activeOrdersCount} active order{activeOrdersCount > 1 ? 's' : ''}.</p>
                     </div>
                 </div>

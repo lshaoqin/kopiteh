@@ -6,7 +6,7 @@ import { BackButton } from "@/components/ui/BackButton";
 import { AddOrderPanel } from "@/components/ui/runner/addorderpanel";
 import { OrderItemDetails } from "@/components/ui/runner/OrderItemDetails";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { OrderItem, OrderItemStatus  } from "../../../../../../../../types/order";
 import { Stall } from "../../../../../../../../types/stall";
 import { useWebSocket } from "@/context/WebSocketContext";
@@ -23,6 +23,10 @@ export default function Home() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [stall, setStall] = useState<Stall | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderItemStatus>("INCOMING");
+  const [newIncomingIds, setNewIncomingIds] = useState<Set<number>>(new Set());
+  const previousStatusRef = useRef<OrderItemStatus>("INCOMING");
+  const orderItemIdsRef = useRef<Set<number>>(new Set());
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [showOrderItemDetails, setShowOrderItemDetails] = useState(false);
@@ -58,17 +62,77 @@ export default function Home() {
       if (!response) {
         throw new Error("Failed to fetch order items");
       }
+      console.log("Fetched order items:", response);
       setOrderItems(response);
+      orderItemIdsRef.current = new Set(response.map((item) => Number(item.order_item_id)));
     } catch (error: any) {
       setError(error.message);
     }
   }, [stallId]);
 
+  const ensureAudioContext = useCallback(async () => {
+    if (typeof window === "undefined") return null;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume();
+    }
+
+    return audioContextRef.current.state === "running" ? audioContextRef.current : null;
+  }, []);
+
+  const playNewOrderTone = useCallback(async () => {
+    const audioContext = await ensureAudioContext();
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+
+    const playBeep = (startAt: number, frequency: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+
+      gainNode.gain.setValueAtTime(0.0001, startAt);
+      gainNode.gain.exponentialRampToValueAtTime(0.2, startAt + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration + 0.02);
+    };
+
+    playBeep(now, 880, 0.12);
+    playBeep(now + 0.16, 1175, 0.14);
+  }, [ensureAudioContext]);
+
   // -- CREATING ORDER AND ORDER ITEMS --
   // Handle WebSocket events for real-time updates
   const handleOrderItemCreated = useCallback((data: { orderItem: OrderItem }) => {
+    const orderItemId = Number(data.orderItem.order_item_id);
+
+    if (orderItemIdsRef.current.has(orderItemId)) {
+      return;
+    }
+
     setOrderItems((prev) => [...prev, data.orderItem]);
-  }, []);
+    orderItemIdsRef.current.add(orderItemId);
+
+    if (data.orderItem.status === "INCOMING") {
+      setNewIncomingIds((prev) => {
+        const next = new Set(prev);
+        next.add(orderItemId);
+        return next;
+      });
+      void playNewOrderTone();
+    }
+  }, [playNewOrderTone]);
 
   const handleOrderItemUpdated = useCallback((data: { orderItem: OrderItem }) => {
     setOrderItems((prev) =>
@@ -76,6 +140,15 @@ export default function Home() {
         item.order_item_id === data.orderItem.order_item_id ? data.orderItem : item
       )
     );
+
+    if (data.orderItem.status !== "INCOMING") {
+      setNewIncomingIds((prev) => {
+        if (!prev.has(data.orderItem.order_item_id)) return prev;
+        const next = new Set(prev);
+        next.delete(data.orderItem.order_item_id);
+        return next;
+      });
+    }
   }, []);
 
   // Join stall room and set up WebSocket listeners
@@ -95,6 +168,35 @@ export default function Home() {
     };
   }, [socket, isConnected, stallId, joinStall, leaveStall, handleOrderItemCreated, handleOrderItemUpdated]);
 
+  useEffect(() => {
+    const unlockAudio = () => {
+      void ensureAudioContext();
+    };
+
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, [ensureAudioContext]);
+
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        void audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (previousStatusRef.current === "INCOMING" && selectedStatus !== "INCOMING") {
+      setNewIncomingIds(new Set());
+    }
+    previousStatusRef.current = selectedStatus;
+  }, [selectedStatus]);
 
   const createOrderItem = async (
     data: {
@@ -221,8 +323,8 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-600 w-full flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 pt-8 pb-20 no-scrollbar">
+    <div className="h-screen overflow-hidden bg-white font-sans text-slate-600 w-full flex flex-col">
+      <div className="px-6 pt-8 pb-4 bg-white">
         <div className="flex items-center gap-4">
             <BackButton href={`/runner/venue/${venueId}/stall/selectstall`} />
             <h1 className="text-3xl font-bold text-slate-800">{stall?.name}</h1>
@@ -235,17 +337,24 @@ export default function Home() {
           onClick={() => setSelectedStatus("INCOMING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
               selectedStatus === "INCOMING"
-                ? "bg-green-600 text-white"
+                ? "bg-green-700 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
-            Incoming
+            <span className="inline-flex items-center gap-2">
+              Incoming
+              {newIncomingIds.size > 0 && (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {newIncomingIds.size}
+                </span>
+              )}
+            </span>
           </button>
           <button 
           onClick={() => setSelectedStatus("PREPARING")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm gap-10 ${
               selectedStatus === "PREPARING"
-                ? "bg-green-600 text-white hover:bg-green-700"
+                ? "bg-green-700 text-white hover:bg-green-800"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
@@ -255,17 +364,20 @@ export default function Home() {
           onClick={() => setSelectedStatus("SERVED")}
             className={`px-4 py-1 rounded-lg text-sm font-medium shadow-sm ${
               selectedStatus === "SERVED"
-                ? "bg-green-600 text-white"
+                ? "bg-green-700 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
             Served
           </button>
         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar">
         {loading ? (
-          <p>Loading...</p>
+          <p className="pt-4">Loading...</p>
         ) : error ? (
-          <p className="text-red-500">Error: {error}</p>
+          <p className="text-red-500 pt-4">Error: {error}</p>
         ) : (
           <div className="mt-4 space-y-2">
             {filteredOrderItems.length === 0 && !loading && (
@@ -276,20 +388,24 @@ export default function Home() {
             {/* Sort the order items by created_at in descending order */}
             {filteredOrderItems
               .slice()
-              .sort((a) => new Date(a.created_at).getTime())
-              .map((item, index) => {
+              .sort((a, b) => {
+                const aTime = Number.isNaN(Date.parse(a.created_at)) ? 0 : Date.parse(a.created_at);
+                const bTime = Number.isNaN(Date.parse(b.created_at)) ? 0 : Date.parse(b.created_at);
+                return aTime - bTime;
+              })
+              .map((item) => {
                 const swipe = swipeState[item.order_item_id] || { x: 0, isSwiping: false };
                 const opacity = 1 - (swipe.x / 150) * 0.3;
                 
                 return (
               <div 
-                key={index}
-                className="relative overflow-hidden"
+                key={item.order_item_id}
+                className="relative overflow-visible"
               >
                 {/* Background indicator */}
                 {swipe.x > 0 && (
                   <div 
-                    className="absolute inset-0 bg-green-600 flex items-center px-4 rounded-lg"
+                    className="absolute inset-0 bg-green-700 flex items-center px-4 rounded-lg"
                     style={{ opacity: Math.min(swipe.x / 100, 1) }}
                   >
                     <span className="text-white font-semibold">
@@ -312,15 +428,24 @@ export default function Home() {
                   onClick={
                     () => {
                       if (!swipe.isSwiping) {
+                        setNewIncomingIds((prev) => {
+                          if (!prev.has(item.order_item_id)) return prev;
+                          const next = new Set(prev);
+                          next.delete(item.order_item_id);
+                          return next;
+                        });
                         setSelectedOrderItem(item);
                         setShowOrderItemDetails(true);
                       }
                     }
                   }
                 >
+                {item.status === "INCOMING" && newIncomingIds.has(item.order_item_id) && (
+                  <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
+                )}
                 <div>
                   <p className="font-medium">
-                    {item.order_item_name} <span className="bg-green-600 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
+                    {item.order_item_name} <span className="bg-green-700 rounded px-1 text-white text-xs font-semibold">x{item.quantity}</span>
                   </p>
                   {item.modifiers && item.modifiers.length > 0 && (
                     <p className="text-sm text-gray-600">

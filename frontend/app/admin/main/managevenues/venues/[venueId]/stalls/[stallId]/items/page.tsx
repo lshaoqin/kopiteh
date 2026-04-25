@@ -299,56 +299,49 @@ export default function ManageItemsPage() {
             setCreateItemError(null);
 
             const trimmedName = v.name.trim();
-            if (!trimmedName) {
-                setCreateItemError("Item name is required.");
-                return;
-            }
+            if (!trimmedName) { setCreateItemError("Item name is required."); return; }
 
             const priceNum = Number(v.price);
-            if (Number.isNaN(priceNum) || priceNum < 0) {
-                setCreateItemError("Price must be a non-negative number.");
-                return;
-            }
+            if (Number.isNaN(priceNum) || priceNum < 0) { setCreateItemError("Price must be a non-negative number."); return; }
 
             const prepNum = Number(v.prep_time);
-            if (Number.isNaN(prepNum) || prepNum < 0) {
-                setCreateItemError("Prep time must be a non-negative number.");
-                return;
-            }
+            if (Number.isNaN(prepNum) || prepNum < 0) { setCreateItemError("Prep time must be a non-negative number."); return; }
 
-            if (!selectedCategoryId) {
-                setCreateItemError("Please choose a category first.");
-                return;
-            }
+            if (!selectedCategoryId) { setCreateItemError("Please choose a category first."); return; }
 
             setCreatingItem(true);
-            const sections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map(
-                (s: ModifierSectionDraft) => ({
-                    // no section_id on create
-                    name: s.name.trim(),
-                    min_selections: Number(s.min_selections),
-                    max_selections: Number(s.max_selections),
-                    options: (s.options ?? []).map((o) => ({
-                        // no option_id on create
-                        name: o.name.trim(),
-                        price_modifier: Number(o.price_modifier),
-                        is_available: Boolean(o.is_available),
-                    })),
-                })
-            );
+
+            let finalImageUrl = v.imageUrl?.trim() || null;
+            if (finalImageUrl?.startsWith('data:')) {
+                const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                    body: JSON.stringify({ dataUri: finalImageUrl, folder: 'items' }),
+                });
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+            }
+
+            const sections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map((s: ModifierSectionDraft) => ({
+                name: s.name.trim(),
+                min_selections: Number(s.min_selections),
+                max_selections: Number(s.max_selections),
+                options: (s.options ?? []).map((o) => ({
+                    name: o.name.trim(),
+                    price_modifier: Number(o.price_modifier),
+                    is_available: Boolean(o.is_available),
+                })),
+            }));
 
             const res = await fetch(`${API_URL}/items/create`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
                 body: JSON.stringify({
                     stall_id: stallIdNum,
                     category_id: selectedCategoryId,
                     name: trimmedName,
-                    item_image: v.imageUrl?.trim() ? v.imageUrl.trim() : null,
-                    description: v.description?.trim() ? v.description.trim() : null,
+                    item_image: finalImageUrl,
+                    description: v.description?.trim() || null,
                     price: priceNum,
                     prep_time: prepNum,
                     is_available: true,
@@ -357,13 +350,9 @@ export default function ManageItemsPage() {
             });
 
             const data = await res.json();
-            if (!res.ok || data?.success === false) {
-                throw new Error(data?.payload?.message ?? "Failed to create item");
-            }
+            if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to create item");
 
-            const created: MenuItem = data.payload?.data;
-
-            setItems((curr) => [...curr, created]);
+            setItems((curr) => [...curr, data.payload?.data]);
             setShowCreateItem(false);
             setSelectedCategoryId(null);
         } catch (e: any) {
@@ -410,20 +399,29 @@ export default function ManageItemsPage() {
 
             const priceNum = Number(v.price);
             const prepNum = Number(v.prep_time);
-            if (Number.isNaN(priceNum) || priceNum < 0)
-                return setUpdateItemError("Price must be a non-negative number.");
-            if (Number.isNaN(prepNum) || prepNum < 0)
-                return setUpdateItemError("Prep time must be a non-negative number.");
+            if (Number.isNaN(priceNum) || priceNum < 0) return setUpdateItemError("Price must be a non-negative number.");
+            if (Number.isNaN(prepNum) || prepNum < 0) return setUpdateItemError("Prep time must be a non-negative number.");
 
             setUpdatingItem(true);
 
+            let finalImageUrl = v.imageUrl?.trim() || null;
+            if (finalImageUrl?.startsWith('data:')) {
+                const uploadRes = await fetch(`${API_URL}/upload/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                    body: JSON.stringify({ dataUri: finalImageUrl, folder: 'items' }),
+                });
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.payload?.data?.imageUrl ?? null;
+            }
+
             const nextSections: ModifierSectionDraft[] = (v.modifier_sections ?? []).map((s: any) => ({
-                section_id: s.section_id, // keep if existing
+                section_id: s.section_id,
                 name: s.name.trim(),
                 min_selections: Number(s.min_selections),
                 max_selections: Number(s.max_selections),
                 options: (s.options ?? []).map((o: any) => ({
-                    option_id: o.option_id, // keep if existing
+                    option_id: o.option_id,
                     name: o.name.trim(),
                     price_modifier: Number(o.price_modifier),
                     is_available: Boolean(o.is_available),
@@ -432,14 +430,11 @@ export default function ManageItemsPage() {
 
             const res = await fetch(`${API_URL}/items/update/${editingItem.item_id}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
                 body: JSON.stringify({
                     name: trimmedName,
-                    item_image: v.imageUrl?.trim() ? v.imageUrl.trim() : null,
-                    description: v.description?.trim() ? v.description.trim() : null,
+                    item_image: finalImageUrl,
+                    description: v.description?.trim() || null,
                     price: priceNum,
                     prep_time: prepNum,
                     modifier_sections: nextSections,
@@ -447,16 +442,9 @@ export default function ManageItemsPage() {
             });
 
             const data = await res.json();
-            if (!res.ok || data?.success === false) {
-                throw new Error(data?.payload?.message ?? "Failed to update item");
-            }
+            if (!res.ok || data?.success === false) throw new Error(data?.payload?.message ?? "Failed to update item");
 
-            const updated: MenuItem = data.payload?.data;
-
-            setItems((curr) =>
-                curr.map((it) => (it.item_id === updated.item_id ? { ...it, ...updated } : it))
-            );
-
+            setItems((curr) => curr.map((it) => (it.item_id === data.payload?.data.item_id ? { ...it, ...data.payload?.data } : it)));
             setShowEditItem(false);
             setEditingItem(null);
             setEditingItemVariants([]);
@@ -627,18 +615,20 @@ export default function ManageItemsPage() {
                                                                 <Button
                                                                     onClick={() => handleItemToggleAvailability(it)}
                                                                     disabled={togglingItems.has(it.item_id)}
-                                                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium transition-opacity
-                                                                             ${it.is_available
-                                                                            ? "bg-green-50 text-green-700 hover:bg-green-100"
-                                                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
-                                                                            disabled:opacity-40 disabled:cursor-not-allowed`}
+                                                                    variant="ghost"
+                                                                    size="bare"
+                                                                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out
+                                                                        ${it.is_available ? "bg-green-500" : "bg-gray-300"}
+                                                                        disabled:opacity-40 disabled:cursor-not-allowed`}
                                                                     aria-label={it.is_available ? "Mark unavailable" : "Mark available"}
+                                                                    role="switch"
+                                                                    aria-checked={it.is_available}
                                                                 >
-                                                                    {togglingItems.has(it.item_id)
-                                                                        ? "…"
-                                                                        : it.is_available
-                                                                            ? "Yes"
-                                                                            : "No"}
+                                                                    <span
+                                                                        className={`absolute left-0.75 inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+                                                                            ${it.is_available ? "translate-x-4" : "translate-x-0"}
+                                                                            ${togglingItems.has(it.item_id) ? "opacity-60" : ""}`}
+                                                                    />
                                                                 </Button>
                                                             </td>
 

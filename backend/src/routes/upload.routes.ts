@@ -17,4 +17,9 @@ router.post(
   asyncHandler(uploadController.uploadMultiple.bind(uploadController))
 );
 
+router.post(
+  '/base64',
+  asyncHandler(uploadController.uploadBase64.bind(uploadController))
+);
+
 export default router;

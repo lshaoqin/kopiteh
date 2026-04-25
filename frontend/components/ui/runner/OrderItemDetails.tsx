@@ -107,7 +107,7 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold text-gray-900 items-center flex ">
                   {currentItem.order_item_name}
-                  <span className="ml-2 rounded-md text-white px-2 py-0.5 text-sm font-medium bg-green-600">
+                  <span className="ml-2 rounded-md text-white px-2 py-0.5 text-sm font-medium bg-green-700">
                     x{currentItem.quantity}
                   </span>
                 </h2>
@@ -174,9 +174,9 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               <Button
                 variant="secondary"
                 className="col-span-2 h-14"
-                onClick={() => {
-                  updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
-                  updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
+                onClick={async () => {
+                  await updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
+                  await updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type);
                 }}
               >
                 Mark as Served
@@ -190,7 +190,7 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               </Button>
             </div>
             <Button
-              className="w-full h-14 bg-green-600"
+              className="w-full h-14 bg-green-700"
               onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
             >
               Mark as Preparing
@@ -224,7 +224,7 @@ function OrderItemDetails({ open, onClose, orderItem, onOrderItemUpdated }: Orde
               </Button>
             </div>
             <Button 
-                className="w-full h-14 bg-green-600 cursor-pointer"
+                className="w-full h-14 bg-green-700 cursor-pointer"
                 onClick={() => updateOrderItemStatus(Number(currentItem.order_item_id), currentItem.type)}
               >
                 Mark as Served

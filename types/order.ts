@@ -35,6 +35,7 @@ export interface OrderItem {
   remarks?: string | null;
   volunteer_name: string;
   modifiers?: OrderItemModifier[];
+  menuModifiers?: OrderItemModifier[];
   type: 'STANDARD' | 'CUSTOM';
 }
 
