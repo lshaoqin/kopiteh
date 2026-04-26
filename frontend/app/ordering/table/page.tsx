@@ -65,7 +65,7 @@ function TableSelectionContent() {
           // Pre-select the dropdown label if a table exists in store/URL
           const currentTable = data.find(t => t.table_id === effectiveTableId);
           if (currentTable) {
-            setSelectedTableNumber(currentTable.table_number.toString());
+            setTableNumber(currentTable.table_number.toString());
           }
         } catch (err) {
           console.error("Failed to load tables:", err);
