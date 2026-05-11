@@ -105,7 +105,13 @@ export default function OrderStatusPage() {
                           <span className="font-bold text-slate-400">{item.quantity}x</span>
                           <span className="text-slate-700 font-medium">{item.name || item.order_item_name}</span>
                         </div>
-                        <span className="font-semibold text-slate-800">${(Number(item.price) * item.quantity).toFixed(2)}</span>
+                        <span className="font-semibold text-slate-800">
+                          ${(
+                            (Number(item.price) + 
+                            (item.modifiers?.reduce((acc: number, mod: any) => acc + Number(mod.price || 0), 0) || 0)
+                            ) * item.quantity
+                          ).toFixed(2)}
+                        </span>
                       </div>
 
                       {/* Display Modifiers */}
